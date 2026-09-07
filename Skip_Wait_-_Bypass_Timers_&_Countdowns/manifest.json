@@ -2,7 +2,7 @@
   "update_url": "https://clients2.google.com/service/update2/crx",
   "manifest_version": 3,
   "name": "Skip Wait - Bypass Timers & Countdowns",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Skip countdown timers and waiting pages on URL shorteners and file hosts. Clicks Continue when needed. Free, unlimited, and open source \u2014 no license key or account required.",
   "icons": {
     "16": "icon.png",

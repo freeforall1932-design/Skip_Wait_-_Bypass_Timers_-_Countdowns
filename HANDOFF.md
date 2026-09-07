@@ -201,6 +201,17 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
       Host provenance caveat: the dev sandbox cannot reach arbitrary sites, so the 126 new
       hostnames are curated from the userscript source of record (fetched 2026-09-07), not
       probed — run `node tools/check-hosts.mjs` on a normal network to prune dead domains.
+      → **8th pass progress (2026-09-07):** **15 more verified ports** — `tii.la`/`oei.la`/
+      `iir.la`/`tvi.la` → `shrinkearn` (same plugin family per the include rules; engine's
+      token-path gate matches), `exeo.app`/`exe-links.com` → `exeio` (adsbypasser lists both
+      with exeygo.com as one engine), and the 9-domain **hosttbuzz cluster** →
+      `wpsafelink-button` (engine extended with that skin: captcha-gated `.btn-captcha`,
+      `#nextpage`/`#getmylnk` form submits, last-resort `#wpsafe-link > a` plain click).
+      Evaluated and **rejected as misaligned**: `stfly.me`/`stfly.xyz` (different plugin
+      generation than our `shrtfly` flow — binding would mismatch), `bcvc.ink`/`1ink.cc`/
+      `blogsward`-family (need brand-new flows = new engines, not data-only). adsbypasser's
+      remaining link/file/image sites are either already covered natively or need engines
+      we don't have.
 - D3. **Optional upgrades (decide with the developer first):** resolution-API fallback for
       hard server-side unlockers (bypass.city / adbypass.org pattern — weigh privacy/ToS);
       reCAPTCHA audio-assist (dessant/buster style); centralize anti-adblock stealth +
@@ -236,7 +247,11 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
         nothing to dedupe there, and a shared math solver should only be created when a
         second site actually needs one. Smoke coverage: exeio double-injection assertions +
         `swExeioExtras` executed in a fake DOM (guard, no-throw, turnstile-render gating);
-        verify-release 28/28 green.
+        verify-release 28/28 green. (d) **Considered and skipped for stability:** extracting
+        the download-timer engines' shared once-guard/DOM-ready/brand-note pattern — each
+        MAIN-world function must stay fully self-contained for `chrome.scripting`
+        serialization, so "sharing" means multi-function injection plumbing for a ~6-line
+        idiom; rejected as churn-without-payoff (recorded here so it isn't re-litigated).
       - **D3a resolution-API fallback — RESOLVED: DROPPED (2026-09-07).** After a detailed
         walkthrough of the pattern (a resolver API takes the shortlink URL/ID, solves the
         server-side gate on someone else's infrastructure/browser-farm, and returns the
@@ -399,6 +414,28 @@ repo is allowed to lag slightly behind.
   of scope; no code changes (the feature was never implemented). Remaining queue: the
   developer's live-site §3.1 pass on the newly shipped engines, then D3c (stealth/captcha
   dedupe) per the approved order, with host-porting as the fallback.
+- **2026-09-07 (8th pass — tasks 2+3 finished: ports, UI/code-health review, v2.3.0)** —
+  Developer ordered the remaining two tasks finished completely (ports + the UI/UX-focused
+  code-health pass), then review → PR → merge. (1) **Ports (15 domains, 3 flows):**
+  shrinkearn += tii.la/oei.la/iir.la/tvi.la, exeio += exeo.app/exe-links.com,
+  wpsafelink-button += 9-domain hosttbuzz cluster with the matching engine skin (captcha-
+  gated `.btn-captcha`, `#nextpage`/`#getmylnk` forms, last-resort anchor click).
+  Misaligned candidates explicitly rejected and logged in §4-D2 (stfly generation mismatch;
+  new-engine-needed families left out). (2) **UI/UX + code-health review findings, all
+  fixed or dispositioned:** popup override engine list was **stale** (missing the new
+  wpsafelink-button engine → added); popup CSS has **zero** dead classes (reverse scan
+  clean); overlay helper API (`setAction`/`turnstileMount`/`startCountdown`) fully used —
+  no dead UI code; no debug leftovers/TODOs in shipped JS; HOW_TO_INSTALL.txt and
+  working.html current, no changes needed; **real engine bug found by the new smoke
+  scenario:** wpsafelink form submits (pre-existing `form[name=dsb]` path included) could
+  resubmit on every poll tick after the settle deadline — now submit exactly once;
+  download-timer once-guard extraction considered and skipped for stability (rationale in
+  §4-D3c). (3) **Docs:** CHANGELOG gained the missing 2.2.0 entry plus this 2.3.0 entry;
+  version bumped to **2.3.0** (now 478 unique hosts / 171 flows). All suites green:
+  verify-release 28/28, smoke-background 25 checks, smoke-content 12 checks. (4) Full
+  diff self-reviewed, then PR → merge (merge commit) into `main`. **Still manual:** the
+  developer's in-Chrome live pass (§3.1) — now with even more untested-in-the-wild hosts,
+  a live spot-check of one hosttbuzz/`.la`/`exeo.app` site is the highest-value first run.
 - **2026-09-07 (7th pass, part 2 — D3b audio assist shipped, D3 decisions logged)** —
   Implemented the developer-approved **manual-first reCAPTCHA audio assist**: overlay
   "Try audio assist" button (wpsafelink-button engine, only while an unsolved captcha is

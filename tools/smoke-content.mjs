@@ -467,6 +467,33 @@ async function loadContent(sandbox) {
   check(responded === null, "audio assist: relay outside a recaptcha frame is a no-op");
 }
 
+/* ------------------------------------------------------------------ *
+ *  Scenario 7: wpsafelink-button hosttbuzz skin (#getmylnk form)      *
+ * ------------------------------------------------------------------ */
+
+{
+  messages.length = 0; // isolate this scenario's message assertions
+  const sb = makeSandbox({ hostname: "hosttbuzz.com", pathname: "/get" });
+  const form = new FakeElement("form");
+  form.setAttribute("id", "getmylnk");
+  const marker = new FakeElement("div");
+  installSelectors(sb, new Map([
+    ["form[name=dsb], #nextpage, #getmylnk", [form]],
+    ["#wpsafe-link, #wpsafegenerate, #wpsafelinkhuman, .wpsafelink-button, form[name=dsb], #nextpage, #getmylnk, .btn-captcha, a#btn7, #topButton, #bottomButton, #open-link, input[name=newwpsafelink]", marker],
+  ]));
+  await loadContent(sb);
+  await tick(4500);
+  check(
+    form.submitted >= 1,
+    `wpsafelink-button hosttbuzz skin: #getmylnk form submitted (submit count: ${form.submitted})`,
+  );
+  // ...and the captcha-less page must NOT have asked for audio assist.
+  check(
+    messages.filter((m) => m?.type === "SKIP_WAIT_AUDIO_ASSIST_START").length === 0,
+    "hosttbuzz skin: no audio-assist attempt without a captcha widget",
+  );
+}
+
 console.log(
   failures === 0
     ? "\nsmoke-content: OK — content.js evaluates and the safelink/wpsafelink/bitcotasks flows behave."

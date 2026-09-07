@@ -7225,16 +7225,32 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
             const t = document.querySelector(selector);
             if (t && wpbPress(t, delay)) return wpbSay("Unlocking your link…")
         }
-        const form = document.querySelector("form[name=dsb]");
-        if (form && wpbVis(form) && wpbWhen(form, 3e3))
+        /* hosttbuzz-cluster skin: the .btn-captcha submit only after the captcha. */
+        if (wpbCaptchaDone()) {
+            const t = document.querySelector(".btn-captcha.btn-primary, .btn-captcha");
+            if (t && wpbPress(t, 2e3)) return wpbSay("Unlocking your link…")
+        }
+        const forms = [...document.querySelectorAll("form[name=dsb], #nextpage, #getmylnk")];
+        for (const form of forms) {
+            if (!(wpbVis(form) && !wpbClicked.has(form) && wpbWhen(form, 3e3))) continue;
+            wpbClicked.add(form);
             if (form.requestSubmit) wpbSay("Unlocking your link…"), form.requestSubmit();
             else {
                 const t = form.querySelector("button[type=submit], input[type=submit]");
                 t ? (wpbSay("Unlocking your link…"), wpbPress(t, 0)) : (wpbSay("Unlocking your link…"), HTMLFormElement.prototype.submit.call(form))
             }
-        else wpbSay("Unlocking your link…");
+            return
+        }
+        if (!forms.length) wpbSay("Unlocking your link…");
+        /* Last resort: some skins wire the destination into the anchor's own
+         * click handler rather than an extractable attribute — press it and
+         * let the page navigate (recipes: sastainsurance / amanguides). */
+        {
+            const t = document.querySelector("#wpsafe-link > a");
+            if (t && wpbPress(t, 6e3)) return wpbSay("Unlocking your link…")
+        }
         /* 3. Nothing recognised — don't fight an unrelated page. */
-        const seen = document.querySelector("#wpsafe-link, #wpsafegenerate, #wpsafelinkhuman, .wpsafelink-button, form[name=dsb], a#btn7, #topButton, #bottomButton, #open-link, input[name=newwpsafelink]");
+        const seen = document.querySelector("#wpsafe-link, #wpsafegenerate, #wpsafelinkhuman, .wpsafelink-button, form[name=dsb], #nextpage, #getmylnk, .btn-captcha, a#btn7, #topButton, #bottomButton, #open-link, input[name=newwpsafelink]");
         d > 12e3 && !seen && (wpbSay("This page doesn't look like a supported SafeLink step."), wpbUi?.setError("Leaving it untouched — the flow may have moved to another domain."), wpbDone = !0)
     }
 

@@ -89,18 +89,32 @@ Because this session was mostly **deletions + a gated-function swap**, the next 
 verify nothing is missing, misaligned, or broken. Go through these one by one.
 
 ### 3.1 Missing / broken logic
+> **2026-09-07 (7th pass) status:** everything below that can be checked without a browser is
+> now **automated** — run `node tools/verify-release.mjs` (28 checks: syntax, both smoke
+> harnesses, manifest, paywall-swap neutrality, popup assets, hosts wiring). The dev sandbox
+> has no outbound web access, so the *live-site* items still need the developer's Chrome;
+> `tools/check-hosts.mjs` (run on a normal network) probes all bundled hostnames for
+> dead/parked domains before that pass. Also verified this session: the remote hosts URL
+> (§3.2/A1) is live and serving valid JSON. NOTE: the `Y`/`tt` validator no-ops from §2 no
+> longer exist — the whole EAS validator module was deleted in the 6th pass (A3), so the
+> correct check is their *absence* (the verifier asserts that).
+
 - [ ] **Load the extension unpacked** (`chrome://extensions` → Developer mode → Load unpacked →
       select `Skip_Wait_-_Bypass_Timers_&_Countdowns`).
 - [ ] Open a **supported shortener / wait page** from `hosts.json` and confirm the timer is
       skipped with **no eas-x network call** (DevTools → background service worker → Network).
+      *Good first targets for the new `wpsafelink-button` engine: any horoscop-cluster or
+      indobo.com flow.*
 - [ ] Confirm there is **no daily cap**: do several bypasses in a row on one day.
 - [ ] Confirm the **survey tab no longer auto-opens** on install / browser start.
-- [ ] Popup opens and renders the freeware UI; version shows **v2.0.0**.
-- [ ] `git diff` on `background.js` / `content.js` shows **only** the intended swaps
-      (`de/et` → `!0`, `Y/tt` → `({ok:!0})`, `le` → `{}`, survey block gone). Re-run
-      `node --check background.js content.js popup.js` after **any** future edit to these
-      files. NOTE (2026-09-07): both files are now shipped as readable beautified source;
-      additionally run `node tools/smoke-background.mjs` after any `background.js` edit.
+- [ ] Popup opens and renders the freeware UI; version shows **v2.2.0** (bumped from 2.1.0
+      in the 7th pass for the wpsafelink-button release).
+- [x] Paywall neutrality re-verified (7th pass): `node tools/verify-release.mjs` → 28/28
+      (`de`/`et` gates still `!0`, `le` still `{}`, EAS validator modules absent, zero
+      eas-x/forms.gle/alarms references, hosts.json fully wired).
+- [x] `node --check` + `tools/smoke-background.mjs` + `tools/smoke-content.mjs` all green
+      after this session's edits. **Keep running `node tools/verify-release.mjs` after ANY
+      edit to background.js / content.js / popup.js / hosts.json.**
 
 ### 3.2 Config notes (some resolved, some still open)
 - [x] **Remote hosts-update URL (RESOLVED — keep reusing).** In `background.js`, `i()` fetches
@@ -160,17 +174,98 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
       hcaptcha, cuty, exeio, loot), WordPress-safelink blogs, and the download-timer sites.
       Reuse the anygame/apkteal/ankergames React-fiber direct-download hack as the model of
       "one generic engine, many hosts".
+      → **7th pass progress (2026-09-07):** (a) the whole **WordPress-safelink button family**
+      is now ONE generic `wpsafelink-button` engine in content.js (~126 hosts — see D2), the
+      exact "one engine, many hosts" treatment; (b) background.js support layer deduplicated:
+      `It`/`xt` injector wrappers deleted in favor of the generic `St` (now supports optional
+      frameIds + serialized args), and lksfy's adblock-stealth MAIN-world script replaced by a
+      shared parameterized `swStealth` (regex passed as executeScript arg); exeio keeps its
+      extended variant (turnstile auto-render) — merging it is possible but left for after a
+      live-site test. **Still open:** cuty/exeio/dlsurf/loot captcha-assisted unlockers,
+      filecrypt POW family, download-timer MAIN-world functions (shareable
+      once/guard + DOM-ready + brand-note helpers).
 - D2. **Port more flows** from the active userscripts — `nOneCode4u/bypass-shortlinks` (best
       source of current recipes) and `adsbypasser`. Done so far: 35 AdLinkFly-style domains
-      added to `adlinkfly-links-go` (data-only). NOT done yet: the WPSafeLink-button plugin
-      sites (horoscop.info cluster, indobo.com, jobinmeghalaya.in…) need a dedicated
-      `wpsafelink-button` engine first; FastForward's `script.js` remains a reference library
-      only (do not switch base — it is unmaintained).
+      added to `adlinkfly-links-go` (data-only).
+      → **7th pass progress (2026-09-07):** dedicated **`wpsafelink-button` engine shipped**
+      (content.js + generic `SKIP_WAIT_PAGE_CALL` MAIN-world call listener in background.js)
+      covering the horoscop `.wpsafelink-button` cluster, indobo `div[id^=wpsafe]` cluster,
+      jobinmeghalaya/tejtime/marketrook button chains, generic `#wpsafe-link a` (href /
+      window.open / handleClick), `newwpsafelink` form payloads, script-content variants and
+      the kingshort choreography — **126 hostnames** curated from the current
+      bypass-shortlinks source (political/ambiguous domains excluded: bjp.org.in,
+      myscheme.org.in, mtc1-5, oreoauto). Also: **bitcotasks** flow implemented (was an inert
+      hosts.json key in both editions), `mobiend.com` + `mrproblogger.com` added to
+      `adlinkfly-links-go` (data-only). NOT done yet: more adsbypasser ports; FastForward's
+      `script.js` remains a reference library only (do not switch base — it is unmaintained).
+      Host provenance caveat: the dev sandbox cannot reach arbitrary sites, so the 126 new
+      hostnames are curated from the userscript source of record (fetched 2026-09-07), not
+      probed — run `node tools/check-hosts.mjs` on a normal network to prune dead domains.
+      → **8th pass progress (2026-09-07):** **15 more verified ports** — `tii.la`/`oei.la`/
+      `iir.la`/`tvi.la` → `shrinkearn` (same plugin family per the include rules; engine's
+      token-path gate matches), `exeo.app`/`exe-links.com` → `exeio` (adsbypasser lists both
+      with exeygo.com as one engine), and the 9-domain **hosttbuzz cluster** →
+      `wpsafelink-button` (engine extended with that skin: captcha-gated `.btn-captcha`,
+      `#nextpage`/`#getmylnk` form submits, last-resort `#wpsafe-link > a` plain click).
+      Evaluated and **rejected as misaligned**: `stfly.me`/`stfly.xyz` (different plugin
+      generation than our `shrtfly` flow — binding would mismatch), `bcvc.ink`/`1ink.cc`/
+      `blogsward`-family (need brand-new flows = new engines, not data-only). adsbypasser's
+      remaining link/file/image sites are either already covered natively or need engines
+      we don't have.
 - D3. **Optional upgrades (decide with the developer first):** resolution-API fallback for
       hard server-side unlockers (bypass.city / adbypass.org pattern — weigh privacy/ToS);
       reCAPTCHA audio-assist (dessant/buster style); centralize anti-adblock stealth +
       math/digit-order captcha solvers instead of per-site copies.
-- D4. B1 (donate) stays on hold until coverage is visibly larger.
+      → **Developer decided (2026-09-07, 7th pass):**
+      - **D3b audio-assist — APPROVED, SHIPPED (manual-first + button).** Implemented in this
+        pass: when a gated page (wpsafelink-button engine) is blocked by a visible unsolved
+        reCAPTCHA, the Skip Wait overlay shows a **"Try audio assist" button** — nothing runs
+        on its own. Pressing it relays to the recaptcha bframe content script, which switches
+        the widget to its audio challenge, downloads the clip (background-side, google.com
+        URLs only), WAV-encodes both channels, and transcribes them against
+        **`skipWaitSttEndpoint`** (user-configured in the popup, e.g. a local Whisper server;
+        OpenAI-style `{text}` or plain-text responses). Result digits are filled + verified,
+        with up to 3 retries while the challenge reloads; failures fall back to manual with a
+        clear message. **No bundled speech backend and zero network calls by default** —
+        modern Buster solves on-device with a bundled ONNX model (transformers.js +
+        onnxruntime + offscreen document), which is the natural v2 if we ever want
+        automatic-by-default without an external service (big bundle, later decision).
+      - **D3c centralize stealth/captcha solvers — DONE (2026-09-07, 8th pass), using only
+        pre-existing code as the developer required.** (a) **exeio's extended stealth merged
+        into the shared layer:** the per-site `_t` MAIN-world script was split — the
+        network/app_vars half is gone (shared `swStealth` now injected with exeio's longer
+        `exeioAdBlockRe`), and the DOM half (Turnstile auto-render into `#captchaShortlink` +
+        the disabled-button shape fixer) is the new `swExeioExtras`, injected right after
+        swStealth; the lazy app_vars trap was dropped from extras because swStealth installs
+        it eagerly (same effect). (b) **content.js constants deduped with initializer-only
+        swaps** (zero call-site changes): 4 new shared constants — `swDelay` (replaced 30
+        per-flow promise-delay arrows), `swTnFrames` (9 Turnstile iframe selector arrays),
+        `swTnToken` (5 `[name="cf-turnstile-response"]` consts), `swTnNote` (8 "Confirm
+        you're human" note objects) — 52 copies removed. (c) **Finding:** the backlog's
+        "per-site math/digit-order captcha solver copies" do **not exist** in this codebase
+        (the note described the userscript ecosystem; our flows never grew those copies) —
+        nothing to dedupe there, and a shared math solver should only be created when a
+        second site actually needs one. Smoke coverage: exeio double-injection assertions +
+        `swExeioExtras` executed in a fake DOM (guard, no-throw, turnstile-render gating);
+        verify-release 28/28 green. (d) **Considered and skipped for stability:** extracting
+        the download-timer engines' shared once-guard/DOM-ready/brand-note pattern — each
+        MAIN-world function must stay fully self-contained for `chrome.scripting`
+        serialization, so "sharing" means multi-function injection plumbing for a ~6-line
+        idiom; rejected as churn-without-payoff (recorded here so it isn't re-litigated).
+      - **D3a resolution-API fallback — RESOLVED: DROPPED (2026-09-07).** After a detailed
+        walkthrough of the pattern (a resolver API takes the shortlink URL/ID, solves the
+        server-side gate on someone else's infrastructure/browser-farm, and returns the
+        destination), the developer decided the trade is not worth it for a browser
+        extension: the third party would see every stuck link AND its destination, the
+        feature depends on their uptime/pricing/honesty, and it is the most ToS-fragile
+        bypass pattern ("too much hassle and too big"). Server-locked sites (work.ink-style
+        server clocks, offerwall confirmation callbacks, server-validated captchas) are
+        therefore **out of scope permanently** — the C1 answer for those is the honest "this
+        gate can't be bypassed locally". Do not re-pitch unless the developer asks; if that
+        ever changes, the agreed shape was: off by default, user-supplied endpoint, visible
+        third-party warning, per-domain opt-in.
+- D4. B1 (donate) stays on hold until coverage is visibly larger. *(Coverage grew ~38% this
+      pass; still holding per instruction.)*
 
 ---
 
@@ -279,6 +374,89 @@ repo is allowed to lag slightly behind.
   through the consolidated engine + override. **All checks pass; run it after any
   `background.js` edit.** **Next:** §3.1 live-site checklist; backlog D1–D4 (more engine
   consolidation + flow ports).
+
+- **2026-09-07 (7th pass — §3.1 verification automation + wpsafelink-button engine)** —
+  (1) **§3.1 automated:** new `tools/verify-release.mjs` (28 checks — syntax, smoke
+  harnesses, manifest refs, paywall neutrality incl. validator *absence*, popup
+  font/class/id wiring, hosts.json schema + engine wiring) and `tools/check-hosts.mjs`
+  (live DNS/HTTP probe of every bundled hostname — run on a normal network; the dev sandbox
+  has no outbound web access, which is why it can't run here). Fixed two findings it caught:
+  popup `.custom-title` class was unstyled (added a matching rule), and the `bitcotasks`
+  hosts.json key was **inert in both editions** (no engine referenced it). Verified the
+  remote hosts URL (A1) is live; diffed it against the bundled list — the paid edition
+  currently adds only `molyn` + `movies4u` flows whose *code* we don't have (needs a §7
+  elevate, data rows alone would be inert); our bundled `adlinkfly-links-go` (39) is far
+  ahead of the paid remote (4). (2) **D2:** shipped the dedicated **`wpsafelink-button`
+  engine** — one generic content.js engine (~126 hosts: horoscop cluster, indobo cluster,
+  jobinmeghalaya/tejtime/marketrook chains, generic `#wpsafe-link` onclick/href variants,
+  `newwpsafelink` form payloads, script-content variants, kingshort choreography) reusing
+  the existing `qy`/`Ay`/`Iy` payload decoders for chained safelink_redirect hops, plus a
+  whitelisted `SKIP_WAIT_PAGE_CALL` background listener for page-world
+  `wpsafehuman`/`wpsafegenerate`/`continueClicked` calls. **bitcotasks** flow implemented
+  (firewall Validate press + page call). `mobiend.com` + `mrproblogger.com` added to
+  `adlinkfly-links-go`. (3) **D1:** deleted the `It`/`xt` injector wrappers (generic `St`
+  now handles optional frameIds + serialized args with catch); lksfy's adblock-stealth
+  MAIN-world script deduplicated into a shared parameterized `swStealth` (ad-regex passed
+  as executeScript arg; exeio's extended variant left intact pending a live test).
+  (4) **First content.js test coverage ever:** new `tools/smoke-content.mjs` (mocked
+  chrome + minimal DOM in a vm) — proves content.js evaluates + runs its flow table, the
+  wp-safelink query engine decodes `?safelink_redirect=` payloads, the new
+  wpsafelink-button engine handles the `window.open` and `newwpsafelink {linkr}` variants,
+  and bitcotasks presses Validate + requests the page call. Both smoke harnesses now run
+  inside `verify-release.mjs` — **28/28 green**. (5) Version bumped to **2.2.0**; README
+  coverage numbers updated (460+ hostnames / 171 flow types). **Still manual (needs the
+  developer's Chrome):** the live-site half of §3.1 — unpacked load, real-site skips
+  (try a horoscop-cluster flow + indobo.com for the new engine), DevTools network check,
+  popup render at v2.2.0. **D3 question put to the developer.**
+- **2026-09-07 (7th pass, part 3 — D3a closed)** — Developer reviewed the resolver-API
+  trade-offs and **dropped D3a permanently** (third-party link exposure, service
+  dependency, ToS fragility — "too much hassle and too big"). Server-locked sites are out
+  of scope; no code changes (the feature was never implemented). Remaining queue: the
+  developer's live-site §3.1 pass on the newly shipped engines, then D3c (stealth/captcha
+  dedupe) per the approved order, with host-porting as the fallback.
+- **2026-09-07 (8th pass — tasks 2+3 finished: ports, UI/code-health review, v2.3.0)** —
+  Developer ordered the remaining two tasks finished completely (ports + the UI/UX-focused
+  code-health pass), then review → PR → merge. (1) **Ports (15 domains, 3 flows):**
+  shrinkearn += tii.la/oei.la/iir.la/tvi.la, exeio += exeo.app/exe-links.com,
+  wpsafelink-button += 9-domain hosttbuzz cluster with the matching engine skin (captcha-
+  gated `.btn-captcha`, `#nextpage`/`#getmylnk` forms, last-resort anchor click).
+  Misaligned candidates explicitly rejected and logged in §4-D2 (stfly generation mismatch;
+  new-engine-needed families left out). (2) **UI/UX + code-health review findings, all
+  fixed or dispositioned:** popup override engine list was **stale** (missing the new
+  wpsafelink-button engine → added); popup CSS has **zero** dead classes (reverse scan
+  clean); overlay helper API (`setAction`/`turnstileMount`/`startCountdown`) fully used —
+  no dead UI code; no debug leftovers/TODOs in shipped JS; HOW_TO_INSTALL.txt and
+  working.html current, no changes needed; **real engine bug found by the new smoke
+  scenario:** wpsafelink form submits (pre-existing `form[name=dsb]` path included) could
+  resubmit on every poll tick after the settle deadline — now submit exactly once;
+  download-timer once-guard extraction considered and skipped for stability (rationale in
+  §4-D3c). (3) **Docs:** CHANGELOG gained the missing 2.2.0 entry plus this 2.3.0 entry;
+  version bumped to **2.3.0** (now 478 unique hosts / 171 flows). All suites green:
+  verify-release 28/28, smoke-background 25 checks, smoke-content 12 checks. (4) Full
+  diff self-reviewed, then PR → merge (merge commit) into `main`. **Still manual:** the
+  developer's in-Chrome live pass (§3.1) — now with even more untested-in-the-wild hosts,
+  a live spot-check of one hosttbuzz/`.la`/`exeo.app` site is the highest-value first run.
+- **2026-09-07 (7th pass, part 2 — D3b audio assist shipped, D3 decisions logged)** —
+  Implemented the developer-approved **manual-first reCAPTCHA audio assist**: overlay
+  "Try audio assist" button (wpsafelink-button engine, only while an unsolved captcha is
+  visible), bframe-side audio-challenge driver (switch to audio → download clip via
+  background (google.com-only guard) → decode → per-channel WAV → transcribe → fill +
+  verify → up to 3 retries), `SKIP_WAIT_AUDIO_STT(_FETCH)` background listeners with
+  `no-backend` refusal when no endpoint is set, and a popup "Audio captcha assist
+  (optional)" panel storing `skipWaitSttEndpoint`. Smoke coverage extended (relay routing,
+  no-backend refusal, endpoint transcription, audio-URL guard, button manual-first
+  semantics + click wiring); `verify-release.mjs` 28/28 green. D3a explanation delivered,
+  decision pending; D3c approved as the next refactor. **Still manual:** live reCAPTCHA
+  audio run in Chrome (needs a real challenge + a configured STT endpoint).
+- **2026-09-07 (8th pass — D3c finished, data-free as required)** — exeio stealth merged
+  into the shared `swStealth` + new `swExeioExtras` (background), and content.js constants
+  deduped (`swDelay` ×30, `swTnFrames` ×9, `swTnToken` ×5, `swTnNote` ×8 — 52 initializer
+  swaps, no call-site changes). Confirmed the "math-captcha per-site copies" from the D3
+  note never existed in this codebase — nothing to dedupe. exeio smoke assertions + fake-DOM
+  execution added; 28/28 green. **Remaining D1 polish (optional, same data-free kind):**
+  extract the shared once-guard/DOM-ready/brand-note pattern used by the download-timer
+  MAIN-world functions (getmodsapk/apkvision/apkaward/fuzyapk/moddroid/modded-1…). The
+  substantive remaining work is live-site testing + host ports (needs external data).
 
 ### UI/UX review notes (final freeware popup)
 - Layout: one column, ~408px wide, `flex` gap 14px; header → hero card → footer.

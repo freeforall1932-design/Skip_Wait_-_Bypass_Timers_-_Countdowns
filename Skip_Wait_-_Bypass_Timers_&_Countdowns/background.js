@@ -1431,48 +1431,20 @@ var vt = e => {
     }
 };
 
-function _t() {
+/*
+ * exeio MAIN-world extras: auto-render the Turnstile widget into
+ * #captchaShortlink and repair the "button disabled" DOM shape the adblock
+ * bait produces. The network/app_vars stealth half is shared swStealth
+ * (injected separately with exeioAdBlockRe); this function is DOM-only.
+ */
+var exeioAdBlockRe = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i;
+
+function swExeioExtras() {
     const e = window;
-    if (e.__swExeioAdblock) return;
-    e.__swExeioAdblock = !0;
-    const t = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i,
-        n = e => t.test(String(e ?? ""));
-    let r = null,
-        o = !1;
-    const a = XMLHttpRequest.prototype.open,
-        i = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function(e, t, n, r, o) {
-        return this.__swMethod = e, this.__swUrl = String(t), a.call(this, e, t, n ?? !0, r, o)
-    }, XMLHttpRequest.prototype.send = function(e) {
-        return n(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
-            configurable: !0,
-            get: () => 200
-        }), Object.defineProperty(this, "readyState", {
-            configurable: !0,
-            get: () => 4
-        }), Object.defineProperty(this, "responseText", {
-            configurable: !0,
-            get: () => ""
-        }), void queueMicrotask(() => {
-            this.onreadystatechange?.call(this, null), this.onload?.call(this, null)
-        })) : i.call(this, e)
-    };
-    const s = window.fetch.bind(window);
-    window.fetch = (e, t) => {
-        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e.url,
-            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e.method) || "GET").toUpperCase();
-        return n(r) && "HEAD" === o ? Promise.resolve(new Response(null, {
-            status: 200,
-            statusText: "OK"
-        })) : s(e, t)
-    };
-    const c = () => {
-            try {
-                const e = window.app_vars;
-                e && (e.force_disable_adblock = "0")
-            } catch {}
-        },
-        l = () => {
+    if (e.__swExeioExtras) return;
+    e.__swExeioExtras = !0;
+    let r = null;
+    const l = () => {
             const e = document.getElementById("captchaShortlink"),
                 t = window.turnstile,
                 n = window.app_vars?.turnstile_site_key;
@@ -1511,24 +1483,7 @@ function _t() {
                     return !!t && u(t)
                 }),
                 t = !!document.querySelector(".button.disabled.danger") && !document.querySelector("#before-captcha, #link-view, #go-link");
-            (e || t) && ((() => {
-                if (!o) {
-                    o = !0;
-                    try {
-                        let e = window.app_vars;
-                        Object.defineProperty(window, "app_vars", {
-                            configurable: !0,
-                            enumerable: !0,
-                            get: () => e,
-                            set: t => {
-                                e = t && "object" == typeof t ? t : e, e && (e.force_disable_adblock = "0")
-                            }
-                        }), e && (e.force_disable_adblock = "0")
-                    } catch {
-                        c()
-                    }
-                }
-            })(), c(), (() => {
+            (e || t) && (() => {
                 if (!r) return !1;
                 const e = document.createElement("div");
                 e.innerHTML = r;
@@ -1545,7 +1500,7 @@ function _t() {
                     return e?.nextSibling ? i.insertBefore(t, e.nextSibling) : i.appendChild(t), p(t), !0
                 }
                 return !1
-            })() && (queueMicrotask(l), window.setTimeout(l, 300)))
+            })() && (queueMicrotask(l), window.setTimeout(l, 300))
         };
     d(), m(), new MutationObserver(m).observe(document.documentElement, {
         childList: !0,
@@ -1573,16 +1528,19 @@ async function Lt() {
         err: "go-link missing"
     }
 }
-var St = (e, t, n) => {
-    chrome.scripting.executeScript({
-        target: {
+var St = (e, t, n, r) => {
+    const o = {
+        target: void 0 === t ? {
+            tabId: e
+        } : {
             tabId: e,
             frameIds: [t]
         },
         world: "MAIN",
         injectImmediately: !0,
         func: n
-    })
+    };
+    void 0 !== r && (o.args = r), chrome.scripting.executeScript(o).catch(() => {})
 };
 
 function Et() {
@@ -1752,32 +1710,26 @@ function Et() {
     })().catch(t)
 }
 
-function It(e, t) {
-    chrome.scripting.executeScript({
-        target: void 0 === t ? {
-            tabId: e
-        } : {
-            tabId: e,
-            frameIds: [t]
-        },
-        world: "MAIN",
-        injectImmediately: !0,
-        func: Et
-    })
-}
+/*
+ * Shared MAIN-world adblock-stealth script (one copy for every flow that
+ * needs it — lksfy today; exeio keeps an extended variant with turnstile
+ * auto-render). The ad-domain pattern is passed as an executeScript arg
+ * because MAIN-world functions are serialized without their closure.
+ */
+var lsAdBlockRe = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|code\.jquery\.com/i;
 
-function Rt() {
-    const e = window;
-    if (e.__swLksfyAdblock) return;
-    e.__swLksfyAdblock = !0;
-    const t = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|code\.jquery\.com/i,
-        n = e => t.test(String(e ?? "")),
-        r = XMLHttpRequest.prototype.open,
-        o = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function(e, t, n, o, a) {
-        return this.__swMethod = e, this.__swUrl = String(t), r.call(this, e, t, n ?? !0, o, a)
+function swStealth(e) {
+    const t = window;
+    if (t.__swAdblockStealth) return;
+    t.__swAdblockStealth = !0;
+    const n = new RegExp(e, "i"),
+        r = e => n.test(String(e ?? ""));
+    const a = XMLHttpRequest.prototype.open,
+        i = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(e, t, n, r, o) {
+        return this.__swMethod = e, this.__swUrl = String(t), a.call(this, e, t, n ?? !0, r, o)
     }, XMLHttpRequest.prototype.send = function(e) {
-        return n(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
+        return r(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
             configurable: !0,
             get: () => 200
         }), Object.defineProperty(this, "readyState", {
@@ -1788,18 +1740,18 @@ function Rt() {
             get: () => ""
         }), void queueMicrotask(() => {
             this.onreadystatechange?.call(this, null), this.onload?.call(this, null)
-        })) : o.call(this, e)
+        })) : i.call(this, e)
     };
-    const a = window.fetch.bind(window);
+    const s = window.fetch.bind(window);
     window.fetch = (e, t) => {
-        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e.url,
-            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e.method) || "GET").toUpperCase();
-        return n(r) && "HEAD" === o ? Promise.resolve(new Response(null, {
+        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e?.url,
+            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e?.method) || "GET").toUpperCase();
+        return r && n.test(String(r)) && "HEAD" === o ? Promise.resolve(new Response(null, {
             status: 200,
             statusText: "OK"
-        })) : a(e, t)
+        })) : s(e, t)
     };
-    const i = () => {
+    const o = () => {
         try {
             const e = window.app_vars;
             e && (e.force_disable_adblock = "0")
@@ -1816,24 +1768,11 @@ function Rt() {
             }
         }), e && (e.force_disable_adblock = "0")
     } catch {
-        i()
+        o()
     }
-    i(), window.setInterval(i, 250)
+    o(), t.setInterval(o, 250)
 }
 
-function xt(e, t) {
-    chrome.scripting.executeScript({
-        target: void 0 === t ? {
-            tabId: e
-        } : {
-            tabId: e,
-            frameIds: [t]
-        },
-        world: "MAIN",
-        injectImmediately: !0,
-        func: Rt
-    })
-}
 var At = "rinku-flow-tabs",
     Nt = /^[A-Za-z0-9_-]{3,}$/,
     $t = /(?:^|\/)backup\/w\/?$/i,
@@ -3762,7 +3701,132 @@ chrome.tabs.onRemoved.addListener(fe), chrome.runtime.onMessage.addListener((e, 
     func: we,
     world: "MAIN",
     injectImmediately: !0
-}).then(n).catch(n), 0))), chrome.runtime.onMessage.addListener((e, t, n) => {
+}).then(n).catch(n), 0))),
+/*
+ * Generic MAIN-world function call used by content flows that must invoke
+ * page-defined functions the isolated world cannot see (wpsafelink-button
+ * engine: wpsafehuman/wpsafegenerate; bitcotasks: continueClicked). The
+ * name is caller-supplied but whitelisted to an identifier pattern, and
+ * the listener only acts on tabs whose top frame is gated by hosts.json
+ * (content.js gates before sending).
+ */
+chrome.runtime.onMessage.addListener((e, t) => {
+    if ("SKIP_WAIT_PAGE_CALL" !== e?.type || !t.tab?.id) return !1;
+    const n = String(e.name ?? "");
+    return /^[A-Za-z_$][\w$]{0,63}$/.test(n) && chrome.scripting.executeScript({
+        target: {
+            tabId: t.tab.id,
+            frameIds: [t.frameId ?? 0]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: e => {
+            try {
+                "function" == typeof window[e] && window[e]()
+            } catch {}
+        },
+        args: [n]
+    }).catch(() => {}), !1
+}),
+/*
+ * reCAPTCHA audio assist (opt-in, manual-first). Nothing happens until the
+ * user presses "Try audio assist" in the Skip Wait overlay on a gated page.
+ * The overlay button -> SKIP_WAIT_AUDIO_ASSIST_START -> relay to every frame;
+ * the recaptcha bframe content script drives the audio challenge and sends
+ * SKIP_WAIT_AUDIO_STT_FETCH / SKIP_WAIT_AUDIO_STT requests; results come back
+ * via SKIP_WAIT_AUDIO_ASSIST_RESULT. The transcription endpoint is whatever
+ * the user configured (skipWaitSttEndpoint, e.g. a local Whisper server);
+ * with none configured the frame reports "no-backend" and the user keeps
+ * solving manually. No bundled speech backend, no third-party calls by default.
+ */
+(() => {
+    const b64 = (e) => {
+        let t = "";
+        const n = new Uint8Array(e),
+            r = 32768;
+        for (let o = 0; o < n.length; o += r) t += String.fromCharCode.apply(null, n.subarray(o, o + r));
+        return btoa(t)
+    };
+    chrome.runtime.onMessage.addListener((e, t, n) => {
+        if ("SKIP_WAIT_AUDIO_ASSIST_START" !== e?.type || !t.tab?.id) return !1;
+        return chrome.tabs.sendMessage(t.tab.id, {
+            type: "SKIP_WAIT_AUDIO_ASSIST_FRAME"
+        }).catch(() => {}), !1
+    }), chrome.runtime.onMessage.addListener((e, t) => ("SKIP_WAIT_AUDIO_ASSIST_RESULT" === e?.type && t.tab?.id && chrome.tabs.sendMessage(t.tab.id, {
+        type: "SKIP_WAIT_AUDIO_ASSIST_RESULT",
+        ok: !0 === e.ok,
+        err: String(e.err ?? "")
+    }).catch(() => {}), !1)), chrome.runtime.onMessage.addListener((e, t, n) => {
+        if ("SKIP_WAIT_AUDIO_STT_FETCH" !== e?.type) return !1;
+        return (async e => {
+            try {
+                const t = String(e.url ?? "");
+                if (!/^https:\/\/[^/]*google\.com\//.test(t)) return {
+                    ok: !1,
+                    err: "bad-audio-url"
+                };
+                const n = await fetch(t, {
+                        credentials: "omit"
+                    }),
+                    r = await n.arrayBuffer();
+                return n.ok ? {
+                    ok: !0,
+                    b64: b64(r),
+                    mime: n.headers.get("content-type") ?? "audio/mpeg"
+                } : {
+                    ok: !1,
+                    err: "audio-http-" + n.status
+                }
+            } catch (t) {
+                return {
+                    ok: !1,
+                    err: String(t)
+                }
+            }
+        })(e).then(n), !0
+    }), chrome.runtime.onMessage.addListener((e, t, n) => {
+        if ("SKIP_WAIT_AUDIO_STT" !== e?.type) return !1;
+        return (async e => {
+            try {
+                const t = await chrome.storage.local.get("skipWaitSttEndpoint"),
+                    r = String(t.skipWaitSttEndpoint ?? "").trim();
+                if (!/^https?:\/\//i.test(r)) return {
+                    ok: !1,
+                    err: "no-backend"
+                };
+                const o = Uint8Array.from(atob(String(e.wav ?? "")), e => e.charCodeAt(0)),
+                    a = await fetch(r, {
+                        method: "POST",
+                        headers: {
+                            "content-type": "audio/wav"
+                        },
+                        body: o,
+                        signal: AbortSignal.timeout(45e3),
+                        credentials: "omit"
+                    }),
+                    i = (await a.text()).trim();
+                if (!a.ok) return {
+                    ok: !1,
+                    err: "stt-http-" + a.status
+                };
+                let s = i;
+                try {
+                    const e = JSON.parse(i);
+                    s = "string" == typeof e.text ? e.text : "string" == typeof e.result ? e.result : i
+                } catch {}
+                return {
+                    ok: !0,
+                    text: s
+                }
+            } catch (t) {
+                return {
+                    ok: !1,
+                    err: String(t)
+                }
+            }
+        })(e).then(n), !0
+    });
+})(), chrome.runtime.onMessage.addListener((e, t, n) => {
     if ("FCLC_ALERT_SUPPRESS" !== e?.type) return !1;
     const r = t.tab?.id,
         o = t.tab?.url ?? "";
@@ -4161,13 +4225,13 @@ chrome.tabs.onRemoved.addListener(fe), chrome.runtime.onMessage.addListener((e, 
     url: n
 }) => {
     0 === e && (async () => {
-        await vt(n) && St(t, 0, _t)
+        await vt(n) && (St(t, 0, swStealth, [exeioAdBlockRe.source]), St(t, 0, swExeioExtras))
     })()
 }), chrome.runtime.onMessage.addListener((e, t, n) => {
     const r = t.tab?.id,
         o = t.frameId ?? 0;
     return "EXEIO_ADBLOCK_BYPASS" === e?.type ? ((async () => {
-        void 0 !== r && (t.tab?.url && !(await vt(t.tab.url)) || St(r, o, _t))
+        void 0 !== r && (t.tab?.url && !(await vt(t.tab.url)) || (St(r, o, swStealth, [exeioAdBlockRe.source]), St(r, o, swExeioExtras)))
     })(), !1) : "EXEIO_GO_UNLOCK" === e?.type && void 0 !== r && ((async () => {
         !t.tab?.url || await vt(t.tab.url) ? chrome.scripting.executeScript({
             target: {
@@ -4195,12 +4259,12 @@ chrome.tabs.onRemoved.addListener(fe), chrome.runtime.onMessage.addListener((e, 
             } catch {
                 return !1
             }
-        }(e.url) && It(e.tabId, 0)
+        }(e.url) && St(e.tabId, 0, Et)
     })()
 }), chrome.runtime.onMessage.addListener((e, t) => {
     if ("FILECRYPT_POW" !== e?.type) return !1;
     const n = t.tab?.id;
-    return void 0 === n || It(n, t.frameId ?? 0), !1
+    return void 0 === n || St(n, t.frameId ?? 0, Et), !1
 }), chrome.webNavigation.onCommitted.addListener(e => {
     0 === e.frameId && async function(e) {
         try {
@@ -4209,12 +4273,12 @@ chrome.tabs.onRemoved.addListener(fe), chrome.runtime.onMessage.addListener((e, 
             return !1
         }
     }(e.url).then(t => {
-        t && xt(e.tabId, 0)
+        t && St(e.tabId, 0, swStealth, [lsAdBlockRe.source])
     })
 }), chrome.runtime.onMessage.addListener((e, t) => {
     if ("LKSFY_ADBLOCK_BYPASS" !== e?.type) return !1;
     const n = t.tab?.id;
-    return void 0 === n || xt(n, t.frameId ?? 0), !1
+    return void 0 === n || St(n, t.frameId ?? 0, swStealth, [lsAdBlockRe.source]), !1
 }), (() => {
     const e = new Set;
     let t = chrome.storage.session.get(At).then(t => {

@@ -79,6 +79,18 @@
             })
         })
     }
+    /*
+     * Shared per-family constants (deduped from dozens of per-flow copies —
+     * D3c): the promise delay helper, the Turnstile iframe selectors, the
+     * Turnstile token input selector, and the "Confirm you're human" note.
+     */
+    var swDelay = swDelay,
+        swTnFrames = swTnFrames,
+        swTnToken = swTnToken,
+        swTnNote = {
+            lead: "Confirm you\u2019re human.",
+            detail: "Complete the Turnstile check below. We\u2019ll continue automatically when it\u2019s done."
+        };
     var st = ["gdrive", "mediafire", "dropbox", "onedrive", "pixeldrain", "gofile", "usersdrive", "torrent", "cloud", "box", "vikingfile"],
         ct = "oke-link",
         lt = "downloadButtons",
@@ -663,7 +675,7 @@
         Ye = !1,
         Ge = !1,
         Ve = !1,
-        Ze = t => new Promise(e => setTimeout(e, t)),
+        Ze = swDelay,
         Je = t => /^https?:\/\//i.test(t),
         Xe = () => {
             chrome.runtime.sendMessage({
@@ -1281,7 +1293,7 @@
         },
         ao = null,
         so = !1,
-        co = t => new Promise(e => setTimeout(e, t)),
+        co = swDelay,
         lo = (t = "Getting things ready…") => {
             const e = kt(oo);
             if (document.documentElement.classList.add(e), !document.getElementById(ro)) {
@@ -1416,10 +1428,7 @@
             lead: "Hang tight — unlocking your link.",
             detail: "Skip Wait is handling JobSheel for you."
         },
-        $o = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        };
+        $o = swTnNote;
 
     function Ao() {
         chrome.runtime.sendMessage({
@@ -1446,9 +1455,9 @@
     var _o = "skip-wait-jobsheel-baby",
         Mo = "skip-wait-jobsheel-baby-gate",
         Oo = "data-sw-jobsheel-pin",
-        Ro = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Ro = swTnFrames,
         Po = qo(_o, "skip-wait-jobsheel-baby-boot"),
-        Do = t => new Promise(e => setTimeout(e, t));
+        Do = swDelay;
 
     function No() {
         for (const t of document.querySelectorAll('[name="cf-turnstile-response"]')) {
@@ -1516,7 +1525,7 @@
         n && (Wo = !0, Uo("Skipping JobSheel gate…"), HTMLFormElement.prototype.submit.call(n))
     }
     var zo = qo("skip-wait-jobsheel-babylinks", "skip-wait-jobsheel-babylinks-boot"),
-        jo = t => new Promise(e => setTimeout(e, t)),
+        jo = swDelay,
         Yo = !1;
 
     function Go() {
@@ -1722,7 +1731,7 @@
             lead: "Unlocking your link",
             detail: "Skip Wait is completing the required wait, then opening your unlock page."
         },
-        wr = t => new Promise(e => setTimeout(e, t)),
+        wr = swDelay,
         gr = t => {
             const e = document.cookie.match(new RegExp(`(?:^|;\\s*)${t}=([^;]*)`));
             return e?.[1] ? decodeURIComponent(e[1]) : null
@@ -1813,18 +1822,15 @@
     var Lr = "skip-wait-gplinks-links-go",
         Cr = "skip-wait-gplinks-links-go-boot",
         Ir = "captchaLinksGo",
-        Tr = '[name="cf-turnstile-response"]',
-        $r = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Tr = swTnToken,
+        $r = swTnFrames,
         Ar = "drive.olamovies.download",
         qr = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        _r = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        Mr = t => new Promise(e => setTimeout(e, t)),
+        _r = swTnNote,
+        Mr = swDelay,
         Or = t => t.startsWith("http://") || t.startsWith("https://"),
         Rr = (t = document) => !!t.querySelector('#go-link,form[action*="/links/go"],a.get-link'),
         Pr = () => /[?&](?:pid|vid)=/.test(location.search) || Rr(),
@@ -2131,7 +2137,7 @@
         },
         mi = null,
         pi = !1,
-        hi = t => new Promise(e => setTimeout(e, t)),
+        hi = swDelay,
         fi = () => {
             const t = kt(li);
             if (document.documentElement.classList.add(t), document.getElementById(ui)) return;
@@ -2344,7 +2350,7 @@
         Vi = !1,
         Zi = !1,
         Ji = !1,
-        Xi = t => new Promise(e => setTimeout(e, t)),
+        Xi = swDelay,
         Ki = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2473,7 +2479,7 @@
         ha = !1,
         fa = !1,
         wa = !1,
-        ga = t => new Promise(e => setTimeout(e, t)),
+        ga = swDelay,
         ya = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2599,7 +2605,7 @@
         $a = null,
         Aa = !1,
         qa = !1,
-        _a = t => new Promise(e => setTimeout(e, t)),
+        _a = swDelay,
         Ma = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2982,7 +2988,7 @@
         },
         Ys = null,
         Gs = !1,
-        Vs = t => new Promise(e => setTimeout(e, t)),
+        Vs = swDelay,
         Zs = (t = "Getting things ready…") => ((() => {
             const t = kt(Hs);
             if (document.documentElement.classList.add(t), document.getElementById(Fs)) return;
@@ -3166,12 +3172,9 @@
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        fc = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
-        wc = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        gc = '[name="cf-turnstile-response"]',
+        fc = swTnFrames,
+        wc = swTnNote,
+        gc = swTnToken,
         yc = ["#verificationForm", "#verificationFormm"],
         kc = null;
 
@@ -3301,15 +3304,12 @@
     var Ic = "skip-wait-fclc-mediator-overlay",
         Tc = 'input[name="fdata"]',
         $c = "#form12",
-        Ac = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Ac = swTnFrames,
         qc = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        _c = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        _c = swTnNote,
         Mc = null,
         Oc = null,
         Rc = null,
@@ -3528,7 +3528,7 @@
         dl = null,
         ml = !1,
         pl = !1,
-        hl = t => new Promise(e => setTimeout(e, t)),
+        hl = swDelay,
         fl = (t, e) => `Page ${t}/3 — ${e}`,
         wl = (t = "Getting ready…") => ((() => {
             const t = kt(al);
@@ -4950,7 +4950,7 @@
         },
         dp = null,
         mp = !1,
-        pp = t => new Promise(e => setTimeout(e, t)),
+        pp = swDelay,
         hp = () => new Promise(t => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -5137,7 +5137,7 @@
     };
     var Cp = /^\/r\/[^/]+\/?$/i,
         Ip = /\bdata-destination=["'](https?:\/\/[^"']+)["']/i;
-    var Tp = t => new Promise(e => setTimeout(e, t)),
+    var Tp = swDelay,
         $p = () => {
             let t = "";
             for (let e = 0; e < 3; e++) t += crypto.randomUUID();
@@ -5560,7 +5560,7 @@
         }, fh = {
             lead: "Could not generate key",
             detail: "Refresh the page and try again."
-        }, wh = t => new Promise(e => setTimeout(e, t)), gh = (t, e) => {
+        }, wh = swDelay, gh = (t, e) => {
             t.setNote(hh), t.setStatus(""), t.setError(null);
             const n = t.turnstileMount;
             n.replaceChildren();
@@ -6068,7 +6068,7 @@
             lead: "Skipping the wait pages.",
             detail: "You don't need to tap anything on the page."
         },
-        Qf = t => new Promise(e => setTimeout(e, t)),
+        Qf = swDelay,
         tw = null,
         ew = !1,
         nw = !1,
@@ -6207,7 +6207,7 @@
     var qw = "skip-wait-olamovies-link-banner",
         _w = "sw-om-link-lock",
         Mw = "sw-om-link-lock-cta",
-        Ow = t => new Promise(e => setTimeout(e, t));
+        Ow = swDelay;
 
     function Rw(t, e) {
         const n = function() {
@@ -6715,19 +6715,16 @@
     var Pg = "skip-wait-shrtfly-mediator-overlay",
         Dg = "skip-wait-shrtfly-mediator-boot",
         Ng = "skip-wait-shrtfly-mediator-turnstile",
-        Bg = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Bg = swTnFrames,
         Ug = new Set(["captcha", "progressbar", "countdown"]),
         Wg = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        Hg = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        Hg = swTnNote,
         Fg = null,
         zg = !1,
-        jg = t => new Promise(e => setTimeout(e, t)),
+        jg = swDelay,
         Yg = (t = Wg, e = "Getting things ready…") => {
             const n = kt(Pg);
             if (document.documentElement.classList.add(n), !document.getElementById(Dg)) {
@@ -6882,7 +6879,7 @@
         },
         gy = null,
         yy = !1,
-        ky = t => new Promise(e => setTimeout(e, t)),
+        ky = swDelay,
         by = (t = "Getting things ready…") => ((() => {
             const t = kt(py);
             if (document.documentElement.classList.add(t), document.getElementById(hy)) return;
@@ -7062,6 +7059,391 @@
             })(e) : Ny()
         }))
     }
+
+    /*
+     * wpsafelink-button engine — the WordPress "WP SafeLink" plugin in
+     * button/generate mode (NOT the ?safelink_redirect query gate, which
+     * Uy handles). One generic engine for the whole family, keyed by the
+     * hosts.json flow "wpsafelink-button"; recipes follow the actively
+     * maintained bypass-shortlinks userscript (nOneCode4u), clusters:
+     *   horoscop  — .wpsafelink-button steps + wpsafehuman/wpsafegenerate
+     *   indobo    — div[id^=wpsafe] anchors, #wpsafegenerate scripts
+     *   jobinmeghalaya / tejtime / marketrook — #topButton/#bottomButton/
+     *               a#btn7/#open-link button chains, form[name=dsb]
+     *   generic   — #wpsafe-link a (href | window.open | handleClick)
+     *   form      — input[name=newwpsafelink] (base64 JSON {linkr})
+     * Destination payloads (safelink_redirect base64 / AES) are decoded by
+     * the shared qy/Ay/Iy helpers, so multi-hop chains land on the target.
+     */
+    var wpbId = "skip-wait-wpsafelink-button",
+        wpbNote = {
+            lead: "Hang tight — unlocking your link.",
+            detail: "You don't need to tap anything on the page."
+        },
+        wpbUi = null,
+        wpbT0 = 0,
+        wpbTimer = null,
+        wpbDone = !1,
+        wpbClicked = new WeakSet,
+        wpbCalled = {},
+        wpbReady = new WeakMap,
+        wpbSay = t => {
+            wpbUi || (wpbT0 = Date.now(), wpbUi = $t({
+                id: wpbId,
+                brand: "Skip Wait",
+                note: wpbNote,
+                status: t
+            })), wpbUi.setStatus(t)
+        },
+        wpbClose = () => {
+            wpbTimer && (clearInterval(wpbTimer), wpbTimer = null), wpbUi && (wpbUi.remove(), wpbUi = null)
+        },
+        wpbVis = t => t instanceof Element && (null !== t.offsetParent || "fixed" === getComputedStyle(t).position),
+        wpbText = t => (t.textContent ?? "").trim(),
+        wpbB64 = t => {
+            try {
+                return atob(t.replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, ""))
+            } catch {
+                return null
+            }
+        },
+        wpbPayload = async t => {
+            const e = wpbB64(t);
+            if (!e) return null;
+            const n = $y(e) ?? (t => {
+                try {
+                    const e = JSON.parse(t).linkr;
+                    return "string" == typeof e && xy.test(e) ? e : null
+                } catch {
+                    return null
+                }
+            })(e);
+            if (n) return n;
+            const o = Ty(e);
+            if (o && xy.test(o.trim())) return o.trim();
+            try {
+                return await Iy(e)
+            } catch {
+                return null
+            }
+        },
+        wpbInOnclick = t => {
+            const e = t.getAttribute("onclick") ?? "";
+            return e.match(/window\.open\(\s*['"]([^'"]+)['"]/i)?.[1] ?? e.match(/handleClick\(\s*['"]([^'"]+)['"]/i)?.[1] ?? null
+        },
+        wpbScriptDest = t => {
+            const e = t?.textContent ?? "";
+            return e.match(/window\.location(?:\.href)?\s*=\s*["']([^"']+)["']/i)?.[1] ?? e.match(/window\.location\.replace\(\s*["']([^"']+)["']/i)?.[1] ?? e.match(/\bredirect\(\s*["'](https?:[^"']+)["']/i)?.[1] ?? null
+        },
+        wpbGo = (t, e = "Opening your link…") => {
+            wpbSay(e), qy(t).then(n => {
+                const o = n && n !== location.href ? n : t;
+                if (o === location.href || !xy.test(o)) return void wpbClose();
+                D(), wpbClose(), location.replace(o)
+            })
+        },
+        wpbPageFn = t => {
+            chrome.runtime.sendMessage({
+                type: "SKIP_WAIT_PAGE_CALL",
+                name: t
+            }).catch(() => {})
+        },
+        wpbCaptchaDone = () => {
+            const e = document.querySelectorAll(".g-recaptcha, .h-captcha, .cf-turnstile, #captcha-container");
+            if (!e.length) return !0;
+            return ["#g-recaptcha-response", 'textarea[name="g-recaptcha-response"]', '[name="h-captcha-response"]', '[name="cf-turnstile-response"]'].some(e => (document.querySelector(e)?.value ?? "").length > 4)
+        },
+        wpbWhen = (t, e) => {
+            const n = wpbReady.get(t);
+            return void 0 === n ? (wpbReady.set(t, Date.now() + e), !1) : Date.now() >= n
+        },
+        wpbPress = (t, e = 1200) => !(!wpbVis(t) || wpbClicked.has(t) || !wpbWhen(t, e)) && (wpbClicked.add(t), t.scrollIntoView({
+            block: "center"
+        }), t.click(), !0),
+        wpbFinishing = e => (wpbSay("Finishing up…"), !1);
+
+    async function wpbTick() {
+        if (wpbDone) return;
+        const d = Date.now() - wpbT0;
+        if (d > 75e3) return wpbDone = !0, wpbSay("Couldn't finish automatically — try the page manually."), void wpbUi?.setError("This page took too long. Reload once; if it keeps failing, the site may have changed.");
+        const captchaBox = document.querySelector(".g-recaptcha, .h-captcha, .cf-turnstile, #captcha-container");
+        const captchaInput = document.querySelector('#g-recaptcha-response, textarea[name="g-recaptcha-response"], [name="h-captcha-response"], [name="cf-turnstile-response"]');
+        if (captchaBox && wpbVis(captchaBox) && captchaInput && !(captchaInput.value ?? "").length)
+            return wpbUi && swaAssistButton(wpbUi.turnstileMount), void wpbSay("Waiting for the captcha — solve it, or press Try audio assist.");
+        /* 1. Destination extraction — ends the flow. */
+        const anchor = document.querySelector("#wpsafe-link a[href]");
+        if (anchor && wpbVis(anchor) && wpbWhen(anchor, 2e3)) {
+            const href = anchor.getAttribute("href")?.trim() ?? "";
+            if (xy.test(href) && "#" !== href) return void wpbGo(href);
+            const inOnclick = wpbInOnclick(anchor);
+            if (inOnclick) {
+                if (xy.test(inOnclick)) return wpbWhen(anchor, 5e3) ? void wpbGo(inOnclick) : void wpbFinishing();
+                const payload = await wpbPayload(inOnclick);
+                if (payload) return wpbWhen(anchor, 5e3) ? void wpbGo(payload) : void wpbFinishing()
+            }
+        }
+        const onclickAnchor = [...document.querySelectorAll("div[id^=wpsafe] > a[rel=nofollow], #wpsafe-link a[onclick*=window], #wpsafe-link a[onclick*=handleClick]")].map(t => [t, wpbInOnclick(t)]).find(([, t]) => t);
+        if (onclickAnchor) {
+            const [t, e] = onclickAnchor;
+            if (xy.test(e)) return wpbWhen(t, 5e3) ? void wpbGo(e) : void wpbFinishing();
+            const n = await wpbPayload(e);
+            if (n) return wpbWhen(t, 5e3) ? void wpbGo(n) : void wpbFinishing()
+        }
+        const nlInput = document.querySelector("input[name=newwpsafelink]");
+        if (nlInput?.value) {
+            const t = await wpbPayload(nlInput.value);
+            if (t) return wpbWhen(nlInput, 5e3) ? void wpbGo(t) : void wpbFinishing()
+        }
+        for (const script of document.querySelectorAll("#wpsafegenerate script, .wpsafe-top script, #wpsafe-link script")) {
+            const t = wpbScriptDest(script);
+            if (t && xy.test(t)) return wpbWhen(script, 3e3) ? void wpbGo(t) : void wpbFinishing()
+        }
+        for (const t of document.querySelectorAll('a[onclick*="safelink_redirect"]')) {
+            const e = (t.getAttribute("onclick") ?? "").match(/'([A-Za-z0-9+/=_-]{12,})'/)?.[1];
+            if (!e) continue;
+            const n = await wpbPayload(e);
+            if (n) return void wpbGo(n)
+        }
+        /* 2. Choreography — at most one action per tick. */
+const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wpsafe-generate");
+        if (human && !wpbCalled.human && wpbCaptchaDone()) return wpbCalled.human = !0, wpbSay("Verifying…"), void wpbPageFn("wpsafehuman");
+        if (wpbCalled.human && !wpbCalled.generate) {
+            const t = document.querySelector(".base-timer");
+            if (!t || "0:00" === wpbText(t)) return wpbCalled.generate = !0, void wpbPageFn("wpsafegenerate")
+        }
+        const steps = [
+            ["center > .wpsafelink-button", 1500],
+            ["#wpsafelink-landing > .wpsafelink-button, #wpsafelink-landing2 > .wpsafelink-button", 1500],
+            ["#wpsafegenerate > a > img", 2e3],
+            ["#wpsafelinkhuman", 1500],
+            ["#topButton.pro_btn, #topButton", 2e3],
+            ["#bottomButton", 2500],
+            ["#open-link > .pro_btn", 2500],
+            ["a#btn7", 3e3]
+        ];
+        for (const [selector, delay] of steps) {
+            const t = document.querySelector(selector);
+            if (t && wpbPress(t, delay)) return wpbSay("Unlocking your link…")
+        }
+        /* hosttbuzz-cluster skin: the .btn-captcha submit only after the captcha. */
+        if (wpbCaptchaDone()) {
+            const t = document.querySelector(".btn-captcha.btn-primary, .btn-captcha");
+            if (t && wpbPress(t, 2e3)) return wpbSay("Unlocking your link…")
+        }
+        const forms = [...document.querySelectorAll("form[name=dsb], #nextpage, #getmylnk")];
+        for (const form of forms) {
+            if (!(wpbVis(form) && !wpbClicked.has(form) && wpbWhen(form, 3e3))) continue;
+            wpbClicked.add(form);
+            if (form.requestSubmit) wpbSay("Unlocking your link…"), form.requestSubmit();
+            else {
+                const t = form.querySelector("button[type=submit], input[type=submit]");
+                t ? (wpbSay("Unlocking your link…"), wpbPress(t, 0)) : (wpbSay("Unlocking your link…"), HTMLFormElement.prototype.submit.call(form))
+            }
+            return
+        }
+        if (!forms.length) wpbSay("Unlocking your link…");
+        /* Last resort: some skins wire the destination into the anchor's own
+         * click handler rather than an extractable attribute — press it and
+         * let the page navigate (recipes: sastainsurance / amanguides). */
+        {
+            const t = document.querySelector("#wpsafe-link > a");
+            if (t && wpbPress(t, 6e3)) return wpbSay("Unlocking your link…")
+        }
+        /* 3. Nothing recognised — don't fight an unrelated page. */
+        const seen = document.querySelector("#wpsafe-link, #wpsafegenerate, #wpsafelinkhuman, .wpsafelink-button, form[name=dsb], #nextpage, #getmylnk, .btn-captcha, a#btn7, #topButton, #bottomButton, #open-link, input[name=newwpsafelink]");
+        d > 12e3 && !seen && (wpbSay("This page doesn't look like a supported SafeLink step."), wpbUi?.setError("Leaving it untouched — the flow may have moved to another domain."), wpbDone = !0)
+    }
+
+    var wpbStart = t => {
+        window === window.top && ot(t).then(t => {
+            t && it(() => {
+                wpbT0 = Date.now(), wpbDone = !1, wpbCalled = {}, wpbTick(), wpbTimer = setInterval(() => {
+                    wpbTick().catch(() => {})
+                }, 700)
+            })
+        })
+    };
+
+    /*
+     * reCAPTCHA audio assist (manual-first, opt-in). Shared by flows that can
+     * get stuck on a reCAPTCHA step (wpsafelink-button engine today): while an
+     * unsolved widget is visible, the overlay offers a "Try audio assist"
+     * button. Pressing it relays to the recaptcha bframe content script, which
+     * switches the widget to its audio challenge, downloads the clip, WAV-
+     * encodes each channel and asks the background to transcribe it against
+     * the user-configured endpoint (skipWaitSttEndpoint — e.g. a local Whisper
+     * server). Without an endpoint nothing is ever sent anywhere and the user
+     * keeps solving manually.
+     */
+    var swaWav = (t, e) => {
+            const n = t.length,
+                r = new DataView(new ArrayBuffer(44 + 2 * n));
+                let i = 0;
+            const a = (t, e) => {
+                    r.setUint8(i, t.charCodeAt(e)), i++
+                },
+                s = t => {
+                    for (let e = 0; e < t.length; e++) a(t, e)
+                };
+            s("RIFF"), r.setUint32(i, 36 + 2 * n, !0), i += 4, s("WAVE"), s("fmt "), r.setUint32(i, 16, !0), i += 4, r.setUint16(i, 1, !0), i += 2, r.setUint16(i, 1, !0), i += 2, r.setUint32(i, t.sampleRate, !0), i += 4, r.setUint32(i, 2 * t.sampleRate, !0), i += 4, r.setUint16(i, 2, !0), i += 2, r.setUint16(i, 16, !0), i += 2, s("data"), r.setUint32(i, 2 * n, !0), i += 4;
+            for (let c = 0; c < n; c++) {
+                const n = Math.max(-1, Math.min(1, e[c]));
+                r.setInt16(i, n < 0 ? 32768 * n : 32767 * n, !0), i += 2
+            }
+            return r.buffer
+        },
+        swaB64 = t => {
+            const e = new Uint8Array(t);
+            let n = "";
+            for (let r = 0; r < e.length; r += 32768) n += String.fromCharCode.apply(null, e.subarray(r, r + 32768));
+            return btoa(n)
+        },
+        swaDigits = t => {
+            const e = String(t ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            return /\d/.test(e) ? e.replace(/\D/g, "") : (e.replace(/zero|oh|one|two|three|four|five|six|seven|eight|nine/g, t => ({
+                zero: "0",
+                oh: "0",
+                one: "1",
+                two: "2",
+                three: "3",
+                four: "4",
+                five: "5",
+                six: "6",
+                seven: "7",
+                eight: "8",
+                nine: "9"
+            })[t] ?? ""));
+        },
+        swaWait = (t, e, n = 15e3) => new Promise(r => {
+            const o = Date.now(),
+                i = setInterval(() => {
+                    const a = t();
+                    (a || Date.now() - o > n) && (clearInterval(i), r(a || null))
+                }, e ?? 250)
+        }),
+        swaInBframe = () => /(^|\.)google\.com$/.test(location.hostname) && /\/recaptcha\/(api2|enterprise)\/bframe/.test(location.pathname),
+        swaSolveOnce = async () => {
+            const t = document.querySelector("#recaptcha-audio-button, .button-holder.audio-button button, button[title*='audio' i]");
+            if (!t) return {
+                ok: !1,
+                err: "no-audio-button"
+            };
+            t.click();
+            const e = await swaWait(() => document.querySelector("#audio-source[src]") ?? null, 250, 15e3),
+                n = e?.getAttribute("src") ?? "";
+            if (!n) return {
+                ok: !1,
+                err: "no-audio-track"
+            };
+            const r = await chrome.runtime.sendMessage({
+                type: "SKIP_WAIT_AUDIO_STT_FETCH",
+                url: n
+            }).catch(t => ({
+                ok: !1,
+                err: String(t)
+            }));
+            if (!r?.ok) return {
+                ok: !1,
+                err: "fetch:" + (r?.err ?? "?")
+            };
+            const o = Uint8Array.from(atob(r.b64), t => t.charCodeAt(0)),
+                a = new AudioContext;
+            let i;
+            try {
+                i = await a.decodeAudioData(o.buffer.slice(0))
+            } catch {
+                return {
+                    ok: !1,
+                    err: "decode"
+                }
+            }
+            const channels = [];
+            for (let t = 0; t < Math.min(2, i.numberOfChannels); t++) channels.push(i.getChannelData(t));
+            for (const o of channels) {
+                const t = swaWav(i, o),
+                    n = await chrome.runtime.sendMessage({
+                        type: "SKIP_WAIT_AUDIO_STT",
+                        wav: swaB64(t)
+                    }).catch(t => ({
+                        ok: !1,
+                        err: String(t)
+                    }));
+                if (n?.ok) {
+                    const t = swaDigits(n.text);
+                    if (t.length >= 2) {
+                        const e = document.querySelector("#audio-response");
+                        if (!e) return {
+                            ok: !1,
+                            err: "no-input"
+                        };
+                        e.value = t, e.dispatchEvent(new Event("input", {
+                            bubbles: !0
+                        })), e.dispatchEvent(new Event("change", {
+                            bubbles: !0
+                        }));
+                        const n = document.querySelector("#recaptcha-verify-button");
+                        return n ? (n.click(), {
+                            ok: !0,
+                            digits: t
+                        }) : {
+                            ok: !1,
+                            err: "no-verify"
+                        }
+                    }
+                } else if ("no-backend" === n?.err) return {
+                    ok: !1,
+                    err: "no-backend"
+                }
+            }
+            return {
+                ok: !1,
+                err: "no-digits"
+            }
+        },
+        swaRunFrame = async () => {
+            if (!swaInBframe()) return {
+                ok: !1,
+                err: "not-bframe"
+            };
+            let t = null,
+                e = null;
+            for (let n = 0; n < 3; n++) {
+                const r = document.querySelector("audio#audio-source")?.getAttribute("src") ?? null;
+                if (t = await swaSolveOnce(), !t.ok) return t;
+                if (e = await swaWait(() => {
+                        const t = document.querySelector("audio#audio-source")?.getAttribute("src") ?? null;
+                        return t && t !== r ? "reloaded" : document.querySelector("#recaptcha-audio-button") && !document.querySelector("audio#audio-source[src]") ? "solved" : null
+                    }, 400, 12e3), "reloaded" !== e) break
+            }
+            return "reloaded" === e ? {
+                ok: !1,
+                err: "still-challenged"
+            } : {
+                ok: !0
+            }
+        };
+    window === window.top && chrome.runtime?.onMessage?.addListener((t, e, n) => "SKIP_WAIT_AUDIO_ASSIST_RESULT" === t?.type ? (wpbUi && (t.ok ? (wpbSay("Captcha solved — continuing…"), wpbCalled.human = !0) : (wpbUi.setError("no-backend" === t.err ? "No speech backend configured — set one in the popup, or solve the captcha manually." : "Audio assist couldn't solve it (" + (t.err || "unknown") + "). Solve it manually instead."), wpbSay("Waiting for the captcha…"))), !1) : void 0), chrome.runtime?.onMessage?.addListener((t, e, n) => {
+        if ("SKIP_WAIT_AUDIO_ASSIST_FRAME" !== t?.type) return !1;
+        return swaRunFrame().then(t => {
+            window !== window.top && chrome.runtime.sendMessage({
+                type: "SKIP_WAIT_AUDIO_ASSIST_RESULT",
+                ok: !!t.ok,
+                err: t.err ?? ""
+            }).catch(() => {})
+        }).catch(() => {}), !1
+    });
+    var swaAssistButton = t => {
+        if (!t || t.dataset.swAssist) return;
+        t.dataset.swAssist = "1", t.replaceChildren();
+        const e = document.createElement("button");
+        e.type = "button", e.textContent = "Try audio assist", e.style.cssText = "display:block;margin:8px auto 0;padding:9px 16px;border:0;border-radius:8px;background:#38bdf8;color:#0f172a;font:700 13px/1.2 system-ui,sans-serif;cursor:pointer", e.addEventListener("click", () => {
+            e.disabled = !0, e.textContent = "Trying audio challenge…", chrome.runtime.sendMessage({
+                type: "SKIP_WAIT_AUDIO_ASSIST_START"
+            }).catch(() => {}), setTimeout(() => {
+                e.disabled = !1, e.textContent = "Try audio assist"
+            }, 25e3)
+        }), t.appendChild(e)
+    };
 
     function Wy() {
         const t = document.querySelector("#butunlock a")?.href;
@@ -7246,7 +7628,7 @@
         },
         Ok = null,
         Rk = !1,
-        Pk = t => new Promise(e => setTimeout(e, t)),
+        Pk = swDelay,
         Dk = (t = "Getting things ready…") => ((() => {
             const t = kt(Ak);
             if (document.documentElement.classList.add(t), document.getElementById(qk)) return;
@@ -7884,7 +8266,7 @@
         $v = null,
         Av = !1,
         qv = !1,
-        _v = t => new Promise(e => setTimeout(e, t)),
+        _v = swDelay,
         Mv = t => {
             const e = kt(Lv);
             if (document.documentElement.classList.add(e), !document.getElementById(Cv)) {
@@ -8031,7 +8413,7 @@
         }, Hv = "skip-wait-reshortfly", Fv = "skip-wait-reshortfly-boot", zv = /^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/, jv = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
-        }, Yv = null, Gv = !1, Vv = t => new Promise(e => setTimeout(e, t)), Zv = (t = "Getting things ready…") => ((() => {
+        }, Yv = null, Gv = !1, Vv = swDelay, Zv = (t = "Getting things ready…") => ((() => {
             const t = kt(Hv);
             if (document.documentElement.classList.add(t), document.getElementById(Fv)) return;
             const e = document.createElement("style");
@@ -8459,7 +8841,7 @@
         AE = ["#captcha-form", ".cf-turnstile", 'iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]', 'div[id^="cf-chl-widget"]'],
         qE = null,
         _E = !1,
-        ME = t => new Promise(e => setTimeout(e, t)),
+        ME = swDelay,
         OE = (t, e) => e ? {
             lead: t,
             detail: e
@@ -9173,7 +9555,7 @@
         gL = null,
         yL = null,
         kL = "",
-        bL = t => new Promise(e => setTimeout(e, t)),
+        bL = swDelay,
         vL = () => {
             const t = new Uint8Array(16);
             return crypto.getRandomValues(t), Array.from(t, t => t.toString(16).padStart(2, "0")).join("")
@@ -9281,7 +9663,7 @@
         OL = null,
         RL = "",
         PL = !1,
-        DL = t => new Promise(e => setTimeout(e, t)),
+        DL = swDelay,
         NL = () => {
             for (const t of document.querySelectorAll(".card-body p.fs-16.fw-semibold")) {
                 const e = t.textContent?.trim();
@@ -9452,20 +9834,17 @@
     var oC = "skip-wait-cuty-overlay",
         rC = "skip-wait-cuty-boot",
         iC = "turnstile-container",
-        aC = '[name="cf-turnstile-response"]',
-        sC = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        aC = swTnToken,
+        sC = swTnFrames,
         cC = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        lC = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        lC = swTnNote,
         uC = "cuty blocked this visit because it detected your adblocker. Pause it for this site, then reload.",
         dC = null,
         mC = !1,
-        pC = t => new Promise(e => setTimeout(e, t)),
+        pC = swDelay,
         hC = (t = cC, e = "Getting things ready…") => ((() => {
             const t = kt(oC);
             if (document.documentElement.classList.add(t), document.getElementById(rC)) return;
@@ -9682,16 +10061,13 @@
     var NC = "EXEIO_ADBLOCK_BYPASS",
         BC = "skip-wait-exeio-overlay",
         UC = "captchaShortlink",
-        WC = '[name="cf-turnstile-response"]',
-        HC = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        WC = swTnToken,
+        HC = swTnFrames,
         FC = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        zC = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        zC = swTnNote,
         jC = null,
         YC = !1,
         GC = t => {
@@ -9880,18 +10256,15 @@
     }
     var iI = "skip-wait-lksfy-overlay",
         aI = "captchaLinksGo",
-        sI = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        sI = swTnFrames,
         cI = '#go-link, form[action*="/links/go"]',
         lI = /var\s+base64\s*=\s*['"]([^'"]+)['"]/,
         uI = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        dI = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        mI = t => new Promise(e => setTimeout(e, t)),
+        dI = swTnNote,
+        mI = swDelay,
         pI = null,
         hI = !1,
         fI = () => {
@@ -10354,7 +10727,7 @@
         },
         yT = null,
         kT = !1,
-        bT = t => new Promise(e => setTimeout(e, t)),
+        bT = swDelay,
         vT = (t = "Getting things ready…") => ((() => {
             const t = kt(fT);
             if (document.documentElement.classList.add(t), document.getElementById(wT)) return;
@@ -10477,7 +10850,7 @@
         } : null
     }
     var BT = () => !_T() && Boolean(NT()),
-        UT = t => new Promise(e => setTimeout(e, t));
+        UT = swDelay;
     async function WT(t = {}) {
         const e = await async function(t) {
             for (let e = 0; e < 40; e++) {
@@ -13998,6 +14371,33 @@
             Uy("wp-safelink-query")
         }, function() {
             Uy("wp-safelink")
+        }, function() {
+            wpbStart("wpsafelink-button")
+        }, function() {
+            /*
+             * bitcotasks.com — FaucetFly "firewall" interstitial (recipe from
+             * bypass-shortlinks): once the on-page captcha reports Verified,
+             * press the Validate button and the page-world continueClicked().
+             */
+            ot("bitcotasks").then(t => {
+                if (!t) return;
+                const e = () => {
+                        const t = document.querySelector("#captcha-container");
+                        if (!t || !wpbVis(t)) return;
+                        const e = [...document.querySelectorAll(".mb-2")].some(t => "Verified" === wpbText(t));
+                        if (!e) return;
+                        if (/\/firewall/i.test(location.pathname) || location.href.includes("/firewall")) {
+                            const t = [...document.querySelectorAll("button, input[type=button], input[type=submit]")].find(t => /validate/i.test(wpbText(t) || (t.value ?? "")));
+                            t && !t.disabled && (t.click(), clearInterval(n))
+                        }
+                        chrome.runtime.sendMessage({
+                            type: "SKIP_WAIT_PAGE_CALL",
+                            name: "continueClicked"
+                        }).catch(() => {})
+                    },
+                    n = setInterval(e, 1500);
+                setTimeout(() => clearInterval(n), 3e5), it(e)
+            })
         }, function() {
             const t = ot("swiftuploads");
             it(() => {

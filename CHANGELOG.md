@@ -2,6 +2,93 @@
 
 All notable changes to the **freeware edition** of Skip Wait.
 
+## [2.3.0] — 2026-09-07
+Coverage ports, UI-review fixes, and the D3c centralization pass.
+
+### Added
+- **15 more hostnames** across existing flows, all data-only ports verified against the
+  bound engine's logic: `tii.la`, `oei.la`, `iir.la`, `tvi.la` → `shrinkearn` (same plugin
+  family per the bypass-shortlinks include rules); `exeo.app`, `exe-links.com` → `exeio`
+  (adsbypasser lists both with exeygo.com as one engine); 9 hosttbuzz-cluster domains
+  (`hosttbuzz.com`, `policiesreview.com`, `blogmystt.com`, `wp2hostt.com`,
+  `advertisingcamps.com`, `healthylifez.com`, `insurancemyst.com`, `clk.kim`,
+  `dekhe.click`) → `wpsafelink-button`.
+- wpsafelink-button engine: the **hosttbuzz plugin skin** — `.btn-captcha` submit (only
+  after the captcha resolves), `#nextpage` / `#getmylnk` form submits, and a last-resort
+  plain click on `#wpsafe-link > a` for skins that wire the destination into the anchor's
+  own click handler.
+- Popup override panel: the engine list now offers the **WordPress SafeLink (button /
+  generate pages)** engine (previously stale at 3 options after the new engine shipped).
+
+### Fixed
+- wpsafelink-button form submits (`form[name=dsb]`, `#nextpage`, `#getmylnk`) could
+  **resubmit on every poll tick** once the settle deadline passed; they now submit exactly
+  once (same guard now also covers the pre-existing `dsb` path).
+- Popup `.custom-title` was an unstyled class (matched rule added in 2.2.0 work).
+
+### Changed (D3c — centralized, pre-existing code only)
+- exeio's extended MAIN-world stealth script split: the network/app_vars half is gone
+  (shared `swStealth` now injected with exeio's longer `exeioAdBlockRe`), the DOM half
+  (Turnstile auto-render + disabled-shape repair) is the new `swExeioExtras`, injected as
+  a pair. The lazy `app_vars` trap was dropped from extras because `swStealth` installs
+  it eagerly (same effect).
+- content.js constants deduped with **initializer-only swaps** (zero call-site changes):
+  `swDelay` (replaced 30 per-flow delay helpers), `swTnFrames` (9 Turnstile iframe
+  selector arrays), `swTnToken` (5 token-input selector consts), `swTnNote` (8
+  "Confirm you're human" note objects) — 52 duplicated copies removed.
+- Review finding recorded: the "per-site math/digit-order captcha solver copies" from the
+  original D3 note never existed in this codebase — nothing to dedupe there.
+- Smoke coverage extended: exeio double-injection assertions, `swExeioExtras` executed in
+  a fake DOM, and the hosttbuzz `#getmylnk` submit-once behavior.
+
+## [2.2.0] — 2026-09-07
+The WordPress SafeLink button engine, §3.1 verification suite, and manual-first audio assist.
+
+### Added
+- **`wpsafelink-button` engine** — one generic content.js engine for the WP SafeLink
+  button/generate family (~126 hosts at release): horoscop `.wpsafelink-button` cluster,
+  indobo `div[id^=wpsafe]` cluster, jobinmeghalaya/tejtime/marketrook button chains,
+  generic `#wpsafe-link` (href / window.open / handleClick), `newwpsafelink` `{linkr}`
+  form payloads, script-content variants, kingshort choreography. Chained
+  `safelink_redirect`/AES payloads resolve through the existing decoders.
+- **`bitcotasks` flow** — the hosts.json key existed in both editions but no engine ever
+  referenced it (inert); the firewall flow is now implemented (Validate press +
+  page-world `continueClicked`).
+- **Manual-first reCAPTCHA audio assist** (opt-in): a "Try audio assist" button appears in
+  the Skip Wait overlay only while an unsolved captcha blocks the page; the attempt runs
+  only on press, transcribes against a **user-configured STT endpoint**
+  (`skipWaitSttEndpoint`, popup panel; empty = disabled, zero network calls). Background
+  relays `SKIP_WAIT_AUDIO_ASSIST_START/RESULT`, guarded `SKIP_WAIT_AUDIO_STT_FETCH`
+  (google.com audio URLs only) and `SKIP_WAIT_AUDIO_STT` (refuses with `no-backend`
+  without an endpoint). bframe driver switches the widget to audio, WAV-encodes both
+  channels, fills and verifies, up to 3 retries.
+- `SKIP_WAIT_PAGE_CALL` background listener: whitelisted identifier-only MAIN-world page
+  function calls (`wpsafehuman`, `wpsafegenerate`, `continueClicked`).
+- **`tools/verify-release.mjs`** — 28 automated §3.1 checks (syntax, smoke harnesses,
+  manifest, paywall neutrality incl. EAS-validator *absence*, popup assets, hosts
+  wiring); **`tools/check-hosts.mjs`** — live DNS/HTTP probe of every bundled hostname
+  (developer-side; needs normal network egress); **`tools/smoke-content.mjs`** —
+  content.js's first harness (mocked chrome + minimal DOM): flow-table run, query-engine
+  decode, wpsafelink-button variants, bitcotasks, audio-assist manual-first semantics.
+- `mobiend.com`, `mrproblogger.com` → `adlinkfly-links-go` (data-only).
+
+### Changed
+- Manifest version → 2.2.0; README coverage numbers refreshed.
+- Background injector consolidation: `It`/`xt` wrappers deleted (generic `St` handles
+  optional frameIds + serialized args); lksfy's adblock-stealth script deduplicated into
+  the shared parameterized `swStealth`.
+- Remote hosts URL (A1) verified live; paid-remote diff shows only `molyn` + `movies4u`
+  as unbundled flows (their code ships via a future §7 elevate, not data rows).
+
+### Fixed
+- Popup `.custom-title` class had no matching CSS rule (unstyled heading).
+
+### Decisions
+- **D3a (resolution-API fallback) permanently dropped** after developer review: a third
+  party would see every submitted link and its destination, the dependency/ToS trade is
+  not worth it for a browser extension. Server-locked sites are out of scope; the C1
+  answer for them is the honest "this gate can't be bypassed locally".
+
 ## [2.1.0] — 2026-09-07
 Coverage expansion + the "one generic engine" consolidation.
 

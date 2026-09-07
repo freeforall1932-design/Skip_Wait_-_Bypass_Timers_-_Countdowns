@@ -30,6 +30,33 @@
         </ul>
       </section>
 
+      <!-- Custom site override (binds an unlisted domain to an existing engine) -->
+      <section class="custom">
+        <button class="custom-head" id="custom-toggle" type="button" aria-expanded="false">
+          <span class="custom-title">Site not covered? Add it here</span>
+          <span class="custom-caret" aria-hidden="true"></span>
+        </button>
+        <div class="custom-body" id="custom-body" hidden>
+          <p class="custom-note">
+            Binds a domain to an existing skip engine without an update. Takes
+            effect on new page loads; the site must use the chosen engine's layout.
+          </p>
+          <label class="custom-label" for="engine">Engine</label>
+          <select id="engine" class="custom-select">
+            <option value="adlinkfly-links-go">AdLinkFly shortener (Get&nbsp;Link / /links/go form)</option>
+            <option value="wp-safelink-query">WordPress Safelink (?query gate)</option>
+            <option value="wp-safelink">WordPress Safelink (alt gate)</option>
+          </select>
+          <div class="custom-row">
+            <input id="host" class="custom-input" type="text" inputmode="url"
+                   placeholder="e.g. short.example.com" spellcheck="false" autocomplete="off" />
+            <button id="add" class="custom-add" type="button">Add</button>
+          </div>
+          <p class="custom-err" id="custom-err" hidden></p>
+          <div class="chips" id="chips"></div>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="foot">
         <span id="ver" class="ver">Skip Wait</span>

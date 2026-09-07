@@ -1,1 +1,5009 @@
-var e="skipWaitHosts",t="skipWaitHostsUpdatedAt",n=/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/,r=/^[a-z][a-z0-9-]{0,63}$/,o=e=>{if(!e||"object"!=typeof e||Array.isArray(e))return null;const t={};for(const[o,a]of Object.entries(e)){if(!r.test(o)||!a||"object"!=typeof a||Array.isArray(a))return null;const e=a.hosts;if(!Array.isArray(e)||!e.every(e=>"string"==typeof e&&n.test(e.toLowerCase())))return null;t[o]={hosts:e.map(e=>e.toLowerCase())}}return t},a=async()=>((...e)=>{const t={};for(const n of e)if(n)for(const[e,{hosts:r}]of Object.entries(n)){const n=new Set(t[e]?.hosts??[]);for(const e of r)n.add(e);t[e]={hosts:[...n]}}return t})(await(async()=>{try{const e=await fetch(chrome.runtime.getURL("hosts.json"));return e.ok?o(await e.json()):null}catch{return null}})(),await(async()=>{const t=await chrome.storage.local.get(e);return o(t[e])})()),i=async()=>{const n=await fetch(`https://raw.githubusercontent.com/sharoon7171/skip-wait-bypass-timers-countdowns/main/extension/public/hosts.json?t=${Date.now()}`,{cache:"no-store",credentials:"omit"});if(!n.ok)return!1;const r=o(await n.json());return!!r&&(await(async n=>{await chrome.storage.local.set({[e]:n,[t]:Date.now()})})(r),!0)},s=async e=>{try{return(await a())[e]?.hosts??[]}catch{return[]}},c=async(e,t)=>((e,t)=>{const n=e.toLowerCase();return t.some(e=>n===e||n.endsWith(`.${e}`))})(e,await s(t)),l=[{id:"6423cfa8-a405-416a-b3ca-014b67974dbe",plan:"monthly"},{id:"6dc17f98-82fe-4de7-ae4a-9e7a57790c56",plan:"trial"}],d="eas-20260828-v1",u="MCowBQYDK2VwAyEAqONfKojqBIyC9qDVYoFuAY-rguajRvhdTmf5aElb-fA",p=12e4,m=/^[A-Za-z0-9_-]+$/,h=e=>{const t=crypto.getRandomValues(new Uint8Array(e));return btoa(String.fromCharCode(...t)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/u,"")},f=e=>{const t=atob((e=>e+"=".repeat((4-e.length%4)%4))(e).replace(/-/g,"+").replace(/_/g,"/")),n=new Uint8Array(t.length);for(let r=0;r<t.length;r+=1)n[r]=t.charCodeAt(r);return n},w=e=>"object"==typeof e&&null!==e,y=e=>"number"==typeof e&&Number.isFinite(e)&&e>0,g=e=>m.test(e)?JSON.parse((new TextDecoder).decode(f(e))):null,b=null,k=null,v=async(e,t)=>{const n=e.split(".");if(3!==n.length)return null;const[r,o,a]=n;if(!r||!o||!a)return null;let i,s;try{i=g(r),s=g(o)}catch{return null}if(!w(i)||!w(s))return null;if("EdDSA"!==i.alg||"EAS-LICENSE"!==i.typ)return null;const c=i.kid;if("string"!=typeof c||0===c.length)return null;const m=await(async e=>{if(e===d)return u;try{const t=await fetch("https://eas-x.com/api/v1/licenses/public-key",{cache:"no-store"});if(!t.ok)return null;const n=await t.json();if(!w(n))return null;if("EdDSA"!==n.alg||"EAS-LICENSE"!==n.type)return null;if(n.kid!==e)return null;const r=n.public_key;return"string"==typeof r&&r.length>0?r:null}catch{return null}})(c);if(!m)return null;const h=await(async e=>{if(b===e&&k)return k;const t=await crypto.subtle.importKey("spki",f(e),{name:"Ed25519"},!1,["verify"]);return b=e,k=t,t})(m);if(!(await crypto.subtle.verify("Ed25519",h,f(a),(new TextEncoder).encode(`${r}.${o}`))))return null;if(1!==s.v||"https://eas-x.com"!==s.iss)return null;const v=s.aud,_=s.nonce,L=s.act,S=s.iat,E=s.exp;if("string"!=typeof v||v!==t.applicationId)return null;if("string"!=typeof _||_!==t.nonce)return null;if("string"!=typeof L||0===L.length)return null;if(!y(S)||!y(E))return null;const I=Date.now();if(1e3*S>I+p)return null;if(1e3*E<=I-p)return null;const R=s.ent_exp,x=null==R?null:y(R)?1e3*R:null;if(null!=R&&null===x)return null;if(null!==x&&x<=I)return null;const A=(N=v,l.find(e=>e.id===N));var N;return A?{plan:A.plan,applicationId:v,activationId:L,nonce:_,leaseExp:1e3*E,entExp:x}:null},_=/^EAS(?:-[A-Z0-9]{5}){5}$/,L=e=>"number"==typeof e&&Number.isFinite(e)&&e>0,S="skipWaitInstanceId",E="skipWaitLicenseKey",I="skipWaitLicensePlan",R="skipWaitApplicationId",x="skipWaitActivationId",A="skipWaitActivationToken",N="skipWaitLease",$="skipWaitLeaseNonce",T="skipWaitLeaseExp",M="skipWaitEntExp",O=["skipWaitDeviceId","skipWaitLicenseExp"],C=[E,I,R,x,A,N,$,T,M],U=E,P=T,W=M,q=e=>Date.now()<e,D=async e=>{const t=e??await j();return!(!t||null===(n=t.entExp)||Date.now()<n)&&(await F(),!0);var n},j=async()=>{const e=await chrome.storage.local.get([...C,S]),t=e[E],n=e[I],r=e[R],o=e[x],a=e[A],i=e[S],s=e[N],c=e[$],l=e[T],d=e[M];return"string"==typeof t&&_.test(t)&&("monthly"===(u=n)||"trial"===u)&&"string"==typeof r&&"string"==typeof o&&"string"==typeof a&&"string"==typeof i&&"string"==typeof s&&"string"==typeof c&&L(l)&&(null===d||L(d))?{key:t,plan:n,applicationId:r,activationId:o,activationToken:a,instanceId:i,lease:s,nonce:c,leaseExp:l,entExp:d}:null;var u},F=async()=>{if(await chrome.storage.local.remove([...C,...O]),chrome.tabs?.query){const e=await chrome.tabs.query({});for(const t of e)void 0!==t.id&&chrome.tabs.reload(t.id)}},B=async()=>{const e=await j();if(!e)return!1;if(await D(e))return!1;if(!q(e.leaseExp))return!1;const t=await v(e.lease,{applicationId:e.applicationId,nonce:e.nonce});return!!t&&t.activationId===e.activationId},H=new Set(["LICENSE_NOT_VALID","ACTIVATION_NOT_VALID"]),z=e=>"string"==typeof e.lease,V=e=>{if("string"!=typeof e||!e)return null;const t=Date.parse(e);return Number.isFinite(t)?t:null},K=(e,t,n)=>(null!==e&&null!==t?Math.min(e,t):e??t)??n,G=e=>({ok:!0,plan:e.plan,leaseExp:e.leaseExp,entExp:e.entExp}),Z=async(e,t,n,r,o,a)=>{if(!o.valid||!z(o))return{ok:!1,error:o.error??"GRANT_INCOMPLETE"};const i=o.activation_token??a?.token;if(!i)return{ok:!1,error:"GRANT_INCOMPLETE"};const s="string"==typeof o.application_id?o.application_id:r,c=await v(o.lease,{applicationId:s,nonce:n});if(!c)return{ok:!1,error:"LEASE_INVALID"};if("string"==typeof o.activation_id&&o.activation_id!==c.activationId)return{ok:!1,error:"LEASE_INVALID"};const l={key:e,plan:c.plan,applicationId:c.applicationId,activationId:c.activationId,activationToken:i,instanceId:t,lease:o.lease,nonce:n,leaseExp:c.leaseExp,entExp:K(c.entExp,V(o.entitlement_expires_at),a?.entExp??null)};return await(async e=>{await chrome.storage.local.remove([...O]),await chrome.storage.local.set({[S]:e.instanceId,[E]:e.key,[I]:e.plan,[R]:e.applicationId,[x]:e.activationId,[A]:e.activationToken,[N]:e.lease,[$]:e.nonce,[T]:e.leaseExp,[M]:e.entExp})})(l),G(l)},X=async e=>{if(await D(e))return{ok:!1,error:"LICENSE_EXPIRED"};const t=h(32),n=await(async(e,t,n)=>{try{const r={"content-type":"application/json"};n&&(r["idempotency-key"]=h(32));const o=await fetch(`https://eas-x.com/api/v1/licenses${e}`,{method:"POST",headers:r,body:JSON.stringify(t),cache:"no-store"});let a;try{a=await o.json()}catch{return{kind:"network"}}return{kind:"response",data:a}}catch{return{kind:"network"}}})("/validate",{activation_token:e.activationToken,instance_id:e.instanceId,nonce:t},!1);if("network"===n.kind)return await B()?G(e):{ok:!1,error:"LEASE_EXPIRED"};if(!n.data.valid){const e=n.data.error??"VALIDATE_FAILED";return("LICENSE_EXPIRED"===e||H.has(e))&&await F(),{ok:!1,error:e}}return z(n.data)?Z(e.key,e.instanceId,t,e.applicationId,n.data,{token:e.activationToken,entExp:e.entExp}):await B()?G(e):{ok:!1,error:"LEASE_EXPIRED"}},J=null,Y=async()=>({ok:!0}),Q="skipWaitLeaseExpiry",ee="skipWaitEntExpiry",te=["skipWaitLicenseRefresh","skipWaitLicenseHourly","skipWaitLicenseExpiry"],ne=async()=>{for(const t of te)await chrome.alarms.clear(t);await chrome.alarms.clear(Q),await chrome.alarms.clear(ee);const e=await j();e&&!(await D(e))&&(null!==e.entExp&&await chrome.alarms.create(ee,{when:e.entExp}),q(e.leaseExp)?await chrome.alarms.create(Q,{when:e.leaseExp}):Y())},re="skipWaitSurveyViewed_v1",oe=null,ae="skipWaitFreeDaily",ie=(e,t=((e=Date.now())=>{const t=new Date(e);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`})())=>{if(e&&"object"==typeof e&&"string"==typeof e.day&&"number"==typeof e.used&&Number.isFinite(e.used)&&e.used>=0){const n=e;if(n.day===t)return{day:t,used:Math.min(Math.floor(n.used),5)}}return{day:t,used:0}},se=async()=>{const e=await chrome.storage.local.get(ae);return ie(e[ae])},ce=Promise.resolve(),le=()=>{},de=async()=>!0,ue=async(e,t)=>!!(await c(e,t))&&de(),pe=async e=>{const t=await s(e);return t.length&&await de()?t:[]},me=e=>{chrome.storage.onChanged.addListener((t,n)=>{"local"===n&&("skipWaitHosts"in t||U in t||P in t||W in t||"skipWaitFreeDaily"in t)&&e()})},he=new Set;function fe(e){for(const t of he)t.startsWith(`${e}:`)&&he.delete(t)}function we(){try{Object.defineProperty(document,"hidden",{get:()=>!1,configurable:!0}),Object.defineProperty(document,"visibilityState",{get:()=>"visible",configurable:!0}),Object.defineProperty(Document.prototype,"hasFocus",{value:()=>!0,configurable:!0,writable:!0})}catch{}}var ye=/^\/(?:r|download)\/[^/]+/;var ge='"Segoe UI Variable","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif',be={textPrimary:"#f1f5f9",textSecondary:"#f8fafc",textMuted:"#94a3b8",textDetail:"#cbd5e1",accent:"#38bdf8",error:"#fca5a5",backdrop:"rgba(15,23,42,.94)",cardGradient:"linear-gradient(145deg,#1e293b 0%,#0f172a 100%)",cardBorder:"rgba(148,163,184,.25)",cardShadow:"0 25px 50px -12px rgba(0,0,0,.5)"},ke={card:"sw-card",brand:"sw-brand",note:"sw-note",noteLead:"sw-note-lead",noteDetail:"sw-note-detail",status:"sw-status",count:"sw-count",countLabel:"sw-count-label",countHint:"sw-count-hint",err:"sw-err",hidden:"sw-hidden",turnstile:"sw-turnstile",action:"sw-action"};function ve(e){return`${e}-active`}function _e(e,t){return function(e,t){return`html.${t},html.${t} body{overflow:hidden!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}html.${t}>*:not(head):not(body):not(#${e}){display:none!important;visibility:hidden!important;pointer-events:none!important}html.${t} body{pointer-events:none!important}html.${t} body *{visibility:hidden!important;pointer-events:none!important}html.${t} #${e},html.${t} #${e} *{visibility:visible!important}html.${t} #${e}{pointer-events:auto!important}`}(e,t)+function(e){return`#${e}{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:${be.backdrop};backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);font-family:${ge};font-size:16px;line-height:1.5;color:${be.textSecondary};pointer-events:auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:default;overscroll-behavior:contain;touch-action:none}`}(e)+function(e){return`#${e} .${ke.card}{max-width:440px;width:100%;border-radius:16px;padding:clamp(22px,4vw,28px);background:${be.cardGradient};border:1px solid ${be.cardBorder};box-shadow:${be.cardShadow};pointer-events:none;font-family:${ge}}#${e} .${ke.brand}{font-family:${ge};font-size:clamp(1em,2.5vw,1.25em);font-weight:700;letter-spacing:-.02em;color:${be.accent};margin-bottom:8px}#${e} .${ke.note}{font-family:${ge};margin-bottom:14px}#${e} .${ke.noteLead}{display:block;font-size:clamp(1em,2.8vw,1.15em);font-weight:700;line-height:1.35;color:${be.textPrimary};word-break:break-word;overflow-wrap:anywhere}#${e} .${ke.noteDetail}{display:block;margin-top:8px;font-size:.875em;font-weight:500;line-height:1.4;color:${be.textMuted}}#${e} .${ke.status}{font-family:${ge};font-size:.9em;color:${be.textPrimary};min-height:1.4em;margin-bottom:10px}#${e} .${ke.hidden}{display:none!important}`}(e)+function(e){return`#${e} .${ke.count}{font-family:${ge};font-size:2.5em;font-weight:700;font-variant-numeric:tabular-nums;color:${be.textPrimary};text-align:center;margin:6px 0 4px;line-height:1.15}#${e} .${ke.countLabel}{font-family:${ge};font-size:.7em;text-transform:uppercase;letter-spacing:.08em;color:${be.textMuted};text-align:center;margin-top:4px}#${e} .${ke.countHint}{font-family:${ge};font-size:.78em;color:${be.textMuted};text-align:center;margin-top:4px}#${e} .${ke.err}{font-family:${ge};font-size:.85em;color:${be.error};margin-top:10px;line-height:1.45}#${e} .${ke.err}:empty{display:none}`}(e)+function(e){return`#${e} .${ke.turnstile}{display:flex;align-items:stretch;justify-content:center;flex-direction:column;min-height:72px;margin-top:16px;pointer-events:auto!important;isolation:isolate;width:100%;overflow:hidden;border-radius:8px}#${e} .${ke.turnstile} iframe{width:100%;min-height:380px;border:0;border-radius:8px;background:transparent;pointer-events:auto!important}#${e} .${ke.turnstile} input{pointer-events:auto!important}#${e} .${ke.action}{display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px 18px;border-radius:10px;background:${be.accent};color:#0f172a;font-family:${ge};font-size:1em;font-weight:800;line-height:1.3;text-align:center;text-decoration:none;pointer-events:auto!important;cursor:pointer}#${e} .${ke.action}.${ke.hidden}{display:none!important}`}(e)}var Le=["click","mousedown","mouseup","touchstart","touchend","wheel","keydown"];function Se(e,t){e.replaceChildren();const n=document.createElement("div");if(n.className=ke.noteLead,n.textContent=t.lead,e.appendChild(n),t.detail){const n=document.createElement("div");n.className=ke.noteDetail,n.textContent=t.detail,e.appendChild(n)}}function Ee(e,t){return t.composedPath().some(e=>e instanceof Element&&(null!=e.closest(`.${ke.turnstile}`)||null!=e.closest(`.${ke.action}`)))}function Ie(e){const{id:t,brand:n="",note:r,status:o="",countdownLabel:a="",countdownHint:i}=e,s=ke,c=ve(t),l=function(e,t){const n=document.createElement("div");n.id=e;const r=document.createElement("style");return r.textContent=t,n.appendChild(r),n}(t,_e(t,c));document.documentElement.classList.add(c),function(e){for(const t of Le)e.addEventListener(t,e=>{Ee(0,e)||(e.preventDefault(),e.stopPropagation())},!0)}(l);const d=document.createElement("div");d.className=s.card;const u=document.createElement("div");u.className=s.brand,u.textContent=n;const p=document.createElement("div");p.className=s.note,Se(p,r);const m=document.createElement("div");m.className=s.status,m.textContent=o;const h=document.createElement("div");h.className=`${s.count} ${s.hidden}`;const f=document.createElement("div");f.className=`${s.countLabel} ${s.hidden}`,f.textContent=a;const w=document.createElement("div");w.className=s.turnstile,w.id=`${t}-turnstile`;const y=document.createElement("a");y.className=`${s.action} ${s.hidden}`,y.rel="noopener",d.append(u,p,m,h,f);let g=null;i&&(g=document.createElement("div"),g.className=`${s.countHint} ${s.hidden}`,g.textContent=i,d.appendChild(g));const b=document.createElement("div");b.className=s.err,d.append(b,y,w),l.appendChild(d),document.documentElement.appendChild(l);const k=new MutationObserver(()=>{l.parentElement===document.documentElement?document.documentElement.lastElementChild!==l&&document.documentElement.appendChild(l):document.documentElement.appendChild(l)});k.observe(document.documentElement,{childList:!0});let v=0;const _=e=>{h.classList.toggle(s.hidden,!e),f.classList.toggle(s.hidden,!e),g?.classList.toggle(s.hidden,!e)},L=e=>{cancelAnimationFrame(v),v=0,e&&_(!1)};return{turnstileMount:w,setStatus(e){L(!0),m.textContent=e},setNote(e){Se(p,e)},setError(e){b.textContent=e??""},setAction(e,t="Direct Download · Skip Wait"){if(!e)return y.removeAttribute("href"),y.classList.add(s.hidden),y.textContent="",void w.classList.remove(s.hidden);y.href=e,y.textContent=t,y.classList.remove(s.hidden),w.classList.add(s.hidden)},startCountdown(e){_(!0);const t=()=>{const n=e-Date.now();h.textContent=`${(Math.max(0,n)/1e3).toFixed(2)} s`,v=n<=0?0:requestAnimationFrame(t)};cancelAnimationFrame(v),v=requestAnimationFrame(t)},stopCountdown:()=>L(!1),hideCountdown:()=>L(!0),remove(){L(!0),k.disconnect(),l.remove(),document.documentElement.classList.remove(c)}}}function Re(){window.alert=function(){}}var xe=e=>/^https?:\/\//i.test(e);var Ae=/^\/download\//i;function Ne(){const e=window;if(e.__swAnkergamesReady)return;e.__swAnkergamesReady=!0;const t=/(downloadPage\([^()]*,\s*)\d+(\s*\))/,n=()=>{const e=document.querySelector('[x-data*="downloadPage("]'),n=e?.getAttribute("x-data");return!!(e&&n&&t.test(n))&&(e.setAttribute("x-data",n.replace(t,(e,t,n)=>`${t}0${n}`)),!0)};if(!n()){const e=new MutationObserver(()=>{n()&&e.disconnect()});e.observe(document.documentElement,{childList:!0,subtree:!0}),document.addEventListener("DOMContentLoaded",()=>e.disconnect(),{once:!0})}document.addEventListener("alpine:init",()=>{const t=e.Alpine;if(!t)return;const n=t.data.bind(t);t.data=(e,t)=>{if("downloadPage"!==e)return n(e,t);n(e,(...e)=>{const n=t(...e);return n.initiateDownload=()=>Promise.resolve(),n})}})}function $e(){const e=window;if(e.__swAnygameDirect)return;e.__swAnygameDirect=!0;const t=".version--cta button, .version--cta a",n="Free Download · Skip Wait",r=new WeakSet,o=new WeakSet,a=new WeakMap,i=new WeakMap,s=new Map;let c=!1;const l=()=>{c||(c=!0,window.postMessage({source:"skip-wait-anygame",type:"cdn"},location.origin))},d=()=>/^\/download\/?$/i.test(location.pathname),u=e=>{const t=Object.keys(e).find(e=>e.startsWith("__reactFiber$"));return t?e[t]??null:null},p=e=>{if(e.textContent?.trim()!==n){e.textContent=n,e.style.whiteSpace="nowrap";for(let t=u(e);t;t=t.child??null){const e=t.memoizedProps??t.pendingProps;if(e&&"string"==typeof e.children){e.children=n,t.pendingProps&&(t.pendingProps.children=n),t.memoizedProps&&(t.memoizedProps.children=n);break}}}},m=e=>{if(!Array.isArray(e)||!e.length)return null;const t=[];for(const n of e){if(!n||"object"!=typeof n)continue;const e=n,r=Number(e.id),o="string"==typeof e.type?e.type:"";Number.isFinite(r)&&r>0&&o&&t.push({id:r,type:o})}return t.length?t:null},h=e=>{let t=e;for(let n=0;n<12&&t;n++){for(let e=u(t);e;e=e.return??null){const t=e.memoizedProps??e.pendingProps;if(!t)continue;const n=t.download;if(n&&"object"==typeof n){const e=m(n.links);if(e)return e}const r=m(t.links);if(r)return r}t=t.parentElement}return null},f=(e,t)=>{const n=(e.textContent??"").replace(/\s+/g," ").trim().toLowerCase();return/fast\s*download/i.test(n)||e.classList.contains("fast-download")?t.find(e=>"Worker"===e.type)??null:/torrent|magnet/i.test(n)||e.classList.contains("torrent")?t.find(e=>"Torrent"===e.type)??null:t.find(e=>"Worker"!==e.type&&"Instant"!==e.type&&"Torrent"!==e.type)??null},w=e=>{let t=s.get(e);return t||(t=fetch(`/api/action/download/?link=${e}`,{credentials:"include",cache:"no-store",headers:{Accept:"application/json"}}).then(async e=>{if(!e.ok)return null;const t=await e.json();return t.success&&"string"==typeof t.url&&t.url?t.url:null}).catch(()=>null).then(t=>(t||s.delete(e),t)),s.set(e,t)),t},y=e=>{if(r.has(e))return void p(e);if(o.has(e))return;const t=h(e),n=t&&f(e,t);n&&(i.set(e,n.id),o.add(e),p(e),w(n.id).then(t=>{o.delete(e),e.isConnected&&t&&(a.set(e,t),r.add(e),e instanceof HTMLAnchorElement&&(e.href=t),l())}))},g=()=>{if(!d())for(const e of document.querySelectorAll(".version"))for(const n of e.querySelectorAll(t))y(n)};document.addEventListener("click",e=>{if(d())return;const n=e.target?.closest(t);if(!(n instanceof HTMLElement))return;e.preventDefault(),e.stopImmediatePropagation();const o=a.get(n)||(n instanceof HTMLAnchorElement&&/^https?:/i.test(n.href)?n.href:"");if(o&&/^https?:/i.test(o))return l(),void location.assign(o);const s=i.get(n)??(()=>{const e=h(n);return e&&f(n,e)?.id})();s&&w(s).then(e=>{e&&(a.set(n,e),i.set(n,s),r.add(n),n instanceof HTMLAnchorElement&&(n.href=e),l(),location.assign(e))})},!0);const b=()=>{g(),new MutationObserver(g).observe(document.documentElement,{childList:!0,subtree:!0})};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",b,{once:!0}):b()}async function Te(e){try{return ue(new URL(e).hostname,"anygame")}catch{return!1}}function Me(e,t){chrome.scripting.executeScript({target:void 0===t?{tabId:e}:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:$e})}function Oe(){const e=window;if(e.__swApktealDirect)return;e.__swApktealDirect=!0;const t='[class*="download_wrap"]',n=`${t} button, ${t} a`,r="Free Download · Skip Wait",o=new WeakSet,a=new WeakSet,i=new WeakMap,s=new WeakMap,c=new Map;let l,d=null,u=!1;const p=()=>{u||(u=!0,window.postMessage({source:"skip-wait-apkteal",type:"cdn"},location.origin))},m=()=>/^\/download\/?$/i.test(location.pathname),h=e=>{const t=Object.keys(e).find(e=>e.startsWith("__reactFiber$"));return t?e[t]??null:null},f=e=>{if(e.textContent?.trim()!==r){e.textContent=r,e.style.whiteSpace="nowrap";for(let t=h(e);t;t=t.child??null){const e=t.memoizedProps??t.pendingProps;if(e&&"string"==typeof e.children){e.children=r,t.pendingProps&&(t.pendingProps.children=r),t.memoizedProps&&(t.memoizedProps.children=r);break}}}},w=e=>{if(!Array.isArray(e)||!e.length)return null;const t=[];for(const n of e){if(!n||"object"!=typeof n)continue;const e=n,r=Number(e.id),o="string"==typeof e.type?e.type:"";Number.isFinite(r)&&r>0&&o&&t.push({id:r,type:o})}return t.length?t:null},y=e=>{let t=e;for(let n=0;n<12&&t;n++){for(let e=h(t);e;e=e.return??null){const t=e.memoizedProps??e.pendingProps;if(!t)continue;const n=t.download;if(n&&"object"==typeof n){const e=w(n.links);if(e)return e}const r=w(t.links);if(r)return r}t=t.parentElement}return null},g=(e,t)=>{const n=(e.textContent??"").replace(/\s+/g," ").trim().toLowerCase();return/fast\s*download/i.test(n)||e.classList.contains("fast-download")?t.find(e=>"Worker"===e.type)??null:/torrent|magnet/i.test(n)||e.classList.contains("torrent")?t.find(e=>"Torrent"===e.type)??null:t.find(e=>"Worker"!==e.type&&"Instant"!==e.type&&"Torrent"!==e.type)??null},b=e=>{const t=e.match(/cd:function\(\)\{return (\w+)\}/);if(!t)return null;const n=e.indexOf(t[0]);return e.slice(n,n+500).match(new RegExp(`${t[1]}=\\(0,\\w+\\.\\$\\)\\("([a-f0-9]{40})"\\)`))?.[1]??null},k=()=>l?Promise.resolve(l):(d||(d=(async()=>{const e=await fetch(`${location.origin}/download/`,{credentials:"include",cache:"force-cache"}).then(e=>e.ok?e.text():"");if(!e)return null;for(const t of e.matchAll(/src="(\/_next\/static\/chunks\/[^"]+)"/g)){const e=await fetch(`${location.origin}${t[1]}`,{credentials:"omit",cache:"force-cache"}).then(e=>e.ok?e.text():"").catch(()=>""),n=b(e);if(n)return n}return null})().catch(()=>null).then(e=>(d=null,e&&(l=e),e))),d),v=e=>{let t=c.get(e);return t||(t=k().then(async t=>{if(!t)return null;const n=await fetch(`${location.origin}/download/`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Next-Action":t,"Content-Type":"text/plain;charset=UTF-8",Accept:"text/x-component"},body:JSON.stringify([String(e)])});return n.ok?(await n.text()).match(/"url"\s*:\s*"(https:[^"\\]+)"/)?.[1]??null:null}).catch(()=>null).then(t=>(t||c.delete(e),t)),c.set(e,t)),t},_=e=>{if(o.has(e))return void f(e);if(a.has(e))return;const t=y(e),n=t&&g(e,t);n&&(s.set(e,n.id),a.add(e),f(e),v(n.id).then(t=>{a.delete(e),e.isConnected&&t&&(i.set(e,t),o.add(e),e instanceof HTMLAnchorElement&&(e.href=t),p())}))},L=()=>{if(!m())for(const e of document.querySelectorAll(t)){const t=e.querySelector('button, a[class*="bg-brand"]');t&&_(t)}};document.addEventListener("click",e=>{if(m())return;const t=e.target?.closest(n);if(!(t instanceof HTMLElement))return;e.preventDefault(),e.stopImmediatePropagation();const r=i.get(t)||(t instanceof HTMLAnchorElement&&/^https?:/i.test(t.href)?t.href:"");if(r&&/^https?:/i.test(r))return p(),void location.assign(r);const a=s.get(t)??(()=>{const e=y(t);return e&&g(t,e)?.id})();a&&v(a).then(e=>{e&&(i.set(t,e),s.set(t,a),o.add(t),t instanceof HTMLAnchorElement&&(t.href=e),p(),location.assign(e))})},!0);const S=()=>{L(),new MutationObserver(L).observe(document.documentElement,{childList:!0,subtree:!0})};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",S,{once:!0}):S()}async function Ce(e){try{return ue(new URL(e).hostname,"apkteal")}catch{return!1}}function Ue(e,t){chrome.scripting.executeScript({target:void 0===t?{tabId:e}:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:Oe})}function Pe(e,t){let n;try{n=new URL(e).hostname.toLowerCase()}catch{return null}return n.includes("mediafire.com")?function(e){for(const t of[/aria-label="Download file"\s+href="(https:\/\/download[^"]+)"/i,/href="(https:\/\/download[^"]+)"[^>]*\bid="downloadButton"/i,/id="downloadButton"[^>]*href="(https:\/\/download[^"]+)"/i]){const n=e.match(t);if(n?.[1])return n[1]}return null}(t):null}var We=/^\/addon\/\d+(?:\/|$)/i;function qe(){const e=window;if(e.__swFlightsimPatched)return;e.__swFlightsimPatched=!0;const t=/^\s*Download\b/i,n=window.setTimeout.bind(window),r=()=>{const e=(()=>{const e=document.querySelectorAll('[role="dialog"]');for(const n of Array.from(e)){const e=n.querySelector("h2");if(e&&t.test(e.textContent??""))return n}return null})();return!!e&&(e.textContent??"").includes("Your download will start in")};let o=1e9;window.setTimeout=(e,t,...a)=>{if("number"==typeof t&&t>=800&&t<=1200&&r()){const t="function"==typeof e?e:new Function(e);return queueMicrotask(()=>{try{t(...a),window.postMessage({source:"skip-wait-flightsim",type:"skip"},location.origin)}catch{}}),++o}return n(e,t,...a)}}var De=917410,je=async()=>{const e=await pe("shortxlinks"),t=e[0]?`https://${e[0]}`:"";t?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[De],addRules:[{id:De,priority:1,action:{type:"redirect",redirect:{regexSubstitution:`${t}/\\1?\\2`}},condition:{regexFilter:"^https?://[^/?#]+/?\\?adlinkfly=([A-Za-z0-9_-]+)\\?([A-Za-z0-9]+)$",resourceTypes:["main_frame"]}}]}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[De],addRules:[]})};var Fe=/\/(?:[a-z]{2}\/)?download\/([a-zA-Z0-9]+)/,Be=/multiup\.io\/([a-zA-Z0-9]+)/,He=/\/multiup\.php\?id=([a-zA-Z0-9]+)/;function ze(){const e=window;if(e.__swCloverTc)return;e.__swCloverTc=!0;const t=window.fetch.bind(window);window.fetch=async(e,n)=>{const r=e instanceof Request?e:null,o=String(r?r.url:e),a=String(n?.method||r?.method||"GET").toUpperCase();if(o.includes("/tc")&&"POST"===a){const r=await t(e,n),o=await r.clone().text();try{const e=JSON.parse(o);if(Array.isArray(e))for(const t of e){const e="string"==typeof t.postback_url?t.postback_url.trim():"";if(e.includes("cloverhub.app/api/l/")){location.replace(e);break}}}catch{}return r}return t(e,n)}}var Ve=new Set,Ke=new Map,Ge=e=>{try{const t=new URL(e);return"/s"===t.pathname&&t.search.length>1}catch{return!1}},Ze=(e,t)=>{chrome.scripting.executeScript({target:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:ze}).catch(()=>{})},Xe=e=>{chrome.webNavigation.getAllFrames({tabId:e}).then(t=>{for(const n of t??[])void 0!==n.frameId&&n.url&&Ge(n.url)&&Ze(e,n.frameId)})};var Je=(e,t)=>"/s"===e&&t.length>1,Ye=Je;var Qe="skip-wait-loot";function et(e){if(!/\/captcha(?:\?|$)/i.test(`${location.pathname}${location.search}`))return;const t=window;if(t.__swLootTokenSent)return;const n=()=>{const e=document.getElementById("go");e&&(e.setAttribute("disabled",""),e.disabled=!0,e.style.pointerEvents="none")};if(!t.__swLootBridgeInit){t.__swLootBridgeInit=!0;const e=document.createElement("style");e.textContent="#go,#msg,.badge,.foot,h1,p.sub,main>.orb{display:none!important}main{padding:12px 16px 16px!important}",(document.documentElement??document.head).appendChild(e),new MutationObserver(n).observe(document.documentElement,{childList:!0,subtree:!0}),n()}const r=r=>{!t.__swLootTokenSent&&r&&(t.__swLootTokenSent=!0,window.parent.postMessage({source:e,type:"captcha-token",token:r},"*"),n(),null!=t.__swLootPollId&&(clearInterval(t.__swLootPollId),delete t.__swLootPollId))};t.__swLootNativeOnToken||"function"!=typeof t.onToken||(t.__swLootNativeOnToken=t.onToken),t.onToken=e=>{r(e),t.__swLootNativeOnToken?.(e)},"string"==typeof t.TOKEN&&t.TOKEN&&r(t.TOKEN),t.__swLootPollId||(t.__swLootPollId=window.setInterval(()=>{"string"==typeof t.TOKEN&&t.TOKEN&&r(t.TOKEN)},200),window.setTimeout(()=>{null!=t.__swLootPollId&&(clearInterval(t.__swLootPollId),delete t.__swLootPollId)},12e4))}function tt(e){const t=window;if(t.__swLootHooked)return;t.__swLootHooked=!0,t.__swLootReplace=location.replace.bind(location);try{location.assign=()=>{},location.replace=()=>{}}catch{}try{Object.defineProperty(navigator,"webdriver",{get:()=>!1,configurable:!0})}catch{}const n=t=>{window.postMessage({source:e,...t},location.origin)},r=window.WebSocket;window.WebSocket=function(e,n){const o=String(e);return t.__swLootBlockWs&&o.includes("/c?uid=")?{readyState:3,send(){},close(){},addEventListener(){},removeEventListener(){}}:new r(e,n)},Object.assign(window.WebSocket,r),window.WebSocket.prototype=r.prototype;const o=async o=>{if(t.__swLootPierce||t.__swLootDone)return;t.__swLootPierce=!0;const a=t.__swLootFetch;if(a)try{const i=new URL(o.url).hostname,s=Number(o.body.tid),c=String(o.body.rkey),l=String(o.body.session);if(!(i&&s&&c&&l))throw new Error("tc capture incomplete");const d=JSON.parse(o.text);if(!Array.isArray(d)||!d.length)throw new Error("tc empty");const u=(e=>{const t=[];for(const n of e){const e=Number(n.auto_complete_seconds);!Number.isFinite(e)||e<=0||t.push({task:n,sec:e})}return t})(d);if(!u.length)throw new Error("no auto-complete task");const p=(e=>{for(const t of e){const e="string"==typeof t.ad_url?t.ad_url.trim():"";if(/\/captcha(?:\?|$)/i.test(e))return t}return null})(d),m=Math.max(...u.map(e=>e.sec)),h=Date.now();n({type:"wait",endTs:h+1e3*m});const f="string"==typeof p?.ad_url?p.ad_url.trim():"";f&&p?.urid&&n({type:"captcha",url:f,urid:p.urid,taskId:Number(p.task_id)});const w=await new Promise((e,n)=>{const r=Date.now(),o=window.setInterval(()=>{const a="string"==typeof t.INCENTIVE_SERVER_DOMAIN?t.INCENTIVE_SERVER_DOMAIN.trim():"";if(a)return clearInterval(o),void e(a);Date.now()-r>2e4&&(clearInterval(o),n(new Error("ws base")))},50)}),y=Number(String(d[0]?.urid??"").slice(-5))%3,g=e=>{navigator.sendBeacon(`https://${y}.${w}/st?uid=${e.urid}&cat=${e.task_id}`,new Blob([],{type:"text/plain"}))},b=(e,t)=>{a(`https://${i}/td?ac=${e}&urid=${t.urid}&cat=${t.task_id}&tid=${s}`,{credentials:"include",mode:"cors"})};let k=!1;const v=()=>{!k&&p&&(k=!0,b("captcha",p))};window.addEventListener("message",t=>{if(t.origin!==location.origin)return;const n=t.data;n?.source===e&&"captcha-ok"===n.type&&v()});const _=await new Promise((e,t)=>{const n=new r(`wss://${y}.${w}/c?uid=${d.map(e=>e.urid).join(",")}&cat=${d.map(e=>e.task_id).join(",")}&key=${c}&session_id=${l}&is_loot=1&tid=${s}`);let o=null;const i=[],p=window.setTimeout(()=>{f(),t(new Error("ws timeout"))},1e3*(m+90)),f=()=>{clearTimeout(p),null!=o&&clearInterval(o);for(const e of i)clearTimeout(e);n.close()};n.onerror=()=>{f(),t(new Error("ws error"))},n.onopen=()=>{n.send("0"),o=window.setInterval(()=>n.send("0"),1e4);for(const e of d)g(e);for(const e of u)i.push(window.setTimeout(()=>{b("auto_complete",e.task);const t=e.task.action_pixel_url;t&&a(`https:${t}`,{credentials:"omit",mode:"cors"})},Math.max(0,h+1e3*e.sec-Date.now())))},n.onmessage=t=>{const n=String(t.data);n.startsWith("r:")&&(f(),e((e=>{const t=atob(e.slice(2));if(t.length<6)throw new Error("r");const n=[...t.slice(0,5)].map(e=>e.charCodeAt(0));return[...t.slice(5)].map((e,t)=>{const r=n[t%n.length];if(void 0===r)throw new Error("r");return String.fromCharCode(e.charCodeAt(0)^r)}).join("").trim()})(n)))}});if(!_||!/^https?:\/\//i.test(_))throw new Error("dest");t.__swLootDone=!0,n({type:"dest",dest:_}),t.__swLootReplace?.(_)}catch(i){t.__swLootPierce=!1,t.__swLootBlockWs=!1,n({type:"err",message:i instanceof Error?i.message:String(i)})}else n({type:"err",message:"fetch"})},a=async(e,r)=>{const a=await(t.__swLootFetch??fetch)(e,{method:"POST",body:r,headers:{"content-type":"application/json"},credentials:"include",mode:"cors"}),i=await a.text();return((e,r,a,i)=>{if(200!==i)return void n({type:"err",message:`tc ${i}`});let s;try{s=JSON.parse(r)}catch{return void n({type:"err",message:"tc body"})}t.__swLootBlockWs=!0,o({url:e,body:s,text:a})})(e,r,i,a.status),i},i=crypto.subtle,s=i.encrypt.bind(i);i.encrypt=async(e,t,n)=>{try{const e=(new TextDecoder).decode(n);if(e.includes('"bot"')){const t=JSON.parse(e);t.bot=!1,delete t.botKind,n=(new TextEncoder).encode(JSON.stringify(t))}}catch{}return s(e,t,n)};const c=window.fetch.bind(window);t.__swLootFetch=c,window.fetch=async(e,n)=>{const r=e instanceof Request?e:null,o=String(r?r.url:e),i=String(n?.method||r?.method||"GET").toUpperCase();if(o.includes("params_only=1")){const r=await c(e,n),o=String((e=>{const t=e.trim().replace(/;$/,"");if(!t.startsWith("(")||!t.endsWith(")"))return[];try{return JSON.parse(`[${t.slice(1,-1)}]`)}catch{return[]}})(await r.clone().text())[9]??"").trim();return o&&(t.INCENTIVE_SERVER_DOMAIN=o),r}if(o.includes("/tc")&&"POST"===i){let e="string"==typeof n?.body?n.body:n?.body?await new Response(n.body).text():r?await r.clone().text():"";try{e=(e=>{const t=JSON.parse(e);if("string"==typeof t.botd)try{const e=JSON.parse(t.botd);e.bot=!1,delete e.botKind,t.botd=JSON.stringify(e)}catch{}return JSON.stringify(t)})(e)}catch{}const t=await a(o,e);return new Response(t,{status:200})}return c(e,n)}}var nt=(e,t,n)=>{chrome.scripting.executeScript({target:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:n,args:[Qe]}).catch(()=>{})},rt=e=>{try{const t=new URL(e);return Ye(t.pathname,t.search)}catch{return!1}};function ot(e){const t=(t,n)=>{window.postMessage({source:e.msgSource,phase:t,...n??{}},location.origin)},n=()=>{try{Object.defineProperty(document,"hidden",{get:()=>!1,configurable:!0}),Object.defineProperty(document,"visibilityState",{get:()=>"visible",configurable:!0}),Object.defineProperty(Document.prototype,"hasFocus",{value:()=>!0,configurable:!0,writable:!0})}catch{}},r=e=>new Promise(t=>window.setTimeout(t,e)),o=e=>{if(!e)return;const t=e.__pulse;t&&window.clearInterval(t);try{e.disconnect?.()}catch{}},a=()=>{const e=document.querySelector('input[name="cf-turnstile-response"]')?.value??"";return e.length>50?e:null};(async()=>{let i=null;try{n();const s=Date.now()+e.waitMs;t("parallel",{waitEndTs:s});const c=new Promise(e=>{let t=!1;const r=window,o=n=>{!t&&n&&(t=!0,s.disconnect(),e(n))},i=r.onTurnstileSuccess;r.onTurnstileSuccess=e=>{try{i?.(e)}catch{}o(e)};const s=new MutationObserver(()=>{n();const e=a();e&&o(e)});s.observe(document.documentElement,{attributeFilter:["value"],attributes:!0,childList:!0,subtree:!0});const c=a();c&&o(c)}),l=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({code:e.code,fingerprint:e.fingerprint})}),d=await l.json();if(!d.sessionId||!d.token)throw new Error(d.error??`session ${l.status}`);const u=await new Promise(e=>{const t=window,n=t.io;if("function"==typeof n)return e(n);let r=n;Object.defineProperty(t,"io",{configurable:!0,get:()=>r,set:t=>{r=t,"function"==typeof t&&e(t)}})});i=await(async(e,t)=>{const n=e(void 0,{transports:["websocket"]}),r=window.setInterval(()=>{n.connected&&(n.emit("heartbeat"),n.emit("visibility","visible"))},1e3);return await new Promise((e,r)=>{n.on("connect",()=>{n.emit("bind",t),n.emit("visibility","visible")}),n.on("bound",()=>e()),n.on("error",e=>r(e instanceof Error?e:new Error(String(e)))),window.setTimeout(()=>e(),3e3)}),n.__pulse=r,n})(u,d.token);const p=await Promise.all([c,r(Math.max(0,s-Date.now()))]).then(([e])=>e);t("complete");let m=null;for(let t=0;t<4&&(m=await(await fetch("/api/session/complete",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({fingerprint:e.fingerprint,turnstileToken:p})})).json(),!m.token);t++){const e=(m.error??"").toLowerCase();if(!e.includes("timer")&&!e.includes("wait"))break;await r(3e3)}if(!m?.token)throw new Error(m?.error??"complete failed");o(i),t("redirect"),location.href=`/go/${encodeURIComponent(d.sessionId)}?t=${encodeURIComponent(m.token)}`}catch(s){o(i),t("error",{message:String(s instanceof Error?s.message:s)})}})()}var at="skip-wait-arolinks-unlock",it={lead:"Hang tight — unlocking your link.",detail:"Skip Wait is handling the waiting pages for you."},st=((()=>{let e=null})(),917299),ct=(e,t)=>{const n=e.match(/(?:document|window)\.location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/)?.[1];if(!n)return null;try{return new URL(n,t).href}catch{return null}},lt=(e,t)=>{const n=e.match(/href=["']([^"']*learn_more\.php[^"']*)["']/i)?.[1];if(!n)return null;try{return new URL(n,t).href}catch{return null}},dt=async(e,t)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[st],addRules:[{id:st,priority:3,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await fetch(e,{redirect:"manual",credentials:"include",cache:"no-store",headers:{Accept:"text/html"}})}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[st]}).catch(()=>{})}},ut=async(e,t)=>{let n=e,r=t;for(let o=0;o<5;o++){const e=await dt(n,r);if(e.status>=300&&e.status<400){const t=e.headers.get("location");if(!t)break;r=n,n=new URL(t,n).href;continue}return{url:n,html:await e.text()}}return{url:n,html:""}},pt=917300,mt=e=>/^https?:\/\//i.test(e),ht=e=>917301+e,ft=async()=>{const e=await pe("arolinks");e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[pt],addRules:[{id:pt,priority:2,action:{type:"modifyHeaders",responseHeaders:[{header:"Content-Security-Policy",operation:"set",value:"script-src 'none'"}]},condition:{requestDomains:e,resourceTypes:["main_frame"]}}]}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[pt],addRules:[]})},wt=e=>chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[ht(e)]}).catch(()=>{});function yt(e){try{const t=e.replace(/-/g,"+").replace(/_/g,"/"),n=t+"=".repeat((4-t.length%4)%4),r=atob(n).trim();return/^https?:\/\//i.test(r)?r:null}catch{return null}}var gt=new Set(["tipsguru","vidyays","mineverse","mineverse360"]),bt=new Set(["phpsessid","wppro_steps","wppro_geo"]);function kt(e){try{return yt(decodeURIComponent(e.trim()))}catch{return yt(e.trim())}}var vt=e=>{try{return ue(new URL(e).hostname,"exeio")}catch{return Promise.resolve(!1)}};function _t(){const e=window;if(e.__swExeioAdblock)return;e.__swExeioAdblock=!0;const t=/googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i,n=e=>t.test(String(e??""));let r=null,o=!1;const a=XMLHttpRequest.prototype.open,i=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(e,t,n,r,o){return this.__swMethod=e,this.__swUrl=String(t),a.call(this,e,t,n??!0,r,o)},XMLHttpRequest.prototype.send=function(e){return n(this.__swUrl)&&"HEAD"===String(this.__swMethod||"").toUpperCase()?(Object.defineProperty(this,"status",{configurable:!0,get:()=>200}),Object.defineProperty(this,"readyState",{configurable:!0,get:()=>4}),Object.defineProperty(this,"responseText",{configurable:!0,get:()=>""}),void queueMicrotask(()=>{this.onreadystatechange?.call(this,null),this.onload?.call(this,null)})):i.call(this,e)};const s=window.fetch.bind(window);window.fetch=(e,t)=>{const r="string"==typeof e?e:e instanceof URL?e.href:e.url,o=(t?.method||("string"==typeof e||e instanceof URL?"GET":e.method)||"GET").toUpperCase();return n(r)&&"HEAD"===o?Promise.resolve(new Response(null,{status:200,statusText:"OK"})):s(e,t)};const c=()=>{try{const e=window.app_vars;e&&(e.force_disable_adblock="0")}catch{}},l=()=>{const e=document.getElementById("captchaShortlink"),t=window.turnstile,n=window.app_vars?.turnstile_site_key;if(e&&t&&n)try{e.replaceChildren(),t.render(e,{sitekey:n,callback:t=>{let n=document.querySelector('[name="cf-turnstile-response"]');n||(n=document.createElement("input"),n.type="hidden",n.name="cf-turnstile-response",e.appendChild(n)),n.value=t;const r=document.getElementById("invisibleCaptchaShortlink");r instanceof HTMLButtonElement&&(r.disabled=!1)}})}catch{try{window.onloadTurnstileCallback?.()}catch{}}else try{window.onloadTurnstileCallback?.()}catch{}},d=()=>{for(const e of["link-view","before-captcha","go-link"]){const t=document.getElementById(e);if(t&&(!t.querySelector(".button.disabled.danger")&&t.querySelector("[name=_csrfToken], button[type=submit], [name=ad_form_data], [name=cf-turnstile-response]")))return void(r=t.outerHTML)}},u=e=>!!e.querySelector(".button.disabled.danger")&&!e.querySelector("button[type=submit], [name=cf-turnstile-response], [name=ad_form_data]"),p=e=>{for(const t of e.querySelectorAll("button"))t instanceof HTMLButtonElement&&(t.disabled=!1)},m=()=>{d();const e=["before-captcha","link-view"].some(e=>{const t=document.getElementById(e);return!!t&&u(t)}),t=!!document.querySelector(".button.disabled.danger")&&!document.querySelector("#before-captcha, #link-view, #go-link");(e||t)&&((()=>{if(!o){o=!0;try{let e=window.app_vars;Object.defineProperty(window,"app_vars",{configurable:!0,enumerable:!0,get:()=>e,set:t=>{e=t&&"object"==typeof t?t:e,e&&(e.force_disable_adblock="0")}}),e&&(e.force_disable_adblock="0")}catch{c()}}})(),c(),(()=>{if(!r)return!1;const e=document.createElement("div");e.innerHTML=r;const t=e.querySelector("#link-view, #before-captcha, #go-link");if(!t)return!1;const n=t.id,o=document.getElementById(n);if(o)return!(!u(o)&&o.querySelector("[name=_csrfToken], [name=cf-turnstile-response], [name=ad_form_data]")||(o.replaceWith(t),p(t),0));const a=document.querySelector(".button.disabled.danger");if(a)return a.replaceWith(t),p(t),!0;const i=document.querySelector(".link-container");if(i){const e=i.querySelector("h4");return e?.nextSibling?i.insertBefore(t,e.nextSibling):i.appendChild(t),p(t),!0}return!1})()&&(queueMicrotask(l),window.setTimeout(l,300)))};d(),m(),new MutationObserver(m).observe(document.documentElement,{childList:!0,subtree:!0}),"loading"===document.readyState&&document.addEventListener("DOMContentLoaded",()=>{d(),m()},{once:!0})}async function Lt(){const{vhit:e}=window;if(!e?.report)return{ok:!1,err:"vhit.report missing"};await Promise.resolve(e.report());const t=document.getElementById("go-link");return t instanceof HTMLFormElement&&t.querySelector("[name=ad_form_data]")?(t.action=`${location.origin}/links/go`,t.method="post",HTMLFormElement.prototype.submit.call(t),{ok:!0}):{ok:!1,err:"go-link missing"}}var St=(e,t,n)=>{chrome.scripting.executeScript({target:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:n})};function Et(){const e=window;if(e.__swFcPow)return;e.__swFcPow=!0;const t=()=>{e.__swFcPow=!1,window.postMessage({source:"skip-wait-filecrypt",type:"err"},location.origin)},n=e=>{window.postMessage({source:"skip-wait-filecrypt",type:"status",text:e},location.origin)},r=()=>document.getElementById("pow-captcha")?"pow":document.querySelector('a.button.download, a[href*="/Link/"], .window.container, .dlcdownload, .cnl')?"open":"pending",o=new Function("u","return import(u)");(async()=>{const a=await new Promise(e=>{const t=r();if("pow"===t)return void e(document.getElementById("pow-captcha"));if("open"===t)return void e(null);const n=new MutationObserver(()=>{const t=r();"pending"!==t&&(n.disconnect(),e("pow"===t?document.getElementById("pow-captcha"):null))});n.observe(document.documentElement,{childList:!0,subtree:!0})});if(!a)return e.__swFcPow=!1,void window.postMessage({source:"skip-wait-filecrypt",type:"done"},location.origin);const i=a.getAttribute("data-session"),s=a.getAttribute("data-ext"),c=a.getAttribute("data-sig"),l=(a.getAttribute("data-px")||"").split(",").map(e=>e.trim()).filter(Boolean);if(!i||!s||!c)return void t();const d=a.closest("form")||document.getElementById("cform");if(!d)return void t();n("Checking the page…");const u=(()=>{try{const e=new Uint32Array(2);return crypto.getRandomValues(e),e[0].toString(36)+e[1].toString(36)}catch{return String(Date.now())+Math.random().toString(36).slice(2)}})(),p=Promise.all([o(s),o(c)]),m=(async(e,t)=>(await Promise.all(e.map(async e=>{const n=e+(e.includes("?")?"&":"?")+"t="+t;try{const e=await fetch(n,{cache:"no-store",mode:"cors"});return e.ok&&(await e.json())?.cid||""}catch{return""}}))).find(Boolean)||"")(l,u),[h,[f,w]]=await Promise.all([m,p]),y=f.R,g=w.S;if(!y||!g)return void t();try{g.start?.()}catch{}const b=y().catch(()=>""),k=new URLSearchParams({pow_x:"",pow_y:h,pow_yn:u,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||"unknown"}),v=(await(await fetch(i,{method:"POST",cache:"no-store",body:k})).json()).challenge;if(!v?.id||!v?.challenge||void 0===v.difficulty)return void t();const _=parseInt(String(v.difficulty),10);n("Skipping the security check…");const L=((e,t)=>new Promise((r,o)=>{const a=navigator.hardwareConcurrency||4,i=Math.max(2,Math.min(2*a,32)),s=new Blob(["\nconst W = new Int32Array(80);\nconst block = new Uint8Array(64);\n\nfunction sha1ok(difficulty) {\n  let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;\n  for (let i = 0; i < 16; i++) {\n    const j = i << 2;\n    W[i] = (block[j] << 24) | (block[j + 1] << 16) | (block[j + 2] << 8) | block[j + 3];\n  }\n  for (let i = 16; i < 80; i++) {\n    const v = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];\n    W[i] = (v << 1) | (v >>> 31);\n  }\n  let a = h0, b = h1, c = h2, d = h3, e = h4;\n  for (let i = 0; i < 20; i++) {\n    const t = (((a << 5) | (a >>> 27)) + ((b & c) | (~b & d)) + e + 0x5A827999 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 20; i < 40; i++) {\n    const t = (((a << 5) | (a >>> 27)) + (b ^ c ^ d) + e + 0x6ED9EBA1 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 40; i < 60; i++) {\n    const t = (((a << 5) | (a >>> 27)) + ((b & c) | (b & d) | (c & d)) + e + 0x8F1BBCDC + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 60; i < 80; i++) {\n    const t = (((a << 5) | (a >>> 27)) + (b ^ c ^ d) + e + 0xCA62C1D6 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  const u = ((h0 + a) | 0) >>> 0;\n  return difficulty >= 32 ? u === 0 : u < (1 << (32 - difficulty));\n}\n\nfunction digitsOf(n) {\n  if (n < 10) return 1;\n  if (n < 100) return 2;\n  if (n < 1000) return 3;\n  if (n < 10000) return 4;\n  if (n < 100000) return 5;\n  if (n < 1000000) return 6;\n  if (n < 10000000) return 7;\n  if (n < 100000000) return 8;\n  if (n < 1000000000) return 9;\n  return 10;\n}\n\nfunction writeNonce(off, n, digits) {\n  let x = n;\n  for (let i = digits - 1; i >= 0; i--) {\n    block[off + i] = 48 + (x % 10);\n    x = (x / 10) | 0;\n  }\n}\n\nfunction prepareBand(prefix, digits) {\n  const msgLen = prefix.length + digits;\n  block.fill(0);\n  block.set(prefix, 0);\n  block[msgLen] = 0x80;\n  const bitLen = msgLen << 3;\n  block[60] = (bitLen >>> 24) & 0xff;\n  block[61] = (bitLen >>> 16) & 0xff;\n  block[62] = (bitLen >>> 8) & 0xff;\n  block[63] = bitLen & 0xff;\n  return msgLen;\n}\n\nself.onmessage = (ev) => {\n  const { challenge, difficulty, start, step } = ev.data;\n  const prefix = new Uint8Array(String(challenge).length + 1);\n  for (let i = 0; i < String(challenge).length; i++) prefix[i] = String(challenge).charCodeAt(i);\n  prefix[prefix.length - 1] = 58;\n  const t0 = performance.now();\n  let nonce = start | 0;\n  const stride = step | 1;\n  let n = 0;\n  let digits = digitsOf(nonce);\n  let bandEnd = 10 ** digits;\n  prepareBand(prefix, digits);\n  const pLen = prefix.length;\n  for (;;) {\n    while (nonce >= bandEnd) {\n      digits++;\n      bandEnd *= 10;\n      prepareBand(prefix, digits);\n    }\n    writeNonce(pLen, nonce, digits);\n    if (sha1ok(difficulty)) {\n      self.postMessage({ type: 'done', nonce, ms: Math.round(performance.now() - t0) });\n      return;\n    }\n    nonce += stride;\n    n++;\n    if ((n & 0x3ffff) === 0) self.postMessage({ type: 'tick', delta: 0x40000 });\n  }\n};\n"],{type:"application/javascript"}),c=URL.createObjectURL(s),l=[];let d=!1,u=0;const p=performance.now(),m=Math.pow(2,Math.max(0,t-1)),h=()=>{for(const e of l)try{e.terminate()}catch{}URL.revokeObjectURL(c)};try{for(let a=0;a<i;a++){const s=new Worker(c);l.push(s),s.onmessage=e=>{const t=e.data;if("tick"===t?.type){u+=t.delta||0;const e=Math.min(99,Math.round(100*(1-Math.exp(-u/m))));return void n(`Almost there… ${e}%`)}var o;"done"===t?.type&&void 0!==t.nonce&&(o=t.nonce,d||(d=!0,h(),r({nonce:o,ms:Math.round(performance.now()-p)})))},s.onerror=()=>{d||(d=!0,h(),o(new Error("pow worker")))},s.postMessage({challenge:e,difficulty:t,start:a,step:i})}}catch(f){h(),o(f)}}))(String(v.challenge),_),[S,E]=await Promise.all([L,b]),I=a.querySelector(".pow-captcha__box");if(I){const e=I.getBoundingClientRect(),t=e.left+Math.max(4,.2*e.width),n=e.top+Math.max(4,.5*e.height);try{g.recordPointer?.(new PointerEvent("pointerdown",{bubbles:!0,clientX:t,clientY:n,pointerId:1,pointerType:"mouse",isPrimary:!0})),g.recordClick?.(new MouseEvent("click",{bubbles:!0,clientX:t,clientY:n}))}catch{}}let R="";try{R=g.collect?.()||""}catch{}const x=(e,t)=>{const n=d.querySelector(`input[name="${e}"]`);n&&(n.value=t)};x("pow_id",v.id),x("pow_nonce",String(S.nonce)),x("pow_elapsed",String(S.ms)),x("pow_pauses","0"),x("pow_data",R),x("pow_x",E||""),n("Opening downloads…"),"function"==typeof d.requestSubmit?d.requestSubmit():d.submit()})().catch(t)}function It(e,t){chrome.scripting.executeScript({target:void 0===t?{tabId:e}:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:Et})}function Rt(){const e=window;if(e.__swLksfyAdblock)return;e.__swLksfyAdblock=!0;const t=/googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|code\.jquery\.com/i,n=e=>t.test(String(e??"")),r=XMLHttpRequest.prototype.open,o=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(e,t,n,o,a){return this.__swMethod=e,this.__swUrl=String(t),r.call(this,e,t,n??!0,o,a)},XMLHttpRequest.prototype.send=function(e){return n(this.__swUrl)&&"HEAD"===String(this.__swMethod||"").toUpperCase()?(Object.defineProperty(this,"status",{configurable:!0,get:()=>200}),Object.defineProperty(this,"readyState",{configurable:!0,get:()=>4}),Object.defineProperty(this,"responseText",{configurable:!0,get:()=>""}),void queueMicrotask(()=>{this.onreadystatechange?.call(this,null),this.onload?.call(this,null)})):o.call(this,e)};const a=window.fetch.bind(window);window.fetch=(e,t)=>{const r="string"==typeof e?e:e instanceof URL?e.href:e.url,o=(t?.method||("string"==typeof e||e instanceof URL?"GET":e.method)||"GET").toUpperCase();return n(r)&&"HEAD"===o?Promise.resolve(new Response(null,{status:200,statusText:"OK"})):a(e,t)};const i=()=>{try{const e=window.app_vars;e&&(e.force_disable_adblock="0")}catch{}};try{let e=window.app_vars;Object.defineProperty(window,"app_vars",{configurable:!0,enumerable:!0,get:()=>e,set:t=>{e=t&&"object"==typeof t?t:e,e&&(e.force_disable_adblock="0")}}),e&&(e.force_disable_adblock="0")}catch{i()}i(),window.setInterval(i,250)}function xt(e,t){chrome.scripting.executeScript({target:void 0===t?{tabId:e}:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:Rt})}var At="rinku-flow-tabs",Nt=/^[A-Za-z0-9_-]{3,}$/,$t=/(?:^|\/)backup\/w\/?$/i,Tt=e=>{try{return t=new URL(e).hostname,ue(t,"cuty")}catch{return Promise.resolve(!1)}var t},Mt=/^\/quick\/?$/i;var Ot=["cuttty.com","cuty.io"];function Ct(e=location.search){const t=new URLSearchParams(e).get("url");if(!t)return null;try{const e=new URL(t);return"http:"!==e.protocol&&"https:"!==e.protocol||(e=>{const t=e.toLowerCase();return Ot.some(e=>t===e||t.endsWith(`.${e}`))})(e.hostname)?null:e.href}catch{return null}}async function Ut(){const e=document.getElementById("submit-form");if(!(e instanceof HTMLFormElement&&e.querySelector('[name="data"]')&&e.querySelector('[name="_token"]')))return{ok:!1,err:"Unlock form missing. Reload and try again."};const{vhit:t}=window;return t?.report?(await t.report(),HTMLFormElement.prototype.submit.call(e),{ok:!0}):{ok:!1,err:"cuty view report blocked. Pause adblock for this site, then try again."}}function Pt(e){try{const t=new URL(e);return ue(t.hostname,"cuty").then(e=>e&&function(e=location.pathname){return Mt.test(e)}(t.pathname)?Ct(t.search):null)}catch{return Promise.resolve(null)}}function Wt(){const e=window;if(e.__swStorylineCountDown)return;e.__swStorylineCountDown=!0;const t=()=>{const n=e.DS?.resolver?.getPresentationContext?.()?.variables?.().models.find(e=>"CountDown"===e.get("name"));if(!n)return void window.setTimeout(t,50);const r=Object.getPrototypeOf(n);if(r.__swCountDownPatched)return;r.__swCountDownPatched=!0;const o=r.changeValue;r.changeValue=function(e,t){return"CountDown"!==this.get("name")?o.call(this,e,t):Number(e)>0&&0===Number(this.value())?(o.call(this,1,t),o.call(this,0,t)):o.call(this,0,t)},0!==Number(n.value())&&n.changeValue(0)};t()}var qt=/^https:\/\/link4m\.co\/full\/\?/i,Dt=/vexgoijaada='[^']*';\s*hgeyioahwuk='(\{.*?\})';/g;function jt(e){const t=new Uint8Array(e.length/2);for(let n=0;n<t.length;n++)t[n]=parseInt(e.slice(2*n,2*n+2),16);return t}function Ft(e){const t=e.length,n=8*t;let r=t+1;for(;r%64!=56;)r++;r+=8;const o=new Uint8Array(r);o.set(e),o[t]=128;const a=new DataView(o.buffer);a.setUint32(r-8,n>>>0,!0),a.setUint32(r-4,Math.floor(n/4294967296),!0);let i=1732584193,s=4023233417,c=2562383102,l=271733878;const d=[7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21],u=Uint32Array.from({length:64},(e,t)=>Math.floor(4294967296*Math.abs(Math.sin(t+1)))),p=(e,t)=>e<<t|e>>>32-t;for(let f=0;f<r;f+=64){const e=new Uint32Array(16);for(let i=0;i<16;i++)e[i]=a.getUint32(f+4*i,!0);let t=i,n=s,r=c,o=l;for(let a=0;a<64;a++){let i,s;a<16?(i=n&r|~n&o,s=a):a<32?(i=o&n|~o&r,s=(5*a+1)%16):a<48?(i=n^r^o,s=(3*a+5)%16):(i=r^(n|~o),s=7*a%16),i=i+t+u[a]+e[s]>>>0,t=o,o=r,r=n,n=n+p(i,d[a])>>>0}i=i+t>>>0,s=s+n>>>0,c=c+r>>>0,l=l+o>>>0}const m=new Uint8Array(16),h=new DataView(m.buffer);return h.setUint32(0,i,!0),h.setUint32(4,s,!0),h.setUint32(8,c,!0),h.setUint32(12,l,!0),m}async function Bt(e){try{const t=JSON.parse(e);if(!t.ct||!t.iv||!t.s)return null;const n=new Uint8Array(function(e,t,n){let r=new Uint8Array(0);const o=new Uint8Array(n);let a=0;for(;a<n;){const i=new Uint8Array(r.length+e.length+t.length);i.set(r),i.set(e,r.length),i.set(t,r.length+e.length),r=new Uint8Array(Ft(i));const s=Math.min(16,n-a);o.set(r.subarray(0,s),a),a+=s}return o}((new TextEncoder).encode("pcenxoqnzrc"),jt(t.s),32)),r=new Uint8Array(jt(t.iv)),o=new Uint8Array(function(e){const t=atob(e),n=new Uint8Array(t.length);for(let r=0;r<t.length;r++)n[r]=t.charCodeAt(r);return n}(t.ct)),a=await crypto.subtle.importKey("raw",n,"AES-CBC",!1,["decrypt"]),i=await crypto.subtle.decrypt({name:"AES-CBC",iv:r},a,o),s=JSON.parse((new TextDecoder).decode(i));return"string"==typeof s&&s?`https://${s}`:null}catch{return null}}async function Ht(e,t){const n=[...e.matchAll(Dt)].map(e=>e[1]).filter(Boolean);if(n.length<2)return null;const r=await Bt(n[n.length-1]);return r?function(e,t){if(!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(t))return null;try{const n=new URL(e);return n.protocol="https:",n.host=`${t.replaceAll(".","-")}.top`,n.href}catch{return null}}(r,t):null}async function zt(e,t,n){const r=await fetch("https://wickradio.com/Please-Wait.php",{method:"POST",body:new URLSearchParams({id:e,filename:t,filesize:n}),credentials:"omit",cache:"no-store",headers:{Accept:"text/html,*/*","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"}});return r.ok?Ht(await r.text(),e):null}async function Vt(e){const t=new AbortController,n=(await fetch(e,{redirect:"follow",credentials:"omit",cache:"no-store",signal:t.signal})).url;if(t.abort(),new URL(n).hostname===new URL(e).hostname)throw new Error("same host");return n}var Kt=/\/download\/\d+\/?$/i;function Gt(){const e=window;if(e.__swGetmodsapk)return;e.__swGetmodsapk=!0,Object.defineProperty(window,"onload",{configurable:!0,enumerable:!0,get:()=>null,set(){}});const t=()=>{const e=document.getElementById("progress-bar"),t=document.getElementById("download-button"),n=e?.parentElement;if(!e||!t||!n)return;n.style.display="none",t.classList.remove("hidden");const r=document.createElement("div");r.id="skipwait-getmodsapk-brand",r.className="bg-[var(--post-color-lighter)] rounded-xl p-4 mb-4",r.setAttribute("role","status");const o=document.createElement("h2");o.className="text-base font-semibold text-gray-800 dark:text-white mb-2 flex items-center";const a=document.createElementNS("http://www.w3.org/2000/svg","svg");a.setAttribute("class","w-5 h-5 mr-2"),a.setAttribute("fill","none"),a.setAttribute("stroke","currentColor"),a.setAttribute("viewBox","0 0 24 24");const i=document.createElementNS("http://www.w3.org/2000/svg","path");i.setAttribute("stroke-linecap","round"),i.setAttribute("stroke-linejoin","round"),i.setAttribute("stroke-width","2"),i.setAttribute("d","M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"),a.append(i),o.append(a,document.createTextNode("Skip Wait"));const s=document.createElement("p");s.className="text-gray-700 dark:text-gray-300",s.textContent="5-second reveal skipped — download is ready now.",r.append(o,s),t.before(r)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",t,{once:!0}):t()}var Zt=/\/download\//i;function Xt(){const e=window;if(e.__swApkvision)return;e.__swApkvision=!0;let t=!1;const n=()=>{if(t)return;const e=document.querySelector(".download-loading"),n=document.querySelector(".download-ready");if(!e||!n)return;t=!0,e.style.display="none",n.style.display="block";const r=document.createElement("div");r.id="skipwait-apkvision-brand",r.className="b-dwn-spoiler__instruction",r.setAttribute("role","status");const o=document.createElement("strong");o.textContent="Skip Wait",r.append(o,document.createTextNode(" 7-second timer skipped — download is ready now.")),n.before(r)},r=window.setInterval.bind(window);window.setInterval=(e,t,...o)=>1e3===t&&document.querySelector(".download-loading")&&document.querySelector(".download-ready")?(queueMicrotask(n),0):r(e,t,...o),"loading"===document.readyState?document.addEventListener("DOMContentLoaded",n,{once:!0}):n()}var Jt=/\/download\//i;function Yt(){const e=window;if(e.__swApkaward)return;e.__swApkaward=!0;let t=!1;const n=()=>{if(t)return;const e=document.getElementById("page-cdn-btns");if(!e?.classList.contains("counter-active"))return;t=!0,e.classList.remove("counter-active");for(const t of e.querySelectorAll(".offcounter"))t.style.removeProperty("display");const n=document.createElement("div");n.id="skipwait-apkaward-brand",n.className="noteccc",n.setAttribute("role","status");const r=document.createElement("strong");r.textContent="Skip Wait",n.append(r,document.createTextNode(" 5-second timer skipped — download is ready now.")),e.before(n)},r=window.setInterval.bind(window);window.setInterval=(e,t,...o)=>1e3===t&&document.getElementById("page-cdn-btns")?.classList.contains("counter-active")?(queueMicrotask(n),0):r(e,t,...o),"loading"===document.readyState?document.addEventListener("DOMContentLoaded",n,{once:!0}):n()}var Qt=/\/download(?:-step)?\/\d+\/?$/i;function en(){const e=window;if(e.__swFuzyapk)return;e.__swFuzyapk=!0,Object.defineProperty(e,"fuzy_smartlink_url",{configurable:!0,enumerable:!0,get:()=>"",set:()=>{}});let t=!1;const n=()=>{if(t||!/\/download\/\d+\/?$/i.test(location.pathname))return;const n=document.getElementById("fuzy-real-download"),r=n?.querySelector(".fuzy-download-text"),o=document.getElementById("fuzy-download-btn-wrap");if(!n||!r||!o)return;t=!0;const a=e.fuzy_file_size||"0MB",i=e.fuzy_real_download;n.classList.remove("loading","disabled"),r.innerText="vi"===e.fuzy_lang?`Tải xuống (${a})`:`Download (${a})`,n.onclick=e=>{e.preventDefault(),i&&(location.href=i)};const s=document.createElement("div");s.id="skipwait-fuzyapk-brand",s.className="fuzy-download-notice",s.setAttribute("role","status");const c=document.createElement("strong");c.textContent="Skip Wait",s.append(c,document.createTextNode(" 10-second timer skipped — download is ready now.")),o.after(s)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",()=>setTimeout(n,0),{once:!0}):setTimeout(n,0)}var tn=/\/(?:apps|games)\/[^/]+\/[^/]+\/(?!history\/?$)[^/]+\/?$/i;function nn(){const e=window;if(e.__swModdroid)return;e.__swModdroid=!0;const t={en:"5-second prepare skipped — download is ready now.",pt:"preparação de 5 segundos ignorada — o download está pronto.",es:"preparación de 5 segundos omitida — la descarga está lista.",id:"persiapan 5 detik dilewati — unduhan siap sekarang.",ru:"5-секундная подготовка пропущена — загрузка уже доступна.",ar:"تم تخطي التحضير لمدة 5 ثوانٍ — التنزيل جاهز الآن.",tr:"5 saniyelik hazırlık atlandı — indirme hazır.",de:"5-Sekunden-Vorbereitung übersprungen — Download ist bereit.",fr:"préparation de 5 secondes ignorée — le téléchargement est prêt.",it:"preparazione di 5 secondi saltata — il download è pronto."},n=()=>{const n=document.getElementById("download-button"),r=document.querySelectorAll(".download-progress");if(!n||!r.length)return!1;for(const e of r)e.style.display="none";if("function"==typeof e.isMobile&&e.isMobile()){const e=document.getElementById("download-app-button");e&&(e.style.display="flex")}return n.style.display="flex",(()=>{if(document.getElementById("skipwait-moddroid-brand"))return;const e=document.querySelector(".download-loading .download-ad-notice");if(!e)return;const n=document.documentElement.lang.toLowerCase().split("-")[0]??"",r=location.hostname.split(".")[0]?.toLowerCase()??"",o=t[n]?n:t[r]?r:"en",a=document.createElement("div");a.id="skipwait-moddroid-brand",a.className="download-ad-notice",a.lang=o,"ar"===o&&(a.dir="rtl");const i=e.querySelector(".download-ad-notice__icon")?.cloneNode(!0),s=document.createElement("span"),c=document.createElement("strong");c.textContent="Skip Wait",s.append(c,document.createTextNode(` ${t[o]}`)),i&&a.append(i),a.append(s),e.before(a)})(),!0};n()||"loading"===document.readyState&&document.addEventListener("DOMContentLoaded",()=>{n()},{once:!0})}var rn=/\/download\/\d+\/?$/i;function on(){const e=window;if(e.__swModded1)return;e.__swModded1=!0;const t=()=>{const e=document.getElementById("download"),t=document.getElementById("download-loading");return!(!e||!t)&&(t.style.display="none",e.style.display="block",(()=>{if(document.getElementById("skipwait-modded1-brand"))return;const e=document.getElementById("download");if(!e)return;const t=document.createElement("div");t.id="skipwait-modded1-brand",t.className="super-container",t.setAttribute("role","status");const n=document.createElement("div");n.className="super-container-title",n.textContent="Skip Wait";const r=document.createElement("p");r.textContent="4-second loading skipped — download is ready now.",t.append(n,r),e.after(t)})(),!0)};t()||"loading"===document.readyState&&document.addEventListener("DOMContentLoaded",()=>{t()},{once:!0})}var an=/\/file\/?$/i;function sn(){const e=window;if(e.__swModsmaniac)return;e.__swModsmaniac=!0;const t=()=>{if(document.getElementById("skipwait-modsmaniac-brand"))return;const e=document.querySelector("div#download");if(!e)return;const t=document.createElement("p");t.id="skipwait-modsmaniac-brand",t.className="text-center text-muted mb-2",t.setAttribute("role","status");const n=document.createElement("strong");n.textContent="Skip Wait",t.append(n,document.createTextNode(" — ~15s wait skipped; download is ready now.")),e.after(t)},n=window.setInterval.bind(window);window.setInterval=(e,r,...o)=>900===r&&"function"==typeof e&&document.getElementById("progress_new")&&document.getElementsByClassName("waitme")[0]?(queueMicrotask(()=>{for(let t=0;t<20;t++)try{e()}catch{break}t()}),0):n(e,r,...o);const r=()=>!(!document.getElementById("progress_new")&&!document.getElementsByClassName("waitme")[0])&&(!!(()=>{if(document.getElementById("no-link"))return!0;const e=new URL(location.href).searchParams.get("urls"),t=document.getElementById("progress_new");if(!e||!t)return!1;const n=window.setInterval(()=>{},1e6);for(let s=1;s<=n;s++)window.clearInterval(s);const r=document.createElement("div");r.id="download",r.className="text-center mb-4",r.style.display="block";const o=document.createElement("a");o.id="no-link",o.className="btn btn-secondary px-5",o.href=e,o.setAttribute("download","");const a=document.createElement("span");a.className="align-middle",a.textContent="Download",o.append(a),r.append(o);const i=t.nextElementSibling;return i instanceof HTMLParagraphElement&&!i.id?i.replaceWith(r):t.after(r),!0})()&&((()=>{const e=document.getElementById("notifx"),t=document.getElementById("progress_new"),n=document.getElementsByClassName("waitme")[0];e&&(e.style.display="none"),t&&(t.style.display="none"),n&&(n.style.display="none")})(),t(),!0));r()||"loading"===document.readyState&&document.addEventListener("DOMContentLoaded",()=>{r()},{once:!0})}var cn=/https?:\/\/du\d+\.devuploads\.com\/d\/[A-Za-z0-9._~/-]+/i,ln=async e=>{const t=await fetch(`https://devuploads.com/${e}`,{method:"POST",credentials:"omit",cache:"no-store",headers:{Accept:"text/html,*/*","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",Referer:`https://devuploads.com/${e}`},body:new URLSearchParams({op:"download2",id:e,rand:"",referer:"",xd:"1",tsty:"0",ransite:"3",dnumber:"0",adblock_detected:"0",ipp:""})});return t.ok?(await t.text()).match(cn)?.[0]??null:null},dn=/^[a-z0-9]{8,16}$/i,un=/^https:\/\/fs\d+\.dupload\.xyz\/files\/\S+/i,pn=/File Not Found|could not be found/i;function mn(){const e=window;if(e.__swDuploadHold)return;e.__swDuploadHold=!0;const t=HTMLFormElement.prototype.submit;HTMLFormElement.prototype.submit=function(){if(!this.querySelector('input[name="op"][value="download2"]')){try{const e=new URL(this.action,location.href).hostname.toLowerCase();if(e!==location.hostname&&"dupload.xyz"!==e&&!e.endsWith(".dupload.xyz"))return}catch{}return t.call(this)}}}function hn(){const e=window;if(e.__swSvbTrial)return;e.__swSvbTrial=!0;const t="skipwait-svb-brand",n=window.setInterval.bind(window);window.setInterval=(e,t,...r)=>1e3===t&&"function"==typeof e&&Function.prototype.toString.call(e).includes("timeLeft")?(queueMicrotask(()=>{for(let t=0;t<241;t++)e()}),n(()=>{},1e9)):n(e,t,...r);const r=()=>{if(document.getElementById(t))return;const e=document.querySelector(".submit-wrapper");if(!e)return;const n=Object.assign(document.createElement("div"),{id:t,innerHTML:'<strong style="display:block;font-size:13px;font-weight:700;margin-bottom:2px">Skip Wait</strong><span style="font-size:12px;font-weight:500;line-height:1.45">Preparing timer skipped — complete reCAPTCHA and start your free trial.</span>'});n.setAttribute("role","status"),n.style.cssText="text-align:center;margin:0 0 12px;padding:10px 14px;box-sizing:border-box;width:100%;border-radius:8px;background:#e8f0ff;border:1px solid #0057ff;font:12px/1.45 Inter,system-ui,sans-serif;color:#003399",e.before(n)};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",r,{once:!0}):r()}var fn=/^\/[0-9][A-Za-z0-9]{2,11}(?:\/[^/]+)?\/?$/;async function wn(e){try{const t=new URL(e);return!!(await ue(t.hostname,"workink"))&&fn.test(t.pathname)}catch{return!1}}function yn(e="skip-wait-workink"){const t=window,n="FOyWLycLacw35PbZpwK8Q3N6ouw6PBQ2snZHMIDmXrUXoCUXv7XgOiVlrl9NMn2p",r="FMEB197nNpP8ge1zElwAHAqufR3U7KZ4jIDqBPQzous0k5cUkjQ96994zIM0qSFd",o=(e,t)=>{const n=[...t].map(e=>255&e.charCodeAt(0));let r=Number.parseInt(e.slice(0,2),16);const o=e.slice(2).match(/.{1,2}/g)??[],a=[];for(const[i,s]of o.entries()){const e=Number.parseInt(s,16);a.push(255&((e-i%8+256)%256^n[(2*i+r)%n.length])),r=(19*r+29)%256}return(new TextDecoder).decode(Uint8Array.from(a))},a=(e,t)=>{const n=[...t].map(e=>255&e.charCodeAt(0)),r=(new TextEncoder).encode(e);let o=Math.floor(256*Math.random());const a=[o.toString(16).padStart(2,"0")];for(const[i,s]of r.entries())a.push((((s^n[(2*i+o)%n.length])+i%8)%256).toString(16).padStart(2,"0")),o=(19*o+29)%256;return a.join("")},i=t=>{window.postMessage({source:e,...t},location.origin)},s=e=>{try{return String(e.url).includes("/_api/v2/ws")}catch{return!1}},c=()=>{const e=t.__swWorkinkWs;var o,s;t.__swWorkinkForged||t.__swWorkinkUnlock||!e||1!==e.readyState||(t.__swWorkinkForged=!0,e.send((o="c_premium_modal_done",s={},a(JSON.stringify({type:o,payload:a(JSON.stringify(s),r)}),n))),i({type:"forged"}))},l=e=>{const a=e;s(a)&&(t.__swWorkinkWs=a,1===a.readyState?i({type:"ready"}):a.addEventListener("open",()=>i({type:"ready"}),{once:!0}),a.__swWorkinkAttached||(a.__swWorkinkAttached=!0,a.addEventListener("message",e=>{if("string"!=typeof e.data)return;let a=null;try{a=(e=>{const t=JSON.parse(o(e,n));return"string"==typeof t.payload&&/^[0-9a-f]+$/i.test(t.payload)&&(t.payload=JSON.parse(o(t.payload,r))),t})(e.data)}catch{return}if(a?.type){if("s_lkds"===a.type){const e="object"==typeof a.payload?a.payload?.url:void 0;if(!e)return;return t.__swWorkinkUnlock=e,void i({type:"unlock",url:e})}"s_tstc"!==a.type&&"s_sthc"!==a.type?"s_hcok"!==a.type&&"s_tsac"!==a.type||(i({type:"gate-done",gate:a.type}),"s_hcok"===a.type&&c()):i({type:"gate-start",gate:a.type})}})))};if(!t.__swWorkinkWsProto){t.__swWorkinkWsProto=!0;const e=WebSocket.prototype.send;WebSocket.prototype.send=function(t){return s(this)&&l(this),e.call(this,t)};const n=WebSocket.prototype.addEventListener;WebSocket.prototype.addEventListener=function(e,t,r){return"message"===e&&l(this),n.call(this,e,t,r)};const r=Object.getOwnPropertyDescriptor(WebSocket.prototype,"onmessage");if(r?.set&&r.get){const e=r.get,t=r.set;Object.defineProperty(WebSocket.prototype,"onmessage",{configurable:!0,enumerable:!!r.enumerable,get(){return e.call(this)},set(e){return l(this),t.call(this,e)}})}}if(!t.__swWorkinkWsHooked){t.__swWorkinkWsHooked=!0,t.__swWorkinkWs=t.__swWorkinkWs??null,t.__swWorkinkForged=!1,t.__swWorkinkUnlock=null;const e=window.WebSocket;window.WebSocket=function(t,n){const r=void 0===n?new e(t):new e(t,n);return String(t).includes("/_api/v2/ws")&&l(r),r},window.WebSocket.prototype=e.prototype,Object.assign(window.WebSocket,e),window.WebSocket.toString=()=>"function WebSocket() { [native code] }";const n=window.open.bind(window);window.open=(e,r,o)=>{const a=String(e??"");return t.__swWorkinkUnlock&&a&&(a===t.__swWorkinkUnlock||a.includes("outgoing.work.ink"))?null:n(e,r,o)}}1===t.__swWorkinkWs?.readyState&&i({type:"ready"})}var gn=async(e,t=0)=>{await chrome.scripting.executeScript({target:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:yn,args:["skip-wait-workink"]})};var bn=/^\/download\/([A-Za-z0-9]+)(?:\/|$)/i;function kn(){const e=window;if(e.__skipWaitVexVerifyHook)return;e.__skipWaitVexVerifyHook=!0;const t=window.fetch.bind(window);window.fetch=async(e,n)=>{const r=await t(e,n);if(!("string"==typeof e?e:e instanceof Request?e.url:String(e)).includes("/verify-cf-captcha"))return r;try{(await r.clone().json()).success&&document.documentElement.setAttribute("data-sw-vex-verified","1")}catch{}return r}}var vn=async e=>{try{const t=new URL(e);return!!bn.test(t.pathname)&&ue(t.hostname,"vexfile")}catch{return!1}};function _n(e,t){chrome.scripting.executeScript({target:void 0===t?{tabId:e}:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:kn})}var Ln="https://backendapi.dlsurf.com";function Sn(e){if(!e)return;const t=window.turnstile;if(t?.remove)try{t.remove(e)}catch{}}function En(e,t,n){const r=document.getElementById(e);if(!r)return void window.postMessage({source:n,type:"err",err:"mount"},location.origin);const o=e=>{window.postMessage({source:n,...e},location.origin)},a=e=>{(()=>{const e=r.getAttribute("data-sw-ts-id"),t=window.turnstile;if(e&&t?.remove)try{t.remove(e)}catch{}r.removeAttribute("data-sw-ts-id"),r.replaceChildren()})();try{const n=e.render(r,{sitekey:t,theme:matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light",callback:e=>o({type:"token",token:e})});n&&r.setAttribute("data-sw-ts-id",n),o({type:"ready"})}catch{o({type:"err",err:"render"})}},i=e=>{const t=window.turnstile;t?.render?a(t):Date.now()>e?o({type:"err",err:"timeout"}):setTimeout(()=>i(e),50)};i(Date.now()+15e3)}async function In(e){const t=async n=>{const r=await fetch(`${e}/api/account/check-auth/`,{credentials:"include",cache:"no-store"});return 401!==r.status||n?r:(await fetch(`${e}/api/account/token/refresh/`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:"{}"})).ok?t(!0):r};return(await t(!1)).ok}async function Rn(e,t){const n=async r=>{const o=await fetch(`${e}/api/file/request-download/file/${t}`,{credentials:"include",cache:"no-store"});return 401!==o.status||r?o:(await fetch(`${e}/api/account/token/refresh/`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:"{}"})).ok?n(!0):o},r=await n(!1);let o={};try{o=await r.json()}catch{}return r.ok&&"success"===o.status&&"string"==typeof o.data?.token?o.data.token:""}async function xn(e,t,n,r){const o=async(t,n,r)=>{const a=await fetch(`${e}${t}`,{credentials:"include",cache:"no-store",...n});return 401!==a.status||r?a:(await fetch(`${e}/api/account/token/refresh/`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:"{}"})).ok?o(t,n,!0):a},a=async e=>{try{return await e.json()}catch{return{}}},i=(e,t)=>"string"==typeof e.errors?.detail&&e.errors.detail||"string"==typeof e.message&&e.message||t;let s=r;if(!s){const e=await o(`/api/file/request-download/file/${t}`,void 0,!1),n=await a(e);if(!e.ok||"success"!==n.status||"string"!=typeof n.data?.token)return{ok:!1,err:i(n,e.ok?"token":`auth ${e.status}`)};s=n.data.token}const c=await o("/api/file/new-download-file/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:s,captcha_token:n})},!1),l=await a(c),d=l.data?.download_url;return"string"==typeof d&&d?{ok:!0,url:d}:{ok:!1,err:i(l,c.ok?"download":`unlock ${c.status}`)}}var An=async e=>{if(!e)return!1;try{return ue(new URL(e).hostname,"dlsurf")}catch{return!1}};var Nn="alpharede",$n=/^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{8,}$/,Tn=e=>/^https?:\/\//i.test(e),Mn=async(e,t)=>{const n=(e,n,r)=>{t?.({lead:e,detail:n,status:r})};n("Hang tight — unlocking your link.","Skip Wait is working. You don't need to tap anything.","Opening your short link");const r=await fetch(e,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:"text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"}}),o=new URL(r.url);if(o.hostname===new URL(e).hostname)throw new Error("gate");const a=o.origin;n("Skipping the wait pages.","Those ad steps stay in the background — nothing to click.","Starting your session");const i=await fetch(`${a}/api/session-info`,{credentials:"include",cache:"no-store",headers:{Accept:"application/json"}});if(!i.ok)throw new Error("session");const s=await i.json();if(!(e=>{if(!e||"object"!=typeof e)return!1;const t=e;return!0===t.hasSession&&"string"==typeof t.sessionToken&&!!t.sessionToken&&"number"==typeof t.stageId&&"number"==typeof t.stageNumber&&"number"==typeof t.totalStage&&t.totalStage>=1})(s))throw new Error("session");const{sessionToken:c,stageId:l,stageNumber:d,totalStage:u}=s;for(let p=d+1;p<=u+1;p++){const e=Math.min(p,u);n(`Unlocking step ${e} of ${u}.`,"Skip Wait is advancing each step for you. You don't need to tap anything.",p<=u?`Skipping step ${e} of ${u}`:"Fetching your destination");const t=encodeURIComponent(JSON.stringify({0:{json:{token:c,progress:p,stageId:l}}})),r=(await(await fetch(`${a}/api/trpc/linkSession.nextStage?batch=1&input=${t}`,{credentials:"include",cache:"no-store",headers:{Accept:"application/json"}})).json())[0]?.result?.data?.json?.destinationLink;if("string"==typeof r&&Tn(r))return n("Almost there.","Opening your destination now.","Opening your link"),r}throw new Error("dest")},On=918400,Cn=()=>Array.from({length:8},(e,t)=>On+t),Un=async()=>{const e=await pe(Nn);e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Cn(),addRules:e.slice(0,8).map((e,t)=>({id:On+t,priority:1,action:{type:"redirect",redirect:{regexSubstitution:`chrome-extension://${chrome.runtime.id}/working.html?site=${Nn}&u=https://${e}/\\1`}},condition:{regexFilter:`^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*[0-9][A-Za-z0-9]*|[A-Za-z0-9]*[0-9][A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,resourceTypes:["main_frame"]}}))}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Cn(),addRules:[]})},Pn="skip-wait-alpharede",Wn=((()=>{let e=null,t=null,n=0,r="",o="",a="";const i=()=>`${r}${".".repeat(n+1)}`,s=()=>{e&&(n=(n+1)%3,e.setStatus(i()))},c=()=>{n=0,e&&(e?.setNote({lead:o,detail:a}),e.setStatus(i()),null==t&&(t=window.setInterval(s,450)))},l=()=>(document.documentElement.classList.add(ve(Pn)),e||(e=Ie({id:Pn,brand:"Skip Wait",note:{lead:o,detail:a},status:i(),countdownLabel:"Your link opens in"}),e))})(),"earnlinks"),qn=/^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/,Dn=e=>/^https?:\/\//i.test(e),jn=918498,Fn=(e,t)=>{e?.(t)},Bn=(e,t)=>{try{const n=new URL(e.replace(/&amp;/g,"&").replace(/\\\//g,"/"),t);return Dn(n.href)?n.href:null}catch{return null}},Hn=(e,t)=>{const n=t.replace(/[[\]]/g,"\\$&"),r=e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`,"i"));return r?.[1]??r?.[2]??null},zn=e=>!!Hn(e,"ad_form_data")&&!!Hn(e,"_csrfToken"),Vn=async(e,t,n)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[jn],addRules:[{id:jn,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await n()}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[jn]}).catch(()=>{})}},Kn=async(e,t)=>{const n=async()=>{const t=await fetch(e,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:"text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"}});if(!t.ok)throw new Error("hop");return{url:t.url||e,html:await t.text()}};return t?Vn(e,t,n):n()},Gn=(e,t,n)=>{const r=new URL(n).hostname,o=(e=>{const[t]=new URL(e).pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return t??""})(n),a=[],i=e=>{e&&((e,t)=>{t&&!e.includes(t)&&e.push(t)})(a,Bn(e,t))};for(const c of e.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>[\s\S]{0,500}?<button\b[^>]*\bid=["'](?:tp-snp2|notarobot)["']/gi))i(c[1]);for(const c of e.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>[\s\S]{0,240}?Click here to continue/gi))i(c[1]);if(o){const t=o.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),n=r.replace(/\./g,"\\.");for(const r of e.matchAll(new RegExp(`href=["']([^"']*[?&](?:dsp|grey|isp)=${t}[^"']*)["']`,"gi")))i(r[1]);for(const r of e.matchAll(new RegExp(`href=["'](https?://[^"']*${n}/${t}/?[^"']*)["']`,"gi")))i(r[1])}const s=a.filter(e=>{try{return new URL(e).hostname!==r}catch{return!1}});return s.length?s:a},Zn=(e,t)=>((e,t)=>{if(e.length>8e3)return null;const n=(e.match(/<meta[^>]*http-equiv=["']?refresh["']?[^>]*content=["'][^"']*URL=['"]?([^"'\s>]+)/i)??e.match(/<meta[^>]*content=["'][^"']*URL=['"]?([^"'\s>]+)[^"']*["'][^>]*http-equiv=["']?refresh/i)??e.match(/(?:window\.)?location(?:\.href)?\s*=\s*["']([^"']+)["']/i)??e.match(/location\.replace\(\s*["']([^"']+)["']/i))?.[1]?.trim().replace(/['"]+$/,"");return n?Bn(n,t):null})(e.html,e.url)??Gn(e.html,e.url,t)[0]??null,Xn=async(e,t)=>{Fn(t,{lead:"Hang tight — unlocking your link.",detail:"Skip Wait is working. You don't need to tap anything.",status:"Opening your short link"});const n=await(async(e,t)=>{let n=null,r=await Kn(e,n);for(let o=0;o<24;o++){if(zn(r.html))return r;const a=Zn(r,e);if(!a)throw new Error("hop");n=r.url,Fn(t,{lead:"Skipping the wait pages.",detail:"Flyer hops stay in the background — nothing to click.",status:0===o?"Starting unlock":`Skipping step ${o+1}`}),r=await Kn(a,n)}if(!zn(r.html))throw new Error("banner");return r})(e,t),r=new URL(n.url).origin===new URL(e).origin?n.url:e,o=(e=>{const t=e.match(/["']counter_value["']\s*:\s*["']?(\d+)/i),n=e.match(/id=["']timer["'][^>]*>\s*(\d+)/i),r=Number(t?.[1]??n?.[1]??0);return Number.isFinite(r)&&r>0?Math.min(r,120):0})(n.html);var a;o>0&&(Fn(t,{lead:"Unlocking your link.",detail:"Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",status:"Waiting for unlock timer"}),await(a=1e3*o,new Promise(e=>setTimeout(e,a)))),Fn(t,{lead:"Unlocking your link.",detail:"Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",status:"Getting your link"});const i=await(async(e,t)=>{const n=Hn(t,"ad_form_data"),r=Hn(t,"_csrfToken");if(!n||!r)throw new Error("form");const o=t.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??t.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??"/links/go",a=Dn(o)?o:new URL(o,e).href,i=new URLSearchParams({_method:Hn(t,"_method")??"POST",_csrfToken:r,ad_form_data:n}),s=Hn(t,"_Token[fields]"),c=Hn(t,"_Token[unlocked]");return s&&i.set("_Token[fields]",s),c&&i.set("_Token[unlocked]",c),await chrome.cookies.set({url:e,name:"ab",value:"1",path:"/"}).catch(()=>{}),Vn(a,e,async()=>{const e=await fetch(a,{method:"POST",credentials:"include",cache:"no-store",headers:{Accept:"application/json, text/javascript, */*; q=0.01","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest"},body:i});if(!e.ok)throw new Error("go");const t=JSON.parse(await e.text()),n="string"==typeof t.url?t.url.trim():"";if(!n||!Dn(n))throw new Error(t.message||"dest");return n})})(r,n.html);return Fn(t,{lead:"Almost there.",detail:"Opening your destination now.",status:"Opening your link"}),i},Jn=918500,Yn=()=>Array.from({length:32},(e,t)=>Jn+t),Qn=async()=>{const e=await pe(Wn);e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Yn(),addRules:e.slice(0,32).map((e,t)=>({id:Jn+t,priority:1,action:{type:"redirect",redirect:{regexSubstitution:`chrome-extension://${chrome.runtime.id}/working.html?site=${Wn}&u=https://${e}/\\1`}},condition:{regexFilter:`^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,resourceTypes:["main_frame"]}}))}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Yn(),addRules:[]})},er="skip-wait-earnlinks",tr=((()=>{let e=null,t=null,n=0,r="",o="",a="";const i=()=>`${r}${".".repeat(n+1)}`,s=()=>{e&&(n=(n+1)%3,e.setStatus(i()))},c=()=>{n=0,e&&(e?.setNote({lead:o,detail:a}),e.setStatus(i()),null==t&&(t=window.setInterval(s,450)))},l=()=>(document.documentElement.classList.add(ve(er)),e||(e=Ie({id:er,brand:"Skip Wait",note:{lead:o,detail:a},status:i(),countdownLabel:"Your link opens in"}),e))})(),/^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/),nr=e=>/Session expired! Please verify captcha again/i.test(e)||/CAPTCHA not detected or missing keys/i.test(e)||/Captcha Verification Failed/i.test(e),rr=918521,or=["go_d2","getmylink","nextpage"],ar=(e,t)=>{e?.(t)},ir=(e,t)=>{const n=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),r=e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`,"i"));return r?.[1]??r?.[2]??null},sr=async(e,t,n)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[rr],addRules:[{id:rr,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await n()}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[rr]}).catch(()=>{})}},cr=(e,t,n)=>(async(e,t,n)=>{const r=async()=>{const n=await fetch(e,{...t,credentials:"include",cache:"no-store",redirect:"follow"});if(!n.ok)throw new Error("hop");return{url:n.url||e,html:await n.text()}};return n?sr(e,n,r):r()})(e,{method:"POST",headers:{Accept:"text/html,*/*","Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(t)},n),lr=e=>{const t=ir(e,"token"),n=ir(e,"alias");if(!t||!n)return null;const r={token:t,alias:n};for(const o of["c_d","c_t","url","visit_token","mysite","ad_type","next_page"]){const t=ir(e,o);null!=t&&(r[o]=t)}return r},dr=(e,t)=>{const n=e.match(new RegExp(`<form\\b[^>]*\\bid="${t}"[^>]*>`,"i"));if(!n)return null;const r=n[0].match(/\baction="([^"]+)"/i)?.[1]?.trim()??"";if(!/^https?:\/\//i.test(r))return null;const o=e.slice(n.index+n[0].length),a=o.search(/<\/form>/i),i=lr(a<0?o:o.slice(0,a));return i?{action:r,fields:i}:null},ur=(e,t)=>{for(const n of or){const t=dr(e,n);if(t)return t}return((e,t)=>{for(const n of e.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/gi)){const e=n[1]??"",r=(n[0].match(/^<form\b[^>]*/i)?.[0]??"").match(/\baction="([^"]+)"/i)?.[1]?.trim()??"";if(!/^https?:\/\//i.test(r)||!ir(e,"visit_token"))continue;try{if(new URL(r).origin===t)continue}catch{continue}const o=lr(e);if(o)return{action:r,fields:o}}return null})(e,new URL(t).origin)},pr=e=>null!=ir(e,"ad_form_data"),mr=async(e,t,n)=>{ar(n,{lead:"Hang tight — unlocking your link.",detail:"You don't need to tap anything on the page.",status:"Skipping wait pages"});const r=await(async(e,t,n)=>{let r={url:e,html:t};for(let o=0;o<12;o++){if(nr(r.html))throw new Error("reject");if(pr(r.html))return r;const t=ur(r.html,e);if(!t)throw new Error("form");ar(n,{lead:"Skipping the wait pages.",detail:"Mediator hops run in the background — nothing to click.",status:0===o?"Starting unlock":`Skipping step ${o+1}`}),r=await cr(t.action,t.fields,r.url)}if(!pr(r.html))throw new Error("shell");return r})(e,t,n),o=new URL(r.url).origin===new URL(e).origin?r.url:e,a=(e=>{const t=Number(e.match(/["']counter_value["']\s*:\s*["']?(\d+)/i)?.[1]??0);return Number.isFinite(t)&&t>0?Math.min(t,120):0})(r.html);var i;return a>0&&(ar(n,{lead:"Unlocking your link.",detail:"Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",status:"Your link is almost ready",countdownSec:a}),await(i=1e3*a,new Promise(e=>setTimeout(e,i)))),ar(n,{lead:"Unlocking your link.",detail:"Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",status:"Getting your destination"}),(async(e,t)=>{const n=ir(t,"ad_form_data");if(!n)throw new Error("go");const r=t.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??t.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??"/links/go",o=/^https?:\/\//i.test(r)?r:new URL(r,e).href,a=new URLSearchParams({_method:ir(t,"_method")??"POST",ad_form_data:n});return await chrome.cookies.set({url:e,name:"ab",value:"1",path:"/"}).catch(()=>{}),sr(o,e,async()=>{const e=await fetch(o,{method:"POST",credentials:"include",cache:"no-store",headers:{Accept:"application/json, text/javascript, */*; q=0.01","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest"},body:a});if(!e.ok)throw new Error("go");const t=JSON.parse(await e.text()),n="string"==typeof t.url?t.url.trim():"";if(!n||!/^https?:\/\//i.test(n))throw new Error("dest");return n})})(o,r.html)},hr="skip-wait-shrinkpe",fr=e=>e.replace(/\.+$/,""),wr=((()=>{let e=null,t=null,n=0,r="",o="Hang tight — unlocking your link.",a="You don't need to tap anything on the page.",i=!1;const s=()=>{null!=t&&(clearInterval(t),t=null)},c=()=>`${r}${".".repeat(n+1)}`,l=()=>{e?.setNote({lead:o,detail:a})},d=()=>{e&&!i&&(n=(n+1)%3,e.setStatus(c()))},u=()=>(document.documentElement.classList.add(ve(hr)),e||(e=Ie({id:hr,brand:"Skip Wait",note:{lead:o,detail:a},status:c(),countdownLabel:"Get Link ready in"}),e))})(),/^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/),yr=e=>/^https?:\/\//i.test(e),gr="text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",br=918610,kr=[/window\.location\.href\s*=\s*"((?:\\.|[^"\\])+)"/i,/window\.location\.href\s*=\s*'((?:\\.|[^'\\])+)'/i,/location\.replace\(\s*"((?:\\.|[^"\\])+)"\s*\)/i,/location\.replace\(\s*'((?:\\.|[^'\\])+)'\s*\)/i],vr=(e,t)=>{e?.(t)},_r=(e,t)=>{const n=t.replace(/[[\]]/g,"\\$&"),r=e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`,"i"));return r?.[1]??r?.[2]??null},Lr=async(e,t)=>{const n=await chrome.cookies.get({url:e,name:t});if(!n?.value)return"";try{return decodeURIComponent(n.value)}catch{return n.value}},Sr=async e=>{const t=await Lr(e,"XSRF-TOKEN");if(!t)throw new Error("xsrf");const n=`#${btoa("a".repeat(64))}`;return t.slice(0,Math.max(0,128-n.length))+n},Er=async(e,t,n,r)=>{const o=await Lr(e,"XSRF-TOKEN");if(!o)throw new Error("xsrf");const a=`${e}${t}`;return(async(e,t,n)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[br],addRules:[{id:br,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await n()}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[br]}).catch(()=>{})}})(a,r,async()=>{const e=await fetch(a,{method:"POST",credentials:"include",cache:"no-store",headers:{Accept:"application/json","Content-Type":"application/json","X-XSRF-TOKEN":o},body:JSON.stringify(n)}),r=await e.text();let i;try{i=JSON.parse(r)}catch{throw new Error(`${t} json`)}if(!e.ok)throw new Error(`${t} ${e.status}`);return i})},Ir=e=>{for(const t of kr){const n=t.exec(e);if(!n?.[1])continue;const r=n[1].replace(/\\\//g,"/").replace(/\\u002f/gi,"/").trim();if(yr(r))return r}return null},Rr=async(e,t)=>{vr(t,{lead:"Hang tight — unlocking your link.",detail:"Skip Wait skips the mediator pages in the background.",status:"Reading your short link…"});const{bindUrl:n,origin:r}=await(async e=>{const t=await fetch(e,{credentials:"include",cache:"no-store",headers:{Accept:gr}});if(!t.ok)throw new Error("landing");const n=await t.text(),r=n.match(/<form[^>]+id="form"[^>]+action="([^"]+)"/i)?.[1]??n.match(/<form[^>]+action="([^"]+)"[^>]+id="form"/i)?.[1]??"",o=_r(n,"alias")?.trim()??"",a=_r(n,"ray_id")?.trim()??"";if(!yr(r)||!o||!a)throw new Error("form");const i=new URL(r);if(i.searchParams.set("ray_id",a),i.searchParams.set("alias",o),!(await ue(i.hostname,"sfl-blog")))throw new Error("bind host");return{bindUrl:i.href,origin:i.origin}})(e);vr(t,{lead:"Skipping mediator waits.",detail:"Binding the unlock session without opening those pages.",status:"Binding session…"});const o=await(async(e,t)=>{const n=await fetch(e,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:gr}});if(!n.ok)throw new Error("bind");const r=n.url;if(new URL(r).origin!==t||/redirect\.php/i.test(r))throw new Error("blog");return r})(n,r);return vr(t,{lead:"Unlocking your link.",detail:"Those gate timers stay in the background — you don't need to tap anything.",status:"Starting unlock…"}),(async(e,t,n)=>{let r=await Er(e,"/api/session",{_token:await Sr(e)},t);for(let o=0;o<6;o++){const o=Number(r.step);if(!Number.isFinite(o))throw new Error("step");if(1!==o){vr(n,{lead:"Almost there.",detail:"Fetching your destination from the unlock page.",status:"Getting destination…"});const r=Math.floor(1e3*Math.random()),o=`${2*(1440+r)}.${2*(900+r)}`,a=(await Er(e,"/api/go",{key:r,size:o},t)).url?.trim()??"";if(!yr(a))throw new Error("ready");const i=await fetch(a,{credentials:"include",cache:"no-store",headers:{Accept:gr}});if(!i.ok)throw new Error("ready fetch");const s=Ir(await i.text());if(!s)throw new Error("dest");return s}if(null!=r.captcha&&""!==r.captcha)throw new Error("captcha");vr(n,{lead:"Still unlocking.",detail:"Skip Wait is verifying the session — no continue taps needed.",status:"Verifying unlock…"}),await Er(e,"/api/verify",{_a:0,captcha:"",passcode:""},t),r=await Er(e,"/api/session",{_token:await Sr(e)},t)}throw new Error("loop")})(r,o,t)},xr=918620,Ar=()=>Array.from({length:8},(e,t)=>xr+t),Nr=async()=>{const e=await pe("sfl");e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Ar(),addRules:e.slice(0,8).map((e,t)=>({id:xr+t,priority:1,action:{type:"redirect",redirect:{regexSubstitution:`chrome-extension://${chrome.runtime.id}/working.html?site=sfl&u=https://${e}/\\1`}},condition:{regexFilter:`^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,resourceTypes:["main_frame"]}}))}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:Ar(),addRules:[]})},$r="skip-wait-sfl",Tr=["Binding session…","Skipping gate waits…","Verifying unlock…","Fetching destination…"],Mr=((()=>{let e=null,t=null,n=0,r=!1;const o=(t,n,r)=>{document.documentElement.classList.add(ve($r));const o={lead:n??"Hang tight — unlocking your link.",detail:r??"Skip Wait skips the mediator pages in the background."};return e?(e.setNote(o),e.setStatus(t),e):(e=Ie({id:$r,brand:"Skip Wait",note:o,status:t,countdownLabel:"Your link opens in"}),e)}})(),"liteshort"),Or=/^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/,Cr=e=>/^https?:\/\//i.test(e),Ur=e=>{const[t,...n]=e.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return t&&0===n.length&&Or.test(t)?t:null},Pr=918701,Wr="text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",qr=(e,t)=>{const n=t.replace(/[[\]]/g,"\\$&"),r=e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`,"i"));return r?.[1]??r?.[2]??null},Dr=async(e,t,n)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Pr],addRules:[{id:Pr,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await n()}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Pr]}).catch(()=>{})}},jr=async(e,t)=>{const n=await fetch(`${e}/${encodeURIComponent(t)}`,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:Wr}});if(!n.ok)throw new Error("entry");const r=(e=>{const t=(e.match(/<a[^>]*class="[^"]*\bbtn\b[^"]*"[^>]*href="(https?:\/\/[^"]+)"/i)??e.match(/href="(https?:\/\/[^"]+)"[^>]*>\s*Continue to Destination/i))?.[1]?.trim()??"";return Cr(t)?t:null})(await n.text());if(!r)throw new Error("continue");return r},Fr=(e,t)=>Dr(e,t,async()=>{const t=await fetch(e,{credentials:"include",cache:"no-store",redirect:"manual",headers:{Accept:Wr}});if("opaqueredirect"===t.type||t.status>=300&&t.status<400)throw new Error("unlock redirect");if(!t.ok)throw new Error("unlock");const n=await t.text();if(!(e=>!!qr(e,"ad_form_data"))(n))throw new Error("form");return n}),Br=async(e,t)=>{const n=(e=>{try{return Ur(new URL(e).pathname)}catch{return null}})(e);if(!n)throw new Error("alias");const{entry:r,unlock:o}=await(async()=>{const e=await s(Mr),t=e[0],n=e[1];if(!t||!n)throw new Error("hosts");return{entry:`https://${t}`,unlock:`https://${n}`}})(),a=`${o}/${encodeURIComponent(n)}`,i=await jr(r,n),c=await Fr(a,i),l=(e=>{const t=e.match(/["']counter_value["']\s*:\s*["']?(\d+)/),n=t?Number(t[1]):5;return Number.isFinite(n)&&n>=0?Math.min(n,120):5})(c);var d;return l>0&&(t?.({waitEndTs:Date.now()+1e3*l}),await(d=1e3*l,new Promise(e=>setTimeout(e,d)))),(async(e,t)=>{const n=qr(t,"ad_form_data"),r=qr(t,"_csrfToken");if(!n||!r)throw new Error("form");const o=t.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??t.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??"/links/go",a=Cr(o)?o:new URL(o,e).href,i=new URLSearchParams({_method:qr(t,"_method")??"POST",_csrfToken:r,ad_form_data:n}),s=qr(t,"_Token[fields]"),c=qr(t,"_Token[unlocked]");return s&&i.set("_Token[fields]",s),c&&i.set("_Token[unlocked]",c),await chrome.cookies.set({url:e,name:"ab",value:"1",path:"/"}).catch(()=>{}),Dr(a,e,async()=>{const e=await fetch(a,{method:"POST",credentials:"include",cache:"no-store",headers:{Accept:"application/json, text/javascript, */*; q=0.01","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest"},body:i});if(!e.ok)throw new Error("go");const t=JSON.parse(await e.text()),n="string"==typeof t.url?t.url.trim():"";if(!n||!Cr(n))throw new Error(t.message||"dest");return n})})(a,c)},Hr=918700,zr=async()=>{const e=await pe(Mr);e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Hr],addRules:[{id:Hr,priority:2,action:{type:"modifyHeaders",responseHeaders:[{header:"Location",operation:"remove"}]},condition:{requestDomains:e,resourceTypes:["main_frame"]}}]}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Hr],addRules:[]})},Vr="skip-wait-liteshort",Kr=["Opening LiteShort","Skipping Continue to Destination","Waiting on Get Link","Opening your destination"],Gr="LiteShort is unlocking.",Zr="Skip Wait clears Continue pages and waits only for the real Get Link timer.",Xr=((()=>{let e=null,t=null,n=null,r=0,o=0,a=!1,i="";const s=()=>{null!=t&&(clearInterval(t),t=null),null!=n&&(clearInterval(n),n=null)},c=()=>`${Kr[o]}${".".repeat(r+1)}`,l=(t,n)=>{document.documentElement.classList.add(ve(Vr));const r={lead:t??Gr,detail:n??Zr},o=a?i:c();return e?(e.setNote(r),e.setStatus(o),e.setError(null),e):(e=Ie({id:Vr,brand:"Skip Wait",note:r,status:o,countdownLabel:"Get Link ready in"}),e)},d=()=>{a||(null==t&&(t=window.setInterval(()=>{!a&&e&&(r=(r+1)%3,e.setStatus(c()))},450)),null==n&&(n=window.setInterval(()=>{!a&&e&&(o>=Kr.length-1?null!=n&&(clearInterval(n),n=null):(o+=1,r=0,e.setStatus(c())))},1800)))}})(),/^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/),Jr=e=>/^https?:\/\//i.test(e),Yr=e=>{const[t,...n]=e.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return t&&0===n.length&&Xr.test(t)?t:null},Qr=918711,eo="text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",to=(e,t)=>{e?.(t)},no=(e,t)=>{const n=t.replace(/[[\]]/g,"\\$&"),r=e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`,"i")),o=r?.[1]??r?.[2]??null;if(null==o)return null;if(!/%[0-9A-Fa-f]{2}/.test(o))return o;try{return decodeURIComponent(o)}catch{return o}},ro=e=>!!no(e,"ad_form_data")&&!!no(e,"_csrfToken"),oo=async(e,t,n)=>{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Qr],addRules:[{id:Qr,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:t}]},condition:{urlFilter:`|${e}`,resourceTypes:["xmlhttprequest"],tabIds:[chrome.tabs.TAB_ID_NONE]}}]});try{return await n()}finally{await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[Qr]}).catch(()=>{})}},ao=async(e,t)=>{const n=(e=>{try{return Yr(new URL(e).pathname)}catch{return null}})(e);if(!n)throw new Error("alias");const r=`${new URL(e).origin}/${encodeURIComponent(n)}`;to(t,{lead:"Hang tight — unlocking your link.",detail:"Skip Wait is working. You don’t need to tap anything.",status:"Opening Nitro Link"});const o=await(async e=>{const t=await fetch(e,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:eo}});if(!t.ok)throw new Error("entry");const n=await t.text();if(ro(n))return{referer:e,html:n};const r=t.url||e;if(!Jr(r))throw new Error("gate");return{referer:r}})(r);to(t,{lead:"Hang tight — unlocking your link.",detail:"Skip Wait is unlocking Get Link in the background.",status:"Loading Get Link"});const a=o.html??await((e,t)=>oo(e,t,async()=>{const t=await fetch(e,{credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:eo}});if(!t.ok)throw new Error("unlock");const n=await t.text();if(!ro(n))throw new Error("form");return n}))(r,o.referer),i=(e=>{const t=e.match(/["']counter_value["']\s*:\s*["']?(\d+)/),n=t?Number(t[1]):0;return Number.isFinite(n)&&n>0?Math.min(n,120):0})(a);if(i>0){const e=Date.now()+1e3*i;to(t,{lead:"Your link is almost ready.",detail:"Skip Wait is waiting for the Get Link timer from this page.",status:"Waiting for Get Link",waitEndTs:e}),await(s=1e3*i,new Promise(e=>setTimeout(e,s)))}var s;to(t,{lead:"Almost there.",detail:"Skip Wait is unlocking Get Link now.",status:"Posting Get Link"});const c=await(async(e,t)=>{const n=no(t,"ad_form_data"),r=no(t,"_csrfToken");if(!n||!r)throw new Error("form");const o=t.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??t.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1]??"/links/go",a=Jr(o)?o:new URL(o,e).href,i=new URLSearchParams({_method:no(t,"_method")??"POST",_csrfToken:r,ad_form_data:n}),s=no(t,"_Token[fields]"),c=no(t,"_Token[unlocked]");return s&&i.set("_Token[fields]",s),c&&i.set("_Token[unlocked]",c),oo(a,e,async()=>{const t=await fetch(a,{method:"POST",credentials:"include",cache:"no-store",headers:{Accept:"application/json, text/javascript, */*; q=0.01","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest",Origin:new URL(e).origin},body:i});if(!t.ok)throw new Error("go");const n=JSON.parse(await t.text()),r="string"==typeof n.url?n.url.trim():"";if(!r||!Jr(r))throw new Error(n.message||"dest");return r})})(r,a);return to(t,{lead:"Almost there.",detail:"Opening your destination now.",status:"Opening your destination"}),c},io=918710,so=async()=>{const e=await pe("nitrolink");e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[io],addRules:[{id:io,priority:2,action:{type:"modifyHeaders",responseHeaders:[{header:"Location",operation:"remove"}]},condition:{requestDomains:e,resourceTypes:["main_frame"]}}]}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[io],addRules:[]})},co="skip-wait-nitrolink",lo=((()=>{let e=null,t=null,n=0,r="",o="",a="",i=!1;const s=()=>{null!=t&&(clearInterval(t),t=null)},c=()=>`${r}${".".repeat(n+1)}`,l=()=>(document.documentElement.classList.add(ve(co)),e||(e=Ie({id:co,brand:"Skip Wait",note:{lead:o,detail:a},status:c(),countdownLabel:"Your link opens in"}),e)),d=()=>{const e=l();return e.setNote({lead:o,detail:a}),e.setStatus(i?r:c()),e}})(),"unlocktoearn"),uo=/^(?=.*[A-Za-z])[A-Za-z0-9]{4,12}$/,po=e=>/^https?:\/\//i.test(e),mo=async e=>{const t=await(async e=>{const t=(await s(lo))[0];if(!t)throw new Error("hosts");return`https://${t}/${encodeURIComponent(e)}`})(e),n=new URL(t).origin,r=(await fetch(t,{method:"POST",credentials:"include",cache:"no-store",redirect:"follow",headers:{Accept:"text/html,application/xhtml+xml;q=0.9,*/*;q=0.8","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",Origin:n,Referer:t},body:new URLSearchParams({referdomain:"Direct",submit:""})})).url;if(!po(r)||new URL(r).origin===n)throw new Error("dest");return r},ho=918800,fo=918801,wo=new Map,yo=e=>{const t=wo.get(e);if(t)return t;const n=mo(e).finally(()=>{wo.delete(e)});return wo.set(e,n),n},go=async()=>{const e=await pe(lo),t=[ho,fo];e.length?await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:t,addRules:[{id:ho,priority:2,action:{type:"modifyHeaders",responseHeaders:[{header:"Location",operation:"remove"}]},condition:{requestDomains:e,resourceTypes:["main_frame"],requestMethods:["get"]}},{id:fo,priority:2,action:{type:"modifyHeaders",responseHeaders:[{header:"Content-Security-Policy",operation:"set",value:"script-src 'none'"}]},condition:{requestDomains:e,resourceTypes:["main_frame"]}}]}):await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:t,addRules:[]})},bo="skip-wait-unlocktoearn",ko=["Starting UnlockToEarn","Clearing unlock steps","Resolving your destination","Opening your destination"],vo="UnlockToEarn is finishing.",_o="Skip Wait stays on UnlockToEarn and opens your destination when ready.";(()=>{let e=null,t=null,n=null,r=0,o=0,a=!1,i="";const s=()=>{null!=t&&(clearInterval(t),t=null),null!=n&&(clearInterval(n),n=null)},c=()=>`${ko[o]}${".".repeat(r+1)}`,l=(t,n)=>{document.documentElement.classList.add(ve(bo));const r={lead:t??vo,detail:n??_o},o=a?i:c();return e?(e.setNote(r),e.setStatus(o),e.setError(null),e):(e=Ie({id:bo,brand:"Skip Wait",note:r,status:o,countdownLabel:"Ready in"}),e)}})();function Lo(){const e=window;if(e.__swCpmlinkNetAdblock)return;e.__swCpmlinkNetAdblock=!0;const t=()=>{},n={onDetected(){return this},onNotDetected(){return this}},r=(t,n)=>{try{Object.defineProperty(e,t,{configurable:!0,enumerable:!0,get:()=>n,set:()=>{}})}catch{e[t]=n}};r("Det",t),r("NotDet",t),r("blockAdBlock",n);const o=()=>{document.getElementById("disable")?.remove()};o(),new MutationObserver(o).observe(document.documentElement,{childList:!0,subtree:!0})}var So=()=>{try{window.grecaptcha?.reset()}catch{}},Eo=(e,t,n)=>{chrome.scripting.executeScript({target:{tabId:e,frameIds:[t]},world:"MAIN",injectImmediately:!0,func:n})};chrome.tabs.onRemoved.addListener(fe),chrome.runtime.onMessage.addListener((e,t,n)=>{if("SKIP_WAIT_COOMEET_MAIN"!==e?.type)return!1;const r=t.tab?.id,o=t.frameId;return void 0===r||void 0===o?(n({ok:!1}),!1):((async()=>{if(t.tab?.url&&!(await async function(e){try{return ue(new URL(e).hostname,"coomeet-iframe")}catch{return!1}}(t.tab.url)))return void n({ok:!1});const e=`${r}:${o}`;if(he.has(e))n({ok:!0,skipped:!0});else try{await chrome.scripting.executeScript({target:{tabId:r,frameIds:[o]},world:"MAIN",files:["content.js"]}),he.add(e),n({ok:!0})}catch{n({ok:!1})}})(),!0)}),chrome.tabs.onUpdated.addListener((e,t,n)=>{if("loading"!==t.status)return;const r=n.url||n.pendingUrl;if(!r||!URL.canParse(r))return;const{hostname:o,pathname:a}=new URL(r);ye.test(a)&&ue(o,"xdmovies").then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e},world:"MAIN",injectImmediately:!0,func:we})})}),chrome.runtime.onMessage.addListener((e,t,n)=>!("INJECT_VISIBILITY_SPOOF"!==e?.type||!t.tab?.id||(chrome.scripting.executeScript({target:{tabId:t.tab.id},func:we,world:"MAIN",injectImmediately:!0}).then(n).catch(n),0))),chrome.runtime.onMessage.addListener((e,t,n)=>{if("FCLC_ALERT_SUPPRESS"!==e?.type)return!1;const r=t.tab?.id,o=t.tab?.url??"";return!(void 0===r||!o||((async()=>{try{if(!(await ue(new URL(o).hostname,"fclc")))return void n(void 0)}catch{return void n(void 0)}chrome.scripting.executeScript({target:{tabId:r},func:Re,world:"MAIN",injectImmediately:!0}).then(n).catch(n)})(),0))}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("FCLC_LINKS_GO"!==e?.type)return!1;const r="string"==typeof e.action?e.action:"",o="string"==typeof e.referer?e.referer:"",a=e.fields&&"object"==typeof e.fields?e.fields:null;return r&&a&&xe(r)?(async function(e,t,n){try{const r=await fetch(e,{method:"POST",body:new URLSearchParams(t),credentials:"include",headers:{Accept:"application/json","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest",Referer:n}}),o=JSON.parse(await r.text()),a="string"==typeof o.url?o.url.trim():"";return"success"===o.status&&a&&xe(a)?{url:a,message:""}:{url:null,message:o.message||o.status||"unlock failed"}}catch{return{url:null,message:"network error"}}}(r,a,o).then(n),!0):(n({url:null,message:"invalid request"}),!1)}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&async function(e){try{const{hostname:t,pathname:n}=new URL(e);return await ue(t,"ankergames")&&Ae.test(n)}catch{return!1}}(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:Ne})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&Te(e.url).then(t=>{t&&Me(e.tabId,0)})}),chrome.runtime.onMessage.addListener((e,t)=>{if("ANYGAME_MAIN_DIRECT"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||(async()=>{t.tab?.url&&!(await Te(t.tab.url))||Me(n,t.frameId??0)})(),!1}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&Ce(e.url).then(t=>{t&&Ue(e.tabId,0)})}),chrome.runtime.onMessage.addListener((e,t)=>{if("APKTEAL_MAIN_DIRECT"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||(async()=>{t.tab?.url&&!(await Ce(t.tab.url))||Ue(n,t.frameId??0)})(),!1}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("FILECR_EXTRACT_LINK"!==e?.type)return!1;const r="string"==typeof e.url?e.url:"";return/^https?:\/\//i.test(r)?(fetch(r,{credentials:"omit",cache:"no-store",headers:{Accept:"text/html,*/*"}}).then(e=>e.ok?e.text():Promise.reject()).then(e=>n({url:Pe(r,e)})).catch(()=>n({url:null})),!0):(n({url:null}),!1)}),chrome.webNavigation.onHistoryStateUpdated.addListener(e=>{0===e.frameId&&(async()=>{let t;try{t=new URL(e.url).hostname}catch{return}await ue(t,"filecr")&&chrome.tabs.sendMessage(e.tabId,{type:"FILECR_ROUTE"}).catch(()=>{})})()}),chrome.tabs.onUpdated.addListener((e,t,n)=>{if("loading"!==t.status)return;const r=t.url??n.url;(async()=>{if(await async function(e){if(!e||!URL.canParse(e))return!1;const t=new URL(e);return!!We.test(t.pathname)&&ue(t.hostname,"flightsim")}(r))try{await chrome.scripting.executeScript({target:{tabId:e,allFrames:!1},world:"MAIN",injectImmediately:!0,func:qe})}catch{}})()}),je(),me(()=>{je()}),chrome.webNavigation.onBeforeNavigate.addListener(e=>{0===e.frameId&&(async()=>{try{if(!(await ue(new URL(e.url).hostname,"multiup")))return}catch{return}const t=!(n=e.url).includes("multiup")||n.includes("/en/mirror/")?null:n.match(He)?.[1]??n.match(Fe)?.[1]??n.match(Be)?.[1]??null;var n;t&&(le(),chrome.tabs.update(e.tabId,{url:`https://multiup.io/en/mirror/${t}`}))})()}),chrome.webNavigation.onBeforeNavigate.addListener(e=>{0===e.frameId&&qt.test(e.url)&&(async()=>{try{if(!(await ue(new URL(e.url).hostname,"link4m")))return}catch{return}const t=new URL(e.url).searchParams.get("url")?.trim();if(!t)throw new Error("link4m url");const n=atob(t);if(!/^https?:\/\//i.test(n))throw new Error("link4m dest");le(),chrome.tabs.update(e.tabId,{url:n})})()},{url:[{hostEquals:"link4m.co",pathPrefix:"/full/"}]}),chrome.webNavigation.onCommitted.addListener(e=>{if(0===e.frameId)try{const t=new URL(e.url);Ye(t.pathname,t.search)&&nt(e.tabId,0,tt)}catch{}}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if(void 0===r)return!1;const o=t.tab?.url??"";if("INJECT_LOOT"===e?.type)return!!rt(o)&&(nt(r,t.frameId??0,tt),!1);if("INJECT_LOOT_CAPTCHA"===e?.type){if(!rt(o))return!1;const e=t.frameId??0;return 0!==e?nt(r,e,et):((e,t)=>{chrome.scripting.executeScript({target:{tabId:e,allFrames:!0},world:"MAIN",injectImmediately:!0,func:t,args:[Qe]}).catch(()=>{})})(r,et),!1}return"LOOT_CAPTCHA_VERIFY"===e?.type&&"string"==typeof e.url&&"string"==typeof e.token&&((async()=>{if(!(await async function(e){try{const t=new URL(e);return await ue(t.hostname,"lootlabs")&&Je(t.pathname,t.search)}catch{return!1}}(o)))return void n({ok:!1});const t=new URL(e.url),r=t.searchParams.get("urid");n(r?{ok:(await fetch(`${t.origin}/captcha/verify`,{method:"POST",headers:{"content-type":"application/json"},credentials:"include",body:JSON.stringify({urid:r,token:e.token})})).ok}:{ok:!1})})(),!0)}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;return!(void 0===r||("CLOVER_LOOT_PENDING"===e?.type?(Ve.add(r),Xe(r),(e=>{const t=Ke.get(e);null!=t&&clearInterval(t);let n=0;const r=setInterval(()=>{if(!Ve.has(e)||n++>40)return clearInterval(r),void Ke.delete(e);Xe(e)},400);Ke.set(e,r)})(r),n({ok:!0}),0):"CLOVER_LOOT_SCAN"===e?.type?!Ve.has(r)||(Xe(r),n({ok:!0}),0):"CLOVER_LOOT_DONE"!==e?.type||(Ve.delete(r),(e=>{const t=Ke.get(e);null!=t&&clearInterval(t),Ke.delete(e)})(r),1)))}),chrome.webNavigation.onCommitted.addListener(e=>{Ve.has(e.tabId)&&Ge(e.url)&&Ze(e.tabId,e.frameId)}),chrome.runtime.onMessage.addListener((e,t)=>{if("XDMOVIES_MAIN_WORLD_RUN"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||chrome.scripting.executeScript({target:{tabId:n,frameIds:[t.frameId??0]},world:"MAIN",func:ot,args:[e.payload]}),!1}),ft(),me(()=>{ft()}),chrome.tabs.onRemoved.addListener(e=>{wt(e)}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if("AROLINKS_MEDIATOR_REFERER"===e.type){const t="string"==typeof e.shortUrl?e.shortUrl:"",r="string"==typeof e.assigned?e.assigned:"";return mt(t)&&mt(r)?((async()=>{try{const e=new URL(t).hostname;if(!(await ue(e,"arolinks")))return void n(null);n(await(async(e,t)=>{let n=t,r=e,o=`${new URL(t).origin}/`;for(let a=0;a<10;a++){const e=await ut(n,r);o=`${new URL(e.url).origin}/`;const t=lt(e.html,e.url);if(t){const a=await ut(t,e.url),i=ct(a.html,t);if(!i)break;r=t,n=i,o=`${new URL(t).origin}/`;continue}const a=ct(e.html,e.url);if(!a||a===e.url)break;r=e.url,n=a}return o})(t,r))}catch{n(null)}})(),!0):(n(null),!1)}if("AROLINKS_OPEN_DEST"===e.type){const o="string"==typeof e.url?e.url:"";return null!=r&&mt(o)?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"arolinks")))return void n(!1);await wt(r),await chrome.tabs.update(r,{url:o}),n(!0)}catch{n(!1)}})(),!0):(n(!1),!1)}if("AROLINKS_ARM_REFERER"!==e.type)return!1;const o="string"==typeof e.url?e.url:"",a="string"==typeof e.referer?e.referer:"";return null!=r&&mt(o)&&mt(a)?((async()=>{try{if(!(await ue(new URL(o).hostname,"arolinks")))return void n(!1);n(await(async(e,t,n)=>{const r=ht(e);try{return await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[r],addRules:[{id:r,priority:1,action:{type:"modifyHeaders",requestHeaders:[{header:"Referer",operation:"set",value:n}]},condition:{urlFilter:`|${t}`,resourceTypes:["main_frame"],tabIds:[e]}}]}),!0}catch{return!1}})(r,o,a))}catch{n(!1)}})(),!0):(n(!1),!1)}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("TIPSGURU_GET_DEST"!==e?.type)return!1;const r=t.tab?.url??t.url??"";return r?((async()=>{try{if(!(await ue(new URL(r).hostname,"tipsguru")))return void n({url:null})}catch{return void n({url:null})}var e;n({url:await(e=r,new Promise(t=>{chrome.cookies.getAll({url:e},e=>{if(chrome.runtime.lastError||!e?.length)return void t(null);const n=e.filter(e=>gt.has(e.name.toLowerCase())),r=e.filter(e=>!gt.has(e.name.toLowerCase()));for(const o of[...n,...r]){if(bt.has(o.name.toLowerCase()))continue;const e=kt(o.value);if(e)return void t(e)}t(null)})}))})})(),!0):(n({url:null}),!1)}),chrome.webNavigation.onCommitted.addListener(({frameId:e,tabId:t,url:n})=>{0===e&&(async()=>{await vt(n)&&St(t,0,_t)})()}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id,o=t.frameId??0;return"EXEIO_ADBLOCK_BYPASS"===e?.type?((async()=>{void 0!==r&&(t.tab?.url&&!(await vt(t.tab.url))||St(r,o,_t))})(),!1):"EXEIO_GO_UNLOCK"===e?.type&&void 0!==r&&((async()=>{!t.tab?.url||await vt(t.tab.url)?chrome.scripting.executeScript({target:{tabId:r,frameIds:[o]},world:"MAIN",func:Lt}).then(e=>n(e[0]?.result??{ok:!1,err:"no result"})).catch(e=>n({ok:!1,err:String(e)})):n({ok:!1,err:"not exeio"})})(),!0)}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&/\/Container\//i.test(e.url)&&(async()=>{await async function(e){try{return ue(new URL(e).hostname,"filecrypt")}catch{return!1}}(e.url)&&It(e.tabId,0)})()}),chrome.runtime.onMessage.addListener((e,t)=>{if("FILECRYPT_POW"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||It(n,t.frameId??0),!1}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&async function(e){try{return ue(new URL(e).hostname,"lksfy")}catch{return!1}}(e.url).then(t=>{t&&xt(e.tabId,0)})}),chrome.runtime.onMessage.addListener((e,t)=>{if("LKSFY_ADBLOCK_BYPASS"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||xt(n,t.frameId??0),!1}),(()=>{const e=new Set;let t=chrome.storage.session.get(At).then(t=>{const n=t[At];if(Array.isArray(n))for(const r of n)"number"==typeof r&&e.add(r)});const n=e=>{t=t.then(e)},r=()=>chrome.storage.session.set({[At]:[...e]});chrome.webNavigation.onBeforeNavigate.addListener(({frameId:t,tabId:o,url:a})=>{0===t&&a.startsWith("http")&&(async e=>{try{const t=new URL(e);if($t.test(t.pathname)){const e=t.searchParams.get("get"),n=t.searchParams.get("short");return null!==e&&null!==n&&Nt.test(e)&&await ue(n,"rinku")}if(!(await ue(t.hostname,"rinku")))return!1;const[n,...r]=t.pathname.split("/").filter(Boolean);return void 0!==n&&0===r.length&&Nt.test(n)}catch{return!1}})(a).then(t=>{t&&n(()=>{if(!e.has(o))return e.add(o),r()})})}),chrome.runtime.onMessage.addListener((t,r,o)=>{const a=r.tab?.id;return"RINKU_FLOW_TAB"===t.type&&null!=a&&(n(()=>{o(e.has(a))}),!0)}),chrome.tabs.onRemoved.addListener(t=>{n(()=>{if(e.delete(t))return r()})})})(),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;return"CUTY_GO_UNLOCK"===e?.type&&void 0!==r&&((async()=>{!t.tab?.url||await Tt(t.tab.url)?chrome.scripting.executeScript({target:{tabId:r,frameIds:[t.frameId??0]},world:"MAIN",func:Ut}).then(e=>n(e[0]?.result??{ok:!1,err:"no result"})).catch(e=>n({ok:!1,err:String(e)})):n({ok:!1,err:"not cuty"})})(),!0)}),chrome.webNavigation.onBeforeNavigate.addListener(e=>{0===e.frameId&&Pt(e.url).then(t=>{t&&(le(),chrome.tabs.update(e.tabId,{url:t}))})}),chrome.webNavigation.onCommitted.addListener(e=>{(async function(e){try{const t=new URL(e);return!!(await ue(t.hostname,"storyline-scorm"))&&(t.pathname.includes("index_lms.html")||t.pathname.includes("package_uploads"))}catch{return!1}})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[e.frameId]},world:"MAIN",injectImmediately:!0,func:Wt})})}),chrome.webNavigation.onCommitted.addListener(e=>{(async function(e){try{const t=new URL(e);return await ue(t.hostname,"streamerviewerbot")&&t.pathname.includes("/trial/trial.php")}catch{return!1}})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[e.frameId]},world:"MAIN",injectImmediately:!0,func:hn})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&wn(e.url).then(t=>{t&&gn(e.tabId,0)})}),chrome.runtime.onMessage.addListener((e,t)=>{if("WORKINK_HOOKS"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||(async()=>{t.tab?.url&&!(await wn(t.tab.url))||await gn(n,t.frameId??0)})(),!1}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("OCEANOFGAMES_RESOLVE_CDN"!==e?.type)return!1;const r="string"==typeof e.id?e.id:"",o="string"==typeof e.filename?e.filename:"",a="string"==typeof e.filesize?e.filesize:"";return r&&o?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"oceanofgames")))return void n({url:null});n({url:await zt(r,o,a)})}catch{n({url:null})}})(),!0):(n({url:null}),!1)}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("GAPKMOD_RESOLVE_DOWNLOAD_LINK"!==e.type||"string"!=typeof e.href||!e.href)return!1;const r=e.href;return(async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"gapkmod")))return void n({url:null});n({url:await Vt(r)})}catch{n({url:null})}})(),!0}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!Kt.test(t.pathname)&&ue(t.hostname,"getmodsapk")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:Gt})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!Zt.test(t.pathname)&&ue(t.hostname,"apkvision")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:Xt})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!Jt.test(t.pathname)&&ue(t.hostname,"apkaward")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:Yt})})}),chrome.webNavigation.onCommitted.addListener(e=>{if(0!==e.frameId||!URL.canParse(e.url))return;const t=new URL(e.url);Qt.test(t.pathname)&&ue(t.hostname,"fuzyapk").then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:en})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!tn.test(t.pathname)&&ue(t.hostname,"moddroid")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:nn})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!rn.test(t.pathname)&&ue(t.hostname,"modded-1")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:on})})}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&(async e=>{if(!URL.canParse(e))return!1;const t=new URL(e);return!!an.test(t.pathname)&&ue(t.hostname,"modsmaniac")})(e.url).then(t=>{t&&chrome.scripting.executeScript({target:{tabId:e.tabId,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:sn})})}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("DEVUPLOADS_DOWNLOAD2"!==e.type)return!1;const r="string"==typeof e.id?e.id.trim():"";return r?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"devuploads-mediator")))return void n({url:null});n({url:await ln(r)})}catch{n({url:null})}})(),!0):(n({url:null}),!1)}),chrome.webNavigation.onCommitted.addListener(({frameId:e,tabId:t,url:n})=>{0===e&&(async()=>{await(async e=>{try{const t=new URL(e);if(!(await ue(t.hostname,"dupload")))return!1;const n=t.pathname.replace(/^\/+|\/+$/g,"");return Boolean(n)&&!n.includes("/")&&dn.test(n)}catch{return!1}})(n)&&chrome.scripting.executeScript({target:{tabId:t,frameIds:[0]},world:"MAIN",injectImmediately:!0,func:mn})})()}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("DUPLOAD_DOWNLOAD2"!==e.type)return!1;const r="string"==typeof e.id?e.id.trim():"";return r?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"dupload")))return void n({url:null});n(await(async e=>{const t=`https://dupload.net/${e}`,n=new AbortController,r=await fetch(t,{method:"POST",credentials:"omit",cache:"no-store",signal:n.signal,headers:{Accept:"text/html,*/*","Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",Referer:t},body:new URLSearchParams({op:"download2",id:e,rand:"",referer:"",method_free:"",method_premium:"",adblock_detected:"0"})});if(un.test(r.url))return n.abort(),{url:r.url};const o=await r.text();return{url:null,missing:pn.test(o)}})(r))}catch{n({url:null})}})(),!0):(n({url:null}),!1)}),chrome.webNavigation.onCommitted.addListener(e=>{0===e.frameId&&vn(e.url).then(t=>{t&&_n(e.tabId,0)})}),chrome.runtime.onMessage.addListener((e,t)=>{if("skip-wait-vexfile-verify-hook"!==e?.type)return!1;const n=t.tab?.id,r=t.tab?.url;return!(void 0===n||!r||(vn(r).then(e=>{e&&_n(n,t.frameId??0)}),1))}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if(void 0===r||!e?.type)return!1;const o={tabId:r,frameIds:[t.frameId??0]},a=(e,t,r,o)=>{e?t().then(e=>n(r(e))).catch(()=>n(o)):n(o)};if("skip-wait-dlsurf-turnstile"===e.type){const r="string"==typeof e.mountId?e.mountId:"";return r?(An(t.tab?.url).then(e=>a(e,()=>chrome.scripting.executeScript({target:o,world:"MAIN",func:En,args:[r,"0x4AAAAAABbfHaaMuK4MmNeI","skip-wait-dlsurf"]}),()=>({ok:!0}),{ok:!1})),!0):(n({ok:!1}),!1)}if("skip-wait-dlsurf-turnstile-remove"===e.type){const r="string"==typeof e.widgetId?e.widgetId:"";return r?(An(t.tab?.url).then(e=>a(e,()=>chrome.scripting.executeScript({target:o,world:"MAIN",func:Sn,args:[r]}),()=>({ok:!0}),{ok:!1})),!0):(n({ok:!1}),!1)}if("skip-wait-dlsurf-auth"===e.type)return An(t.tab?.url).then(e=>a(e,()=>chrome.scripting.executeScript({target:o,world:"MAIN",func:In,args:[Ln]}),e=>({ok:!0===e[0]?.result}),{ok:!1})),!0;if("skip-wait-dlsurf-prefetch"===e.type){const r="string"==typeof e.slug?e.slug:"";return r?(An(t.tab?.url).then(e=>a(e,()=>chrome.scripting.executeScript({target:o,world:"MAIN",func:Rn,args:[Ln,r]}),e=>({token:e[0]?.result??""}),{token:""})),!0):(n({token:""}),!1)}if("skip-wait-dlsurf-unlock"===e.type){const r="string"==typeof e.slug?e.slug:"",i="string"==typeof e.captchaToken?e.captchaToken:"",s="string"==typeof e.jwt?e.jwt:"";return r&&i?(An(t.tab?.url).then(e=>a(e,()=>chrome.scripting.executeScript({target:o,world:"MAIN",func:xn,args:[Ln,r,i,s]}),e=>e[0]?.result??{ok:!1,err:"empty"},{ok:!1,err:e?"inject":"host"})),!0):(n({ok:!1,err:"args"}),!1)}return!1}),Un(),me(()=>{Un()}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("ALPHAREDE_RESOLVE"!==e.type)return!1;const r="string"==typeof e.unlockUrl?e.unlockUrl:"";if(!(e=>{try{const t=new URL(e);if(!Tn(t.href))return!1;const[n,...r]=t.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return!!n&&0===r.length&&$n.test(n)}catch{return!1}})(r))return n({ok:!1}),!1;const o=e=>{chrome.runtime.sendMessage({type:"ALPHAREDE_PROGRESS",...e}).catch(()=>{})};return(async()=>{try{if(!(await ue(new URL(r).hostname,"alpharede")))return void n({ok:!1});n({ok:!0,dest:await Mn(r,o)})}catch{n({ok:!1})}})(),!0}),Qn(),me(()=>{Qn()}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("EARNLINKS_RESOLVE"!==e.type)return!1;const r="string"==typeof e.unlockUrl?e.unlockUrl:"";if(!(e=>{try{const t=new URL(e);if(!Dn(t.href))return!1;const[n,...r]=t.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return!!n&&0===r.length&&qn.test(n)}catch{return!1}})(r))return n({ok:!1}),!1;const o=e=>{chrome.runtime.sendMessage({type:"EARNLINKS_PROGRESS",...e}).catch(()=>{})};return(async()=>{try{if(!(await ue(new URL(r).hostname,"earnlinks")))return void n({ok:!1});n({ok:!0,dest:await Xn(r,o)})}catch{n({ok:!1})}})(),!0}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("SHRINKPE_RESOLVE"!==e.type)return!1;const r="string"==typeof e.unlockUrl?e.unlockUrl:"",o="string"==typeof e.pageHtml?e.pageHtml:"";if(!(e=>{try{const t=new URL(e);if(!/^https?:\/\//i.test(t.href))return!1;const[n,...r]=t.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return!!n&&0===r.length&&tr.test(n)}catch{return!1}})(r)||!o)return n({ok:!1}),!1;const a=t.tab?.id,i=e=>{const t={type:"SHRINKPE_PROGRESS",unlockUrl:r,...e};null!=a?chrome.tabs.sendMessage(a,t).catch(()=>{}):chrome.runtime.sendMessage(t).catch(()=>{})};return(async()=>{try{if(!(await ue(new URL(r).hostname,"shrinkpe")))return void n({ok:!1});n({ok:!0,dest:await mr(r,o,i)})}catch{n({ok:!1})}})(),!0}),Nr(),me(()=>{Nr()}),chrome.runtime.onMessage.addListener((e,t,n)=>{if("SFL_RESOLVE"!==e.type)return!1;const r="string"==typeof e.unlockUrl?e.unlockUrl:"";if(!(e=>{try{const t=new URL(e);if(!yr(t.href))return!1;const[n,...r]=t.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return!!n&&0===r.length&&wr.test(n)}catch{return!1}})(r))return n({ok:!1}),!1;const o=e=>{chrome.runtime.sendMessage({type:"SFL_PROGRESS",...e}).catch(()=>{})};return(async()=>{try{if(!(await ue(new URL(r).hostname,"sfl")))return void n({ok:!1});n({ok:!0,dest:await Rr(r,o)})}catch{n({ok:!1})}})(),!0}),zr(),me(()=>{zr()}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if("LITESHORT_OPEN_DEST"===e.type){const o="string"==typeof e.url?e.url:"";return null!=r&&Cr(o)?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"liteshort")))return void n(!1);n(await(async(e,t)=>{try{return await chrome.tabs.update(e,{url:t}),!0}catch{return!1}})(r,o))}catch{n(!1)}})(),!0):(n(!1),!1)}if("LITESHORT_RESOLVE"!==e.type)return!1;const o="string"==typeof e.pageUrl?e.pageUrl:"";return(async()=>{try{if(!(await(async e=>{try{const t=new URL(e);return!!Cr(t.href)&&!!(await c(t.hostname,"liteshort"))&&null!=Ur(t.pathname)}catch{return!1}})(o)))return void n({ok:!1});if(!(await ue(new URL(o).hostname,"liteshort")))return void n({ok:!1});const e=e=>{chrome.runtime.sendMessage({type:"LITESHORT_PROGRESS",...e}).catch(()=>{})};n({ok:!0,dest:await Br(o,e)})}catch{n({ok:!1})}})(),!0}),so(),me(()=>{so()}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if("NITROLINK_OPEN_DEST"===e.type){const o="string"==typeof e.url?e.url:"";return null!=r&&Jr(o)?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"nitrolink")))return void n(!1);n(await(async(e,t)=>{try{return await chrome.tabs.update(e,{url:t}),!0}catch{return!1}})(r,o))}catch{n(!1)}})(),!0):(n(!1),!1)}if("NITROLINK_RESOLVE"!==e.type)return!1;const o="string"==typeof e.pageUrl?e.pageUrl:"";return(async()=>{try{if(!(await(async e=>{try{const t=new URL(e);return!(!Jr(t.href)||!(await c(t.hostname,"nitrolink")))&&null!=Yr(t.pathname)}catch{return!1}})(o)))return void n({ok:!1});if(!(await ue(new URL(o).hostname,"nitrolink")))return void n({ok:!1});n({ok:!0,dest:await ao(o,e=>((e,t)=>{null!=e&&chrome.tabs.sendMessage(e,{type:"NITROLINK_PROGRESS",...t}).catch(()=>{})})(r,e))})}catch{n({ok:!1})}})(),!0}),go(),me(()=>{go()}),chrome.runtime.onMessage.addListener((e,t,n)=>{const r=t.tab?.id;if("UNLOCKTOEARN_OPEN_DEST"===e.type){const o="string"==typeof e.url?e.url:"";return null!=r&&po(o)?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"unlocktoearn")))return void n(!1);n(await(async(e,t)=>{try{return await chrome.tabs.update(e,{url:t}),!0}catch{return!1}})(r,o))}catch{n(!1)}})(),!0):(n(!1),!1)}if("UNLOCKTOEARN_RESOLVE"!==e.type)return!1;const o="string"==typeof e.alias?e.alias.trim():"";return(e=>{const[t,...n]=e.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return t&&0===n.length&&uo.test(t)?t:null})(`/${o}`)?((async()=>{try{const e=t.tab?.url?new URL(t.tab.url).hostname:"";if(!e||!(await ue(e,"unlocktoearn")))return void n({ok:!1});n({ok:!0,dest:await yo(o)})}catch{n({ok:!1})}})(),!0):(n({ok:!1}),!1)}),chrome.webNavigation.onCommitted.addListener(e=>{if(0===e.frameId)try{ue(new URL(e.url).hostname,"cpmlink-net").then(t=>{t&&Eo(e.tabId,0,Lo)})}catch{}}),chrome.runtime.onMessage.addListener((e,t)=>{if("CPMLINK_NET_RESET_CAPTCHA"!==e?.type)return!1;const n=t.tab?.id;return void 0===n||Eo(n,t.frameId??0,So),!1}),chrome.runtime.onStartup.addListener(()=>{i()}),chrome.runtime.onInstalled.addListener(()=>{i()}),i(),chrome.runtime.onStartup.addListener(()=>{ne()}),chrome.runtime.onInstalled.addListener(()=>{ne()}),chrome.alarms.onAlarm.addListener(e=>{e.name===Q&&Y(),e.name===ee&&F()}),chrome.storage.onChanged.addListener((e,t)=>{if("local"!==t)return;(P in e||W in e||U in e)&&ne();const n=e[U];n&&n.oldValue!==n.newValue&&chrome.runtime.reload()}),ne()
+var e = "skipWaitHosts",
+    t = "skipWaitHostsUpdatedAt",
+    n = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/,
+    r = /^[a-z][a-z0-9-]{0,63}$/,
+    o = e => {
+        if (!e || "object" != typeof e || Array.isArray(e)) return null;
+        const t = {};
+        for (const [o, a] of Object.entries(e)) {
+            if (!r.test(o) || !a || "object" != typeof a || Array.isArray(a)) return null;
+            const e = a.hosts;
+            if (!Array.isArray(e) || !e.every(e => "string" == typeof e && n.test(e.toLowerCase()))) return null;
+            t[o] = {
+                hosts: e.map(e => e.toLowerCase())
+            }
+        }
+        return t
+    },
+    a = async () => ((...e) => {
+        const t = {};
+        for (const n of e)
+            if (n)
+                for (const [e, {
+                        hosts: r
+                    }] of Object.entries(n)) {
+                    const n = new Set(t[e]?.hosts ?? []);
+                    for (const e of r) n.add(e);
+                    t[e] = {
+                        hosts: [...n]
+                    }
+                }
+        return t
+    })(await (async () => {
+        try {
+            const e = await fetch(chrome.runtime.getURL("hosts.json"));
+            return e.ok ? o(await e.json()) : null
+        } catch {
+            return null
+        }
+    })(), await (async () => {
+        const t = await chrome.storage.local.get(e);
+        return o(t[e])
+    })(), await (async () => {
+        // User-defined overrides (popup -> "Add a site"); survive remote host refreshes.
+        const e = await chrome.storage.local.get("skipWaitCustomHosts");
+        return o(e.skipWaitCustomHosts)
+    })()), i = async () => {
+        const n = await fetch(`https://raw.githubusercontent.com/sharoon7171/skip-wait-bypass-timers-countdowns/main/extension/public/hosts.json?t=${Date.now()}`, {
+            cache: "no-store",
+            credentials: "omit"
+        });
+        if (!n.ok) return !1;
+        const r = o(await n.json());
+        return !!r && (await (async n => {
+            await chrome.storage.local.set({
+                [e]: n,
+                [t]: Date.now()
+            })
+        })(r), !0)
+    }, s = async e => {
+        try {
+            return (await a())[e]?.hosts ?? []
+        } catch {
+            return []
+        }
+    }, c = async (e, t) => ((e, t) => {
+        const n = e.toLowerCase();
+        return t.some(e => n === e || n.endsWith(`.${e}`))
+    })(e, await s(t)),
+        // EAS licensing module removed (freeware edition — HANDOFF A3).
+        le = () => {}, de = async () => !0, ue = async (e, t) => !!(await c(e, t)) && de(), pe = async e => {
+        const t = await s(e);
+        return t.length && await de() ? t : []
+    }, me = e => {
+        chrome.storage.onChanged.addListener((t, n) => {
+            "local" === n && ("skipWaitHosts" in t || "skipWaitCustomHosts" in t) && e()
+        })
+    }, glEngine = (() => {
+    /*
+     * Generic AdLinkFly-style "links/go" engine.
+     *
+     * One shared implementation for every resolver that finishes an unlock
+     * by POSTing the page's #go-link form (ad_form_data [+ _csrfToken +
+     * _Token fields]) to /links/go with the ab=1 cookie set and a spoofed
+     * Referer header: earnlinks, shrinkpe, liteshort, nitrolink — and the
+     * sfl api client reuses withReferer. Adding coverage for a new site of
+     * this kind is a hosts.json row + thin dispatch, not new engine code.
+     */
+    const isHttp = e => /^https?:\/\//i.test(e),
+        field = (html, name, decode) => {
+            const esc = name.replace(/[\[\]]/g, "\\$&"),
+                m = html.match(new RegExp(`name="${esc}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${esc}"`, "i")),
+                v = m?.[1] ?? m?.[2] ?? null;
+            if (null == v || !decode || !/%[0-9A-Fa-f]{2}/.test(v)) return v;
+            try {
+                return decodeURIComponent(v)
+            } catch {
+                return v
+            }
+        },
+        goAction = (html, pageUrl) => {
+            const a = html.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1] ?? html.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1] ?? "/links/go";
+            return isHttp(a) ? a : new URL(a, pageUrl).href
+        },
+        counterSeconds = (html, fallback = 0, timerId) => {
+            let n;
+            const m = html.match(/["']counter_value["']\s*:\s*["']?(\d+)/i);
+            if (m) n = Number(m[1]);
+            else if (timerId) {
+                const t = html.match(/id=["']timer["'][^>]*>\s*(\d+)/i);
+                n = t ? Number(t[1]) : fallback
+            } else n = fallback;
+            return Number.isFinite(n) && n >= 0 ? Math.min(n, 120) : fallback > 0 ? fallback : 0
+        },
+        withReferer = async (ruleId, url, referer, fn) => {
+            await chrome.declarativeNetRequest.updateSessionRules({
+                removeRuleIds: [ruleId],
+                addRules: [{
+                    id: ruleId,
+                    priority: 1,
+                    action: {
+                        type: "modifyHeaders",
+                        requestHeaders: [{
+                            header: "Referer",
+                            operation: "set",
+                            value: referer
+                        }]
+                    },
+                    condition: {
+                        urlFilter: `|${url}`,
+                        resourceTypes: ["xmlhttprequest"],
+                        tabIds: [chrome.tabs.TAB_ID_NONE]
+                    }
+                }]
+            });
+            try {
+                return await fn()
+            } finally {
+                await chrome.declarativeNetRequest.updateSessionRules({
+                    removeRuleIds: [ruleId]
+                }).catch(() => {})
+            }
+        },
+        postGo = async (pageUrl, html, opts) => {
+            const {
+                ruleId,
+                csrf = !0,
+                abCookie = !0,
+                originHeader = !1,
+                decode = !1,
+                tokenFields = !0
+            } = opts, adFormData = field(html, "ad_form_data", decode),
+                csrfToken = field(html, "_csrfToken", decode);
+            if (!adFormData || csrf && !csrfToken) throw new Error("form");
+            const action = goAction(html, pageUrl),
+                body = new URLSearchParams({
+                    _method: field(html, "_method", decode) ?? "POST",
+                    ad_form_data: adFormData
+                });
+            csrf && body.set("_csrfToken", csrfToken);
+            if (tokenFields) {
+                const tokFields = field(html, "_Token[fields]", decode),
+                    tokUnlocked = field(html, "_Token[unlocked]", decode);
+                tokFields && body.set("_Token[fields]", tokFields), tokUnlocked && body.set("_Token[unlocked]", tokUnlocked)
+            }
+            abCookie && await chrome.cookies.set({
+                url: pageUrl,
+                name: "ab",
+                value: "1",
+                path: "/"
+            }).catch(() => {});
+            return withReferer(ruleId, action, pageUrl, async () => {
+                const headers = {
+                    Accept: "application/json, text/javascript, */*; q=0.01",
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest"
+                };
+                originHeader && (headers.Origin = new URL(pageUrl).origin);
+                const res = await fetch(action, {
+                    method: "POST",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: headers,
+                    body: body
+                });
+                if (!res.ok) throw new Error("go");
+                const data = JSON.parse(await res.text()),
+                    dest = "string" == typeof data.url ? data.url.trim() : "";
+                if (!dest || !isHttp(dest)) throw new Error(data.message || "dest");
+                return dest
+            })
+        };
+    return {
+        isHttp,
+        field,
+        goAction,
+        counterSeconds,
+        withReferer,
+        postGo
+    };
+})(), he = new Set;
+
+function fe(e) {
+    for (const t of he) t.startsWith(`${e}:`) && he.delete(t)
+}
+
+function we() {
+    try {
+        Object.defineProperty(document, "hidden", {
+            get: () => !1,
+            configurable: !0
+        }), Object.defineProperty(document, "visibilityState", {
+            get: () => "visible",
+            configurable: !0
+        }), Object.defineProperty(Document.prototype, "hasFocus", {
+            value: () => !0,
+            configurable: !0,
+            writable: !0
+        })
+    } catch {}
+}
+var ye = /^\/(?:r|download)\/[^/]+/;
+var ge = '"Segoe UI Variable","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif',
+    be = {
+        textPrimary: "#f1f5f9",
+        textSecondary: "#f8fafc",
+        textMuted: "#94a3b8",
+        textDetail: "#cbd5e1",
+        accent: "#38bdf8",
+        error: "#fca5a5",
+        backdrop: "rgba(15,23,42,.94)",
+        cardGradient: "linear-gradient(145deg,#1e293b 0%,#0f172a 100%)",
+        cardBorder: "rgba(148,163,184,.25)",
+        cardShadow: "0 25px 50px -12px rgba(0,0,0,.5)"
+    },
+    ke = {
+        card: "sw-card",
+        brand: "sw-brand",
+        note: "sw-note",
+        noteLead: "sw-note-lead",
+        noteDetail: "sw-note-detail",
+        status: "sw-status",
+        count: "sw-count",
+        countLabel: "sw-count-label",
+        countHint: "sw-count-hint",
+        err: "sw-err",
+        hidden: "sw-hidden",
+        turnstile: "sw-turnstile",
+        action: "sw-action"
+    };
+
+function ve(e) {
+    return `${e}-active`
+}
+
+function _e(e, t) {
+    return function(e, t) {
+        return `html.${t},html.${t} body{overflow:hidden!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}html.${t}>*:not(head):not(body):not(#${e}){display:none!important;visibility:hidden!important;pointer-events:none!important}html.${t} body{pointer-events:none!important}html.${t} body *{visibility:hidden!important;pointer-events:none!important}html.${t} #${e},html.${t} #${e} *{visibility:visible!important}html.${t} #${e}{pointer-events:auto!important}`
+    }(e, t) + function(e) {
+        return `#${e}{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:${be.backdrop};backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);font-family:${ge};font-size:16px;line-height:1.5;color:${be.textSecondary};pointer-events:auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:default;overscroll-behavior:contain;touch-action:none}`
+    }(e) + function(e) {
+        return `#${e} .${ke.card}{max-width:440px;width:100%;border-radius:16px;padding:clamp(22px,4vw,28px);background:${be.cardGradient};border:1px solid ${be.cardBorder};box-shadow:${be.cardShadow};pointer-events:none;font-family:${ge}}#${e} .${ke.brand}{font-family:${ge};font-size:clamp(1em,2.5vw,1.25em);font-weight:700;letter-spacing:-.02em;color:${be.accent};margin-bottom:8px}#${e} .${ke.note}{font-family:${ge};margin-bottom:14px}#${e} .${ke.noteLead}{display:block;font-size:clamp(1em,2.8vw,1.15em);font-weight:700;line-height:1.35;color:${be.textPrimary};word-break:break-word;overflow-wrap:anywhere}#${e} .${ke.noteDetail}{display:block;margin-top:8px;font-size:.875em;font-weight:500;line-height:1.4;color:${be.textMuted}}#${e} .${ke.status}{font-family:${ge};font-size:.9em;color:${be.textPrimary};min-height:1.4em;margin-bottom:10px}#${e} .${ke.hidden}{display:none!important}`
+    }(e) + function(e) {
+        return `#${e} .${ke.count}{font-family:${ge};font-size:2.5em;font-weight:700;font-variant-numeric:tabular-nums;color:${be.textPrimary};text-align:center;margin:6px 0 4px;line-height:1.15}#${e} .${ke.countLabel}{font-family:${ge};font-size:.7em;text-transform:uppercase;letter-spacing:.08em;color:${be.textMuted};text-align:center;margin-top:4px}#${e} .${ke.countHint}{font-family:${ge};font-size:.78em;color:${be.textMuted};text-align:center;margin-top:4px}#${e} .${ke.err}{font-family:${ge};font-size:.85em;color:${be.error};margin-top:10px;line-height:1.45}#${e} .${ke.err}:empty{display:none}`
+    }(e) + function(e) {
+        return `#${e} .${ke.turnstile}{display:flex;align-items:stretch;justify-content:center;flex-direction:column;min-height:72px;margin-top:16px;pointer-events:auto!important;isolation:isolate;width:100%;overflow:hidden;border-radius:8px}#${e} .${ke.turnstile} iframe{width:100%;min-height:380px;border:0;border-radius:8px;background:transparent;pointer-events:auto!important}#${e} .${ke.turnstile} input{pointer-events:auto!important}#${e} .${ke.action}{display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px 18px;border-radius:10px;background:${be.accent};color:#0f172a;font-family:${ge};font-size:1em;font-weight:800;line-height:1.3;text-align:center;text-decoration:none;pointer-events:auto!important;cursor:pointer}#${e} .${ke.action}.${ke.hidden}{display:none!important}`
+    }(e)
+}
+var Le = ["click", "mousedown", "mouseup", "touchstart", "touchend", "wheel", "keydown"];
+
+function Se(e, t) {
+    e.replaceChildren();
+    const n = document.createElement("div");
+    if (n.className = ke.noteLead, n.textContent = t.lead, e.appendChild(n), t.detail) {
+        const n = document.createElement("div");
+        n.className = ke.noteDetail, n.textContent = t.detail, e.appendChild(n)
+    }
+}
+
+function Ee(e, t) {
+    return t.composedPath().some(e => e instanceof Element && (null != e.closest(`.${ke.turnstile}`) || null != e.closest(`.${ke.action}`)))
+}
+
+function Ie(e) {
+    const {
+        id: t,
+        brand: n = "",
+        note: r,
+        status: o = "",
+        countdownLabel: a = "",
+        countdownHint: i
+    } = e, s = ke, c = ve(t), l = function(e, t) {
+        const n = document.createElement("div");
+        n.id = e;
+        const r = document.createElement("style");
+        return r.textContent = t, n.appendChild(r), n
+    }(t, _e(t, c));
+    document.documentElement.classList.add(c),
+        function(e) {
+            for (const t of Le) e.addEventListener(t, e => {
+                Ee(0, e) || (e.preventDefault(), e.stopPropagation())
+            }, !0)
+        }(l);
+    const d = document.createElement("div");
+    d.className = s.card;
+    const u = document.createElement("div");
+    u.className = s.brand, u.textContent = n;
+    const p = document.createElement("div");
+    p.className = s.note, Se(p, r);
+    const m = document.createElement("div");
+    m.className = s.status, m.textContent = o;
+    const h = document.createElement("div");
+    h.className = `${s.count} ${s.hidden}`;
+    const f = document.createElement("div");
+    f.className = `${s.countLabel} ${s.hidden}`, f.textContent = a;
+    const w = document.createElement("div");
+    w.className = s.turnstile, w.id = `${t}-turnstile`;
+    const y = document.createElement("a");
+    y.className = `${s.action} ${s.hidden}`, y.rel = "noopener", d.append(u, p, m, h, f);
+    let g = null;
+    i && (g = document.createElement("div"), g.className = `${s.countHint} ${s.hidden}`, g.textContent = i, d.appendChild(g));
+    const b = document.createElement("div");
+    b.className = s.err, d.append(b, y, w), l.appendChild(d), document.documentElement.appendChild(l);
+    const k = new MutationObserver(() => {
+        l.parentElement === document.documentElement ? document.documentElement.lastElementChild !== l && document.documentElement.appendChild(l) : document.documentElement.appendChild(l)
+    });
+    k.observe(document.documentElement, {
+        childList: !0
+    });
+    let v = 0;
+    const _ = e => {
+            h.classList.toggle(s.hidden, !e), f.classList.toggle(s.hidden, !e), g?.classList.toggle(s.hidden, !e)
+        },
+        L = e => {
+            cancelAnimationFrame(v), v = 0, e && _(!1)
+        };
+    return {
+        turnstileMount: w,
+        setStatus(e) {
+            L(!0), m.textContent = e
+        },
+        setNote(e) {
+            Se(p, e)
+        },
+        setError(e) {
+            b.textContent = e ?? ""
+        },
+        setAction(e, t = "Direct Download · Skip Wait") {
+            if (!e) return y.removeAttribute("href"), y.classList.add(s.hidden), y.textContent = "", void w.classList.remove(s.hidden);
+            y.href = e, y.textContent = t, y.classList.remove(s.hidden), w.classList.add(s.hidden)
+        },
+        startCountdown(e) {
+            _(!0);
+            const t = () => {
+                const n = e - Date.now();
+                h.textContent = `${(Math.max(0,n)/1e3).toFixed(2)} s`, v = n <= 0 ? 0 : requestAnimationFrame(t)
+            };
+            cancelAnimationFrame(v), v = requestAnimationFrame(t)
+        },
+        stopCountdown: () => L(!1),
+        hideCountdown: () => L(!0),
+        remove() {
+            L(!0), k.disconnect(), l.remove(), document.documentElement.classList.remove(c)
+        }
+    }
+}
+
+function Re() {
+    window.alert = function() {}
+}
+var xe = e => /^https?:\/\//i.test(e);
+var Ae = /^\/download\//i;
+
+function Ne() {
+    const e = window;
+    if (e.__swAnkergamesReady) return;
+    e.__swAnkergamesReady = !0;
+    const t = /(downloadPage\([^()]*,\s*)\d+(\s*\))/,
+        n = () => {
+            const e = document.querySelector('[x-data*="downloadPage("]'),
+                n = e?.getAttribute("x-data");
+            return !!(e && n && t.test(n)) && (e.setAttribute("x-data", n.replace(t, (e, t, n) => `${t}0${n}`)), !0)
+        };
+    if (!n()) {
+        const e = new MutationObserver(() => {
+            n() && e.disconnect()
+        });
+        e.observe(document.documentElement, {
+            childList: !0,
+            subtree: !0
+        }), document.addEventListener("DOMContentLoaded", () => e.disconnect(), {
+            once: !0
+        })
+    }
+    document.addEventListener("alpine:init", () => {
+        const t = e.Alpine;
+        if (!t) return;
+        const n = t.data.bind(t);
+        t.data = (e, t) => {
+            if ("downloadPage" !== e) return n(e, t);
+            n(e, (...e) => {
+                const n = t(...e);
+                return n.initiateDownload = () => Promise.resolve(), n
+            })
+        }
+    })
+}
+
+function $e() {
+    const e = window;
+    if (e.__swAnygameDirect) return;
+    e.__swAnygameDirect = !0;
+    const t = ".version--cta button, .version--cta a",
+        n = "Free Download · Skip Wait",
+        r = new WeakSet,
+        o = new WeakSet,
+        a = new WeakMap,
+        i = new WeakMap,
+        s = new Map;
+    let c = !1;
+    const l = () => {
+            c || (c = !0, window.postMessage({
+                source: "skip-wait-anygame",
+                type: "cdn"
+            }, location.origin))
+        },
+        d = () => /^\/download\/?$/i.test(location.pathname),
+        u = e => {
+            const t = Object.keys(e).find(e => e.startsWith("__reactFiber$"));
+            return t ? e[t] ?? null : null
+        },
+        p = e => {
+            if (e.textContent?.trim() !== n) {
+                e.textContent = n, e.style.whiteSpace = "nowrap";
+                for (let t = u(e); t; t = t.child ?? null) {
+                    const e = t.memoizedProps ?? t.pendingProps;
+                    if (e && "string" == typeof e.children) {
+                        e.children = n, t.pendingProps && (t.pendingProps.children = n), t.memoizedProps && (t.memoizedProps.children = n);
+                        break
+                    }
+                }
+            }
+        },
+        m = e => {
+            if (!Array.isArray(e) || !e.length) return null;
+            const t = [];
+            for (const n of e) {
+                if (!n || "object" != typeof n) continue;
+                const e = n,
+                    r = Number(e.id),
+                    o = "string" == typeof e.type ? e.type : "";
+                Number.isFinite(r) && r > 0 && o && t.push({
+                    id: r,
+                    type: o
+                })
+            }
+            return t.length ? t : null
+        },
+        h = e => {
+            let t = e;
+            for (let n = 0; n < 12 && t; n++) {
+                for (let e = u(t); e; e = e.return ?? null) {
+                    const t = e.memoizedProps ?? e.pendingProps;
+                    if (!t) continue;
+                    const n = t.download;
+                    if (n && "object" == typeof n) {
+                        const e = m(n.links);
+                        if (e) return e
+                    }
+                    const r = m(t.links);
+                    if (r) return r
+                }
+                t = t.parentElement
+            }
+            return null
+        },
+        f = (e, t) => {
+            const n = (e.textContent ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+            return /fast\s*download/i.test(n) || e.classList.contains("fast-download") ? t.find(e => "Worker" === e.type) ?? null : /torrent|magnet/i.test(n) || e.classList.contains("torrent") ? t.find(e => "Torrent" === e.type) ?? null : t.find(e => "Worker" !== e.type && "Instant" !== e.type && "Torrent" !== e.type) ?? null
+        },
+        w = e => {
+            let t = s.get(e);
+            return t || (t = fetch(`/api/action/download/?link=${e}`, {
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                    Accept: "application/json"
+                }
+            }).then(async e => {
+                if (!e.ok) return null;
+                const t = await e.json();
+                return t.success && "string" == typeof t.url && t.url ? t.url : null
+            }).catch(() => null).then(t => (t || s.delete(e), t)), s.set(e, t)), t
+        },
+        y = e => {
+            if (r.has(e)) return void p(e);
+            if (o.has(e)) return;
+            const t = h(e),
+                n = t && f(e, t);
+            n && (i.set(e, n.id), o.add(e), p(e), w(n.id).then(t => {
+                o.delete(e), e.isConnected && t && (a.set(e, t), r.add(e), e instanceof HTMLAnchorElement && (e.href = t), l())
+            }))
+        },
+        g = () => {
+            if (!d())
+                for (const e of document.querySelectorAll(".version"))
+                    for (const n of e.querySelectorAll(t)) y(n)
+        };
+    document.addEventListener("click", e => {
+        if (d()) return;
+        const n = e.target?.closest(t);
+        if (!(n instanceof HTMLElement)) return;
+        e.preventDefault(), e.stopImmediatePropagation();
+        const o = a.get(n) || (n instanceof HTMLAnchorElement && /^https?:/i.test(n.href) ? n.href : "");
+        if (o && /^https?:/i.test(o)) return l(), void location.assign(o);
+        const s = i.get(n) ?? (() => {
+            const e = h(n);
+            return e && f(n, e)?.id
+        })();
+        s && w(s).then(e => {
+            e && (a.set(n, e), i.set(n, s), r.add(n), n instanceof HTMLAnchorElement && (n.href = e), l(), location.assign(e))
+        })
+    }, !0);
+    const b = () => {
+        g(), new MutationObserver(g).observe(document.documentElement, {
+            childList: !0,
+            subtree: !0
+        })
+    };
+    "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", b, {
+        once: !0
+    }) : b()
+}
+async function Te(e) {
+    try {
+        return ue(new URL(e).hostname, "anygame")
+    } catch {
+        return !1
+    }
+}
+
+function Me(e, t) {
+    chrome.scripting.executeScript({
+        target: void 0 === t ? {
+            tabId: e
+        } : {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: $e
+    })
+}
+
+function Oe() {
+    const e = window;
+    if (e.__swApktealDirect) return;
+    e.__swApktealDirect = !0;
+    const t = '[class*="download_wrap"]',
+        n = `${t} button, ${t} a`,
+        r = "Free Download · Skip Wait",
+        o = new WeakSet,
+        a = new WeakSet,
+        i = new WeakMap,
+        s = new WeakMap,
+        c = new Map;
+    let l, d = null,
+        u = !1;
+    const p = () => {
+            u || (u = !0, window.postMessage({
+                source: "skip-wait-apkteal",
+                type: "cdn"
+            }, location.origin))
+        },
+        m = () => /^\/download\/?$/i.test(location.pathname),
+        h = e => {
+            const t = Object.keys(e).find(e => e.startsWith("__reactFiber$"));
+            return t ? e[t] ?? null : null
+        },
+        f = e => {
+            if (e.textContent?.trim() !== r) {
+                e.textContent = r, e.style.whiteSpace = "nowrap";
+                for (let t = h(e); t; t = t.child ?? null) {
+                    const e = t.memoizedProps ?? t.pendingProps;
+                    if (e && "string" == typeof e.children) {
+                        e.children = r, t.pendingProps && (t.pendingProps.children = r), t.memoizedProps && (t.memoizedProps.children = r);
+                        break
+                    }
+                }
+            }
+        },
+        w = e => {
+            if (!Array.isArray(e) || !e.length) return null;
+            const t = [];
+            for (const n of e) {
+                if (!n || "object" != typeof n) continue;
+                const e = n,
+                    r = Number(e.id),
+                    o = "string" == typeof e.type ? e.type : "";
+                Number.isFinite(r) && r > 0 && o && t.push({
+                    id: r,
+                    type: o
+                })
+            }
+            return t.length ? t : null
+        },
+        y = e => {
+            let t = e;
+            for (let n = 0; n < 12 && t; n++) {
+                for (let e = h(t); e; e = e.return ?? null) {
+                    const t = e.memoizedProps ?? e.pendingProps;
+                    if (!t) continue;
+                    const n = t.download;
+                    if (n && "object" == typeof n) {
+                        const e = w(n.links);
+                        if (e) return e
+                    }
+                    const r = w(t.links);
+                    if (r) return r
+                }
+                t = t.parentElement
+            }
+            return null
+        },
+        g = (e, t) => {
+            const n = (e.textContent ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+            return /fast\s*download/i.test(n) || e.classList.contains("fast-download") ? t.find(e => "Worker" === e.type) ?? null : /torrent|magnet/i.test(n) || e.classList.contains("torrent") ? t.find(e => "Torrent" === e.type) ?? null : t.find(e => "Worker" !== e.type && "Instant" !== e.type && "Torrent" !== e.type) ?? null
+        },
+        b = e => {
+            const t = e.match(/cd:function\(\)\{return (\w+)\}/);
+            if (!t) return null;
+            const n = e.indexOf(t[0]);
+            return e.slice(n, n + 500).match(new RegExp(`${t[1]}=\\(0,\\w+\\.\\$\\)\\("([a-f0-9]{40})"\\)`))?.[1] ?? null
+        },
+        k = () => l ? Promise.resolve(l) : (d || (d = (async () => {
+            const e = await fetch(`${location.origin}/download/`, {
+                credentials: "include",
+                cache: "force-cache"
+            }).then(e => e.ok ? e.text() : "");
+            if (!e) return null;
+            for (const t of e.matchAll(/src="(\/_next\/static\/chunks\/[^"]+)"/g)) {
+                const e = await fetch(`${location.origin}${t[1]}`, {
+                        credentials: "omit",
+                        cache: "force-cache"
+                    }).then(e => e.ok ? e.text() : "").catch(() => ""),
+                    n = b(e);
+                if (n) return n
+            }
+            return null
+        })().catch(() => null).then(e => (d = null, e && (l = e), e))), d),
+        v = e => {
+            let t = c.get(e);
+            return t || (t = k().then(async t => {
+                if (!t) return null;
+                const n = await fetch(`${location.origin}/download/`, {
+                    method: "POST",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: {
+                        "Next-Action": t,
+                        "Content-Type": "text/plain;charset=UTF-8",
+                        Accept: "text/x-component"
+                    },
+                    body: JSON.stringify([String(e)])
+                });
+                return n.ok ? (await n.text()).match(/"url"\s*:\s*"(https:[^"\\]+)"/)?.[1] ?? null : null
+            }).catch(() => null).then(t => (t || c.delete(e), t)), c.set(e, t)), t
+        },
+        _ = e => {
+            if (o.has(e)) return void f(e);
+            if (a.has(e)) return;
+            const t = y(e),
+                n = t && g(e, t);
+            n && (s.set(e, n.id), a.add(e), f(e), v(n.id).then(t => {
+                a.delete(e), e.isConnected && t && (i.set(e, t), o.add(e), e instanceof HTMLAnchorElement && (e.href = t), p())
+            }))
+        },
+        L = () => {
+            if (!m())
+                for (const e of document.querySelectorAll(t)) {
+                    const t = e.querySelector('button, a[class*="bg-brand"]');
+                    t && _(t)
+                }
+        };
+    document.addEventListener("click", e => {
+        if (m()) return;
+        const t = e.target?.closest(n);
+        if (!(t instanceof HTMLElement)) return;
+        e.preventDefault(), e.stopImmediatePropagation();
+        const r = i.get(t) || (t instanceof HTMLAnchorElement && /^https?:/i.test(t.href) ? t.href : "");
+        if (r && /^https?:/i.test(r)) return p(), void location.assign(r);
+        const a = s.get(t) ?? (() => {
+            const e = y(t);
+            return e && g(t, e)?.id
+        })();
+        a && v(a).then(e => {
+            e && (i.set(t, e), s.set(t, a), o.add(t), t instanceof HTMLAnchorElement && (t.href = e), p(), location.assign(e))
+        })
+    }, !0);
+    const S = () => {
+        L(), new MutationObserver(L).observe(document.documentElement, {
+            childList: !0,
+            subtree: !0
+        })
+    };
+    "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", S, {
+        once: !0
+    }) : S()
+}
+async function Ce(e) {
+    try {
+        return ue(new URL(e).hostname, "apkteal")
+    } catch {
+        return !1
+    }
+}
+
+function Ue(e, t) {
+    chrome.scripting.executeScript({
+        target: void 0 === t ? {
+            tabId: e
+        } : {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: Oe
+    })
+}
+
+function Pe(e, t) {
+    let n;
+    try {
+        n = new URL(e).hostname.toLowerCase()
+    } catch {
+        return null
+    }
+    return n.includes("mediafire.com") ? function(e) {
+        for (const t of [/aria-label="Download file"\s+href="(https:\/\/download[^"]+)"/i, /href="(https:\/\/download[^"]+)"[^>]*\bid="downloadButton"/i, /id="downloadButton"[^>]*href="(https:\/\/download[^"]+)"/i]) {
+            const n = e.match(t);
+            if (n?.[1]) return n[1]
+        }
+        return null
+    }(t) : null
+}
+var We = /^\/addon\/\d+(?:\/|$)/i;
+
+function qe() {
+    const e = window;
+    if (e.__swFlightsimPatched) return;
+    e.__swFlightsimPatched = !0;
+    const t = /^\s*Download\b/i,
+        n = window.setTimeout.bind(window),
+        r = () => {
+            const e = (() => {
+                const e = document.querySelectorAll('[role="dialog"]');
+                for (const n of Array.from(e)) {
+                    const e = n.querySelector("h2");
+                    if (e && t.test(e.textContent ?? "")) return n
+                }
+                return null
+            })();
+            return !!e && (e.textContent ?? "").includes("Your download will start in")
+        };
+    let o = 1e9;
+    window.setTimeout = (e, t, ...a) => {
+        if ("number" == typeof t && t >= 800 && t <= 1200 && r()) {
+            const t = "function" == typeof e ? e : new Function(e);
+            return queueMicrotask(() => {
+                try {
+                    t(...a), window.postMessage({
+                        source: "skip-wait-flightsim",
+                        type: "skip"
+                    }, location.origin)
+                } catch {}
+            }), ++o
+        }
+        return n(e, t, ...a)
+    }
+}
+var De = 917410,
+    je = async () => {
+        const e = await pe("shortxlinks"),
+            t = e[0] ? `https://${e[0]}` : "";
+        t ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [De],
+            addRules: [{
+                id: De,
+                priority: 1,
+                action: {
+                    type: "redirect",
+                    redirect: {
+                        regexSubstitution: `${t}/\\1?\\2`
+                    }
+                },
+                condition: {
+                    regexFilter: "^https?://[^/?#]+/?\\?adlinkfly=([A-Za-z0-9_-]+)\\?([A-Za-z0-9]+)$",
+                    resourceTypes: ["main_frame"]
+                }
+            }]
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [De],
+            addRules: []
+        })
+    };
+var Fe = /\/(?:[a-z]{2}\/)?download\/([a-zA-Z0-9]+)/,
+    Be = /multiup\.io\/([a-zA-Z0-9]+)/,
+    He = /\/multiup\.php\?id=([a-zA-Z0-9]+)/;
+
+function ze() {
+    const e = window;
+    if (e.__swCloverTc) return;
+    e.__swCloverTc = !0;
+    const t = window.fetch.bind(window);
+    window.fetch = async (e, n) => {
+        const r = e instanceof Request ? e : null,
+            o = String(r ? r.url : e),
+            a = String(n?.method || r?.method || "GET").toUpperCase();
+        if (o.includes("/tc") && "POST" === a) {
+            const r = await t(e, n),
+                o = await r.clone().text();
+            try {
+                const e = JSON.parse(o);
+                if (Array.isArray(e))
+                    for (const t of e) {
+                        const e = "string" == typeof t.postback_url ? t.postback_url.trim() : "";
+                        if (e.includes("cloverhub.app/api/l/")) {
+                            location.replace(e);
+                            break
+                        }
+                    }
+            } catch {}
+            return r
+        }
+        return t(e, n)
+    }
+}
+var Ve = new Set,
+    Ke = new Map,
+    Ge = e => {
+        try {
+            const t = new URL(e);
+            return "/s" === t.pathname && t.search.length > 1
+        } catch {
+            return !1
+        }
+    },
+    Ze = (e, t) => {
+        chrome.scripting.executeScript({
+            target: {
+                tabId: e,
+                frameIds: [t]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: ze
+        }).catch(() => {})
+    },
+    Xe = e => {
+        chrome.webNavigation.getAllFrames({
+            tabId: e
+        }).then(t => {
+            for (const n of t ?? []) void 0 !== n.frameId && n.url && Ge(n.url) && Ze(e, n.frameId)
+        })
+    };
+var Je = (e, t) => "/s" === e && t.length > 1,
+    Ye = Je;
+var Qe = "skip-wait-loot";
+
+function et(e) {
+    if (!/\/captcha(?:\?|$)/i.test(`${location.pathname}${location.search}`)) return;
+    const t = window;
+    if (t.__swLootTokenSent) return;
+    const n = () => {
+        const e = document.getElementById("go");
+        e && (e.setAttribute("disabled", ""), e.disabled = !0, e.style.pointerEvents = "none")
+    };
+    if (!t.__swLootBridgeInit) {
+        t.__swLootBridgeInit = !0;
+        const e = document.createElement("style");
+        e.textContent = "#go,#msg,.badge,.foot,h1,p.sub,main>.orb{display:none!important}main{padding:12px 16px 16px!important}", (document.documentElement ?? document.head).appendChild(e), new MutationObserver(n).observe(document.documentElement, {
+            childList: !0,
+            subtree: !0
+        }), n()
+    }
+    const r = r => {
+        !t.__swLootTokenSent && r && (t.__swLootTokenSent = !0, window.parent.postMessage({
+            source: e,
+            type: "captcha-token",
+            token: r
+        }, "*"), n(), null != t.__swLootPollId && (clearInterval(t.__swLootPollId), delete t.__swLootPollId))
+    };
+    t.__swLootNativeOnToken || "function" != typeof t.onToken || (t.__swLootNativeOnToken = t.onToken), t.onToken = e => {
+        r(e), t.__swLootNativeOnToken?.(e)
+    }, "string" == typeof t.TOKEN && t.TOKEN && r(t.TOKEN), t.__swLootPollId || (t.__swLootPollId = window.setInterval(() => {
+        "string" == typeof t.TOKEN && t.TOKEN && r(t.TOKEN)
+    }, 200), window.setTimeout(() => {
+        null != t.__swLootPollId && (clearInterval(t.__swLootPollId), delete t.__swLootPollId)
+    }, 12e4))
+}
+
+function tt(e) {
+    const t = window;
+    if (t.__swLootHooked) return;
+    t.__swLootHooked = !0, t.__swLootReplace = location.replace.bind(location);
+    try {
+        location.assign = () => {}, location.replace = () => {}
+    } catch {}
+    try {
+        Object.defineProperty(navigator, "webdriver", {
+            get: () => !1,
+            configurable: !0
+        })
+    } catch {}
+    const n = t => {
+            window.postMessage({
+                source: e,
+                ...t
+            }, location.origin)
+        },
+        r = window.WebSocket;
+    window.WebSocket = function(e, n) {
+        const o = String(e);
+        return t.__swLootBlockWs && o.includes("/c?uid=") ? {
+            readyState: 3,
+            send() {},
+            close() {},
+            addEventListener() {},
+            removeEventListener() {}
+        } : new r(e, n)
+    }, Object.assign(window.WebSocket, r), window.WebSocket.prototype = r.prototype;
+    const o = async o => {
+        if (t.__swLootPierce || t.__swLootDone) return;
+        t.__swLootPierce = !0;
+        const a = t.__swLootFetch;
+        if (a) try {
+            const i = new URL(o.url).hostname,
+                s = Number(o.body.tid),
+                c = String(o.body.rkey),
+                l = String(o.body.session);
+            if (!(i && s && c && l)) throw new Error("tc capture incomplete");
+            const d = JSON.parse(o.text);
+            if (!Array.isArray(d) || !d.length) throw new Error("tc empty");
+            const u = (e => {
+                const t = [];
+                for (const n of e) {
+                    const e = Number(n.auto_complete_seconds);
+                    !Number.isFinite(e) || e <= 0 || t.push({
+                        task: n,
+                        sec: e
+                    })
+                }
+                return t
+            })(d);
+            if (!u.length) throw new Error("no auto-complete task");
+            const p = (e => {
+                    for (const t of e) {
+                        const e = "string" == typeof t.ad_url ? t.ad_url.trim() : "";
+                        if (/\/captcha(?:\?|$)/i.test(e)) return t
+                    }
+                    return null
+                })(d),
+                m = Math.max(...u.map(e => e.sec)),
+                h = Date.now();
+            n({
+                type: "wait",
+                endTs: h + 1e3 * m
+            });
+            const f = "string" == typeof p?.ad_url ? p.ad_url.trim() : "";
+            f && p?.urid && n({
+                type: "captcha",
+                url: f,
+                urid: p.urid,
+                taskId: Number(p.task_id)
+            });
+            const w = await new Promise((e, n) => {
+                    const r = Date.now(),
+                        o = window.setInterval(() => {
+                            const a = "string" == typeof t.INCENTIVE_SERVER_DOMAIN ? t.INCENTIVE_SERVER_DOMAIN.trim() : "";
+                            if (a) return clearInterval(o), void e(a);
+                            Date.now() - r > 2e4 && (clearInterval(o), n(new Error("ws base")))
+                        }, 50)
+                }),
+                y = Number(String(d[0]?.urid ?? "").slice(-5)) % 3,
+                g = e => {
+                    navigator.sendBeacon(`https://${y}.${w}/st?uid=${e.urid}&cat=${e.task_id}`, new Blob([], {
+                        type: "text/plain"
+                    }))
+                },
+                b = (e, t) => {
+                    a(`https://${i}/td?ac=${e}&urid=${t.urid}&cat=${t.task_id}&tid=${s}`, {
+                        credentials: "include",
+                        mode: "cors"
+                    })
+                };
+            let k = !1;
+            const v = () => {
+                !k && p && (k = !0, b("captcha", p))
+            };
+            window.addEventListener("message", t => {
+                if (t.origin !== location.origin) return;
+                const n = t.data;
+                n?.source === e && "captcha-ok" === n.type && v()
+            });
+            const _ = await new Promise((e, t) => {
+                const n = new r(`wss://${y}.${w}/c?uid=${d.map(e=>e.urid).join(",")}&cat=${d.map(e=>e.task_id).join(",")}&key=${c}&session_id=${l}&is_loot=1&tid=${s}`);
+                let o = null;
+                const i = [],
+                    p = window.setTimeout(() => {
+                        f(), t(new Error("ws timeout"))
+                    }, 1e3 * (m + 90)),
+                    f = () => {
+                        clearTimeout(p), null != o && clearInterval(o);
+                        for (const e of i) clearTimeout(e);
+                        n.close()
+                    };
+                n.onerror = () => {
+                    f(), t(new Error("ws error"))
+                }, n.onopen = () => {
+                    n.send("0"), o = window.setInterval(() => n.send("0"), 1e4);
+                    for (const e of d) g(e);
+                    for (const e of u) i.push(window.setTimeout(() => {
+                        b("auto_complete", e.task);
+                        const t = e.task.action_pixel_url;
+                        t && a(`https:${t}`, {
+                            credentials: "omit",
+                            mode: "cors"
+                        })
+                    }, Math.max(0, h + 1e3 * e.sec - Date.now())))
+                }, n.onmessage = t => {
+                    const n = String(t.data);
+                    n.startsWith("r:") && (f(), e((e => {
+                        const t = atob(e.slice(2));
+                        if (t.length < 6) throw new Error("r");
+                        const n = [...t.slice(0, 5)].map(e => e.charCodeAt(0));
+                        return [...t.slice(5)].map((e, t) => {
+                            const r = n[t % n.length];
+                            if (void 0 === r) throw new Error("r");
+                            return String.fromCharCode(e.charCodeAt(0) ^ r)
+                        }).join("").trim()
+                    })(n)))
+                }
+            });
+            if (!_ || !/^https?:\/\//i.test(_)) throw new Error("dest");
+            t.__swLootDone = !0, n({
+                type: "dest",
+                dest: _
+            }), t.__swLootReplace?.(_)
+        } catch (i) {
+            t.__swLootPierce = !1, t.__swLootBlockWs = !1, n({
+                type: "err",
+                message: i instanceof Error ? i.message : String(i)
+            })
+        } else n({
+            type: "err",
+            message: "fetch"
+        })
+    }, a = async (e, r) => {
+        const a = await (t.__swLootFetch ?? fetch)(e, {
+                method: "POST",
+                body: r,
+                headers: {
+                    "content-type": "application/json"
+                },
+                credentials: "include",
+                mode: "cors"
+            }),
+            i = await a.text();
+        return ((e, r, a, i) => {
+            if (200 !== i) return void n({
+                type: "err",
+                message: `tc ${i}`
+            });
+            let s;
+            try {
+                s = JSON.parse(r)
+            } catch {
+                return void n({
+                    type: "err",
+                    message: "tc body"
+                })
+            }
+            t.__swLootBlockWs = !0, o({
+                url: e,
+                body: s,
+                text: a
+            })
+        })(e, r, i, a.status), i
+    }, i = crypto.subtle, s = i.encrypt.bind(i);
+    i.encrypt = async (e, t, n) => {
+        try {
+            const e = (new TextDecoder).decode(n);
+            if (e.includes('"bot"')) {
+                const t = JSON.parse(e);
+                t.bot = !1, delete t.botKind, n = (new TextEncoder).encode(JSON.stringify(t))
+            }
+        } catch {}
+        return s(e, t, n)
+    };
+    const c = window.fetch.bind(window);
+    t.__swLootFetch = c, window.fetch = async (e, n) => {
+        const r = e instanceof Request ? e : null,
+            o = String(r ? r.url : e),
+            i = String(n?.method || r?.method || "GET").toUpperCase();
+        if (o.includes("params_only=1")) {
+            const r = await c(e, n),
+                o = String((e => {
+                    const t = e.trim().replace(/;$/, "");
+                    if (!t.startsWith("(") || !t.endsWith(")")) return [];
+                    try {
+                        return JSON.parse(`[${t.slice(1,-1)}]`)
+                    } catch {
+                        return []
+                    }
+                })(await r.clone().text())[9] ?? "").trim();
+            return o && (t.INCENTIVE_SERVER_DOMAIN = o), r
+        }
+        if (o.includes("/tc") && "POST" === i) {
+            let e = "string" == typeof n?.body ? n.body : n?.body ? await new Response(n.body).text() : r ? await r.clone().text() : "";
+            try {
+                e = (e => {
+                    const t = JSON.parse(e);
+                    if ("string" == typeof t.botd) try {
+                        const e = JSON.parse(t.botd);
+                        e.bot = !1, delete e.botKind, t.botd = JSON.stringify(e)
+                    } catch {}
+                    return JSON.stringify(t)
+                })(e)
+            } catch {}
+            const t = await a(o, e);
+            return new Response(t, {
+                status: 200
+            })
+        }
+        return c(e, n)
+    }
+}
+var nt = (e, t, n) => {
+        chrome.scripting.executeScript({
+            target: {
+                tabId: e,
+                frameIds: [t]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: n,
+            args: [Qe]
+        }).catch(() => {})
+    },
+    rt = e => {
+        try {
+            const t = new URL(e);
+            return Ye(t.pathname, t.search)
+        } catch {
+            return !1
+        }
+    };
+
+function ot(e) {
+    const t = (t, n) => {
+            window.postMessage({
+                source: e.msgSource,
+                phase: t,
+                ...n ?? {}
+            }, location.origin)
+        },
+        n = () => {
+            try {
+                Object.defineProperty(document, "hidden", {
+                    get: () => !1,
+                    configurable: !0
+                }), Object.defineProperty(document, "visibilityState", {
+                    get: () => "visible",
+                    configurable: !0
+                }), Object.defineProperty(Document.prototype, "hasFocus", {
+                    value: () => !0,
+                    configurable: !0,
+                    writable: !0
+                })
+            } catch {}
+        },
+        r = e => new Promise(t => window.setTimeout(t, e)),
+        o = e => {
+            if (!e) return;
+            const t = e.__pulse;
+            t && window.clearInterval(t);
+            try {
+                e.disconnect?.()
+            } catch {}
+        },
+        a = () => {
+            const e = document.querySelector('input[name="cf-turnstile-response"]')?.value ?? "";
+            return e.length > 50 ? e : null
+        };
+    (async () => {
+        let i = null;
+        try {
+            n();
+            const s = Date.now() + e.waitMs;
+            t("parallel", {
+                waitEndTs: s
+            });
+            const c = new Promise(e => {
+                    let t = !1;
+                    const r = window,
+                        o = n => {
+                            !t && n && (t = !0, s.disconnect(), e(n))
+                        },
+                        i = r.onTurnstileSuccess;
+                    r.onTurnstileSuccess = e => {
+                        try {
+                            i?.(e)
+                        } catch {}
+                        o(e)
+                    };
+                    const s = new MutationObserver(() => {
+                        n();
+                        const e = a();
+                        e && o(e)
+                    });
+                    s.observe(document.documentElement, {
+                        attributeFilter: ["value"],
+                        attributes: !0,
+                        childList: !0,
+                        subtree: !0
+                    });
+                    const c = a();
+                    c && o(c)
+                }),
+                l = await fetch("/api/session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        code: e.code,
+                        fingerprint: e.fingerprint
+                    })
+                }),
+                d = await l.json();
+            if (!d.sessionId || !d.token) throw new Error(d.error ?? `session ${l.status}`);
+            const u = await new Promise(e => {
+                const t = window,
+                    n = t.io;
+                if ("function" == typeof n) return e(n);
+                let r = n;
+                Object.defineProperty(t, "io", {
+                    configurable: !0,
+                    get: () => r,
+                    set: t => {
+                        r = t, "function" == typeof t && e(t)
+                    }
+                })
+            });
+            i = await (async (e, t) => {
+                const n = e(void 0, {
+                        transports: ["websocket"]
+                    }),
+                    r = window.setInterval(() => {
+                        n.connected && (n.emit("heartbeat"), n.emit("visibility", "visible"))
+                    }, 1e3);
+                return await new Promise((e, r) => {
+                    n.on("connect", () => {
+                        n.emit("bind", t), n.emit("visibility", "visible")
+                    }), n.on("bound", () => e()), n.on("error", e => r(e instanceof Error ? e : new Error(String(e)))), window.setTimeout(() => e(), 3e3)
+                }), n.__pulse = r, n
+            })(u, d.token);
+            const p = await Promise.all([c, r(Math.max(0, s - Date.now()))]).then(([e]) => e);
+            t("complete");
+            let m = null;
+            for (let t = 0; t < 4 && (m = await (await fetch("/api/session/complete", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        fingerprint: e.fingerprint,
+                        turnstileToken: p
+                    })
+                })).json(), !m.token); t++) {
+                const e = (m.error ?? "").toLowerCase();
+                if (!e.includes("timer") && !e.includes("wait")) break;
+                await r(3e3)
+            }
+            if (!m?.token) throw new Error(m?.error ?? "complete failed");
+            o(i), t("redirect"), location.href = `/go/${encodeURIComponent(d.sessionId)}?t=${encodeURIComponent(m.token)}`
+        } catch (s) {
+            o(i), t("error", {
+                message: String(s instanceof Error ? s.message : s)
+            })
+        }
+    })()
+}
+var at = "skip-wait-arolinks-unlock",
+    it = {
+        lead: "Hang tight — unlocking your link.",
+        detail: "Skip Wait is handling the waiting pages for you."
+    },
+    st = ((() => {
+        let e = null
+    })(), 917299),
+    ct = (e, t) => {
+        const n = e.match(/(?:document|window)\.location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/)?.[1];
+        if (!n) return null;
+        try {
+            return new URL(n, t).href
+        } catch {
+            return null
+        }
+    },
+    lt = (e, t) => {
+        const n = e.match(/href=["']([^"']*learn_more\.php[^"']*)["']/i)?.[1];
+        if (!n) return null;
+        try {
+            return new URL(n, t).href
+        } catch {
+            return null
+        }
+    },
+    dt = async (e, t) => {
+        await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [st],
+            addRules: [{
+                id: st,
+                priority: 3,
+                action: {
+                    type: "modifyHeaders",
+                    requestHeaders: [{
+                        header: "Referer",
+                        operation: "set",
+                        value: t
+                    }]
+                },
+                condition: {
+                    urlFilter: `|${e}`,
+                    resourceTypes: ["xmlhttprequest"],
+                    tabIds: [chrome.tabs.TAB_ID_NONE]
+                }
+            }]
+        });
+        try {
+            return await fetch(e, {
+                redirect: "manual",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                    Accept: "text/html"
+                }
+            })
+        } finally {
+            await chrome.declarativeNetRequest.updateSessionRules({
+                removeRuleIds: [st]
+            }).catch(() => {})
+        }
+    }, ut = async (e, t) => {
+        let n = e,
+            r = t;
+        for (let o = 0; o < 5; o++) {
+            const e = await dt(n, r);
+            if (e.status >= 300 && e.status < 400) {
+                const t = e.headers.get("location");
+                if (!t) break;
+                r = n, n = new URL(t, n).href;
+                continue
+            }
+            return {
+                url: n,
+                html: await e.text()
+            }
+        }
+        return {
+            url: n,
+            html: ""
+        }
+    }, pt = 917300, mt = e => /^https?:\/\//i.test(e), ht = e => 917301 + e, ft = async () => {
+        const e = await pe("arolinks");
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [pt],
+            addRules: [{
+                id: pt,
+                priority: 2,
+                action: {
+                    type: "modifyHeaders",
+                    responseHeaders: [{
+                        header: "Content-Security-Policy",
+                        operation: "set",
+                        value: "script-src 'none'"
+                    }]
+                },
+                condition: {
+                    requestDomains: e,
+                    resourceTypes: ["main_frame"]
+                }
+            }]
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [pt],
+            addRules: []
+        })
+    }, wt = e => chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [ht(e)]
+    }).catch(() => {});
+
+function yt(e) {
+    try {
+        const t = e.replace(/-/g, "+").replace(/_/g, "/"),
+            n = t + "=".repeat((4 - t.length % 4) % 4),
+            r = atob(n).trim();
+        return /^https?:\/\//i.test(r) ? r : null
+    } catch {
+        return null
+    }
+}
+var gt = new Set(["tipsguru", "vidyays", "mineverse", "mineverse360"]),
+    bt = new Set(["phpsessid", "wppro_steps", "wppro_geo"]);
+
+function kt(e) {
+    try {
+        return yt(decodeURIComponent(e.trim()))
+    } catch {
+        return yt(e.trim())
+    }
+}
+var vt = e => {
+    try {
+        return ue(new URL(e).hostname, "exeio")
+    } catch {
+        return Promise.resolve(!1)
+    }
+};
+
+function _t() {
+    const e = window;
+    if (e.__swExeioAdblock) return;
+    e.__swExeioAdblock = !0;
+    const t = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i,
+        n = e => t.test(String(e ?? ""));
+    let r = null,
+        o = !1;
+    const a = XMLHttpRequest.prototype.open,
+        i = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(e, t, n, r, o) {
+        return this.__swMethod = e, this.__swUrl = String(t), a.call(this, e, t, n ?? !0, r, o)
+    }, XMLHttpRequest.prototype.send = function(e) {
+        return n(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
+            configurable: !0,
+            get: () => 200
+        }), Object.defineProperty(this, "readyState", {
+            configurable: !0,
+            get: () => 4
+        }), Object.defineProperty(this, "responseText", {
+            configurable: !0,
+            get: () => ""
+        }), void queueMicrotask(() => {
+            this.onreadystatechange?.call(this, null), this.onload?.call(this, null)
+        })) : i.call(this, e)
+    };
+    const s = window.fetch.bind(window);
+    window.fetch = (e, t) => {
+        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e.url,
+            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e.method) || "GET").toUpperCase();
+        return n(r) && "HEAD" === o ? Promise.resolve(new Response(null, {
+            status: 200,
+            statusText: "OK"
+        })) : s(e, t)
+    };
+    const c = () => {
+            try {
+                const e = window.app_vars;
+                e && (e.force_disable_adblock = "0")
+            } catch {}
+        },
+        l = () => {
+            const e = document.getElementById("captchaShortlink"),
+                t = window.turnstile,
+                n = window.app_vars?.turnstile_site_key;
+            if (e && t && n) try {
+                e.replaceChildren(), t.render(e, {
+                    sitekey: n,
+                    callback: t => {
+                        let n = document.querySelector('[name="cf-turnstile-response"]');
+                        n || (n = document.createElement("input"), n.type = "hidden", n.name = "cf-turnstile-response", e.appendChild(n)), n.value = t;
+                        const r = document.getElementById("invisibleCaptchaShortlink");
+                        r instanceof HTMLButtonElement && (r.disabled = !1)
+                    }
+                })
+            } catch {
+                try {
+                    window.onloadTurnstileCallback?.()
+                } catch {}
+            } else try {
+                window.onloadTurnstileCallback?.()
+            } catch {}
+        },
+        d = () => {
+            for (const e of ["link-view", "before-captcha", "go-link"]) {
+                const t = document.getElementById(e);
+                if (t && (!t.querySelector(".button.disabled.danger") && t.querySelector("[name=_csrfToken], button[type=submit], [name=ad_form_data], [name=cf-turnstile-response]"))) return void(r = t.outerHTML)
+            }
+        },
+        u = e => !!e.querySelector(".button.disabled.danger") && !e.querySelector("button[type=submit], [name=cf-turnstile-response], [name=ad_form_data]"),
+        p = e => {
+            for (const t of e.querySelectorAll("button")) t instanceof HTMLButtonElement && (t.disabled = !1)
+        },
+        m = () => {
+            d();
+            const e = ["before-captcha", "link-view"].some(e => {
+                    const t = document.getElementById(e);
+                    return !!t && u(t)
+                }),
+                t = !!document.querySelector(".button.disabled.danger") && !document.querySelector("#before-captcha, #link-view, #go-link");
+            (e || t) && ((() => {
+                if (!o) {
+                    o = !0;
+                    try {
+                        let e = window.app_vars;
+                        Object.defineProperty(window, "app_vars", {
+                            configurable: !0,
+                            enumerable: !0,
+                            get: () => e,
+                            set: t => {
+                                e = t && "object" == typeof t ? t : e, e && (e.force_disable_adblock = "0")
+                            }
+                        }), e && (e.force_disable_adblock = "0")
+                    } catch {
+                        c()
+                    }
+                }
+            })(), c(), (() => {
+                if (!r) return !1;
+                const e = document.createElement("div");
+                e.innerHTML = r;
+                const t = e.querySelector("#link-view, #before-captcha, #go-link");
+                if (!t) return !1;
+                const n = t.id,
+                    o = document.getElementById(n);
+                if (o) return !(!u(o) && o.querySelector("[name=_csrfToken], [name=cf-turnstile-response], [name=ad_form_data]") || (o.replaceWith(t), p(t), 0));
+                const a = document.querySelector(".button.disabled.danger");
+                if (a) return a.replaceWith(t), p(t), !0;
+                const i = document.querySelector(".link-container");
+                if (i) {
+                    const e = i.querySelector("h4");
+                    return e?.nextSibling ? i.insertBefore(t, e.nextSibling) : i.appendChild(t), p(t), !0
+                }
+                return !1
+            })() && (queueMicrotask(l), window.setTimeout(l, 300)))
+        };
+    d(), m(), new MutationObserver(m).observe(document.documentElement, {
+        childList: !0,
+        subtree: !0
+    }), "loading" === document.readyState && document.addEventListener("DOMContentLoaded", () => {
+        d(), m()
+    }, {
+        once: !0
+    })
+}
+async function Lt() {
+    const {
+        vhit: e
+    } = window;
+    if (!e?.report) return {
+        ok: !1,
+        err: "vhit.report missing"
+    };
+    await Promise.resolve(e.report());
+    const t = document.getElementById("go-link");
+    return t instanceof HTMLFormElement && t.querySelector("[name=ad_form_data]") ? (t.action = `${location.origin}/links/go`, t.method = "post", HTMLFormElement.prototype.submit.call(t), {
+        ok: !0
+    }) : {
+        ok: !1,
+        err: "go-link missing"
+    }
+}
+var St = (e, t, n) => {
+    chrome.scripting.executeScript({
+        target: {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: n
+    })
+};
+
+function Et() {
+    const e = window;
+    if (e.__swFcPow) return;
+    e.__swFcPow = !0;
+    const t = () => {
+            e.__swFcPow = !1, window.postMessage({
+                source: "skip-wait-filecrypt",
+                type: "err"
+            }, location.origin)
+        },
+        n = e => {
+            window.postMessage({
+                source: "skip-wait-filecrypt",
+                type: "status",
+                text: e
+            }, location.origin)
+        },
+        r = () => document.getElementById("pow-captcha") ? "pow" : document.querySelector('a.button.download, a[href*="/Link/"], .window.container, .dlcdownload, .cnl') ? "open" : "pending",
+        o = new Function("u", "return import(u)");
+    (async () => {
+        const a = await new Promise(e => {
+            const t = r();
+            if ("pow" === t) return void e(document.getElementById("pow-captcha"));
+            if ("open" === t) return void e(null);
+            const n = new MutationObserver(() => {
+                const t = r();
+                "pending" !== t && (n.disconnect(), e("pow" === t ? document.getElementById("pow-captcha") : null))
+            });
+            n.observe(document.documentElement, {
+                childList: !0,
+                subtree: !0
+            })
+        });
+        if (!a) return e.__swFcPow = !1, void window.postMessage({
+            source: "skip-wait-filecrypt",
+            type: "done"
+        }, location.origin);
+        const i = a.getAttribute("data-session"),
+            s = a.getAttribute("data-ext"),
+            c = a.getAttribute("data-sig"),
+            l = (a.getAttribute("data-px") || "").split(",").map(e => e.trim()).filter(Boolean);
+        if (!i || !s || !c) return void t();
+        const d = a.closest("form") || document.getElementById("cform");
+        if (!d) return void t();
+        n("Checking the page…");
+        const u = (() => {
+                try {
+                    const e = new Uint32Array(2);
+                    return crypto.getRandomValues(e), e[0].toString(36) + e[1].toString(36)
+                } catch {
+                    return String(Date.now()) + Math.random().toString(36).slice(2)
+                }
+            })(),
+            p = Promise.all([o(s), o(c)]),
+            m = (async (e, t) => (await Promise.all(e.map(async e => {
+                const n = e + (e.includes("?") ? "&" : "?") + "t=" + t;
+                try {
+                    const e = await fetch(n, {
+                        cache: "no-store",
+                        mode: "cors"
+                    });
+                    return e.ok && (await e.json())?.cid || ""
+                } catch {
+                    return ""
+                }
+            }))).find(Boolean) || "")(l, u),
+            [h, [f, w]] = await Promise.all([m, p]),
+            y = f.R,
+            g = w.S;
+        if (!y || !g) return void t();
+        try {
+            g.start?.()
+        } catch {}
+        const b = y().catch(() => ""),
+            k = new URLSearchParams({
+                pow_x: "",
+                pow_y: h,
+                pow_yn: u,
+                tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"
+            }),
+            v = (await (await fetch(i, {
+                method: "POST",
+                cache: "no-store",
+                body: k
+            })).json()).challenge;
+        if (!v?.id || !v?.challenge || void 0 === v.difficulty) return void t();
+        const _ = parseInt(String(v.difficulty), 10);
+        n("Skipping the security check…");
+        const L = ((e, t) => new Promise((r, o) => {
+                const a = navigator.hardwareConcurrency || 4,
+                    i = Math.max(2, Math.min(2 * a, 32)),
+                    s = new Blob(["\nconst W = new Int32Array(80);\nconst block = new Uint8Array(64);\n\nfunction sha1ok(difficulty) {\n  let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;\n  for (let i = 0; i < 16; i++) {\n    const j = i << 2;\n    W[i] = (block[j] << 24) | (block[j + 1] << 16) | (block[j + 2] << 8) | block[j + 3];\n  }\n  for (let i = 16; i < 80; i++) {\n    const v = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];\n    W[i] = (v << 1) | (v >>> 31);\n  }\n  let a = h0, b = h1, c = h2, d = h3, e = h4;\n  for (let i = 0; i < 20; i++) {\n    const t = (((a << 5) | (a >>> 27)) + ((b & c) | (~b & d)) + e + 0x5A827999 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 20; i < 40; i++) {\n    const t = (((a << 5) | (a >>> 27)) + (b ^ c ^ d) + e + 0x6ED9EBA1 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 40; i < 60; i++) {\n    const t = (((a << 5) | (a >>> 27)) + ((b & c) | (b & d) | (c & d)) + e + 0x8F1BBCDC + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  for (let i = 60; i < 80; i++) {\n    const t = (((a << 5) | (a >>> 27)) + (b ^ c ^ d) + e + 0xCA62C1D6 + W[i]) | 0;\n    e = d; d = c; c = ((b << 30) | (b >>> 2)) | 0; b = a; a = t;\n  }\n  const u = ((h0 + a) | 0) >>> 0;\n  return difficulty >= 32 ? u === 0 : u < (1 << (32 - difficulty));\n}\n\nfunction digitsOf(n) {\n  if (n < 10) return 1;\n  if (n < 100) return 2;\n  if (n < 1000) return 3;\n  if (n < 10000) return 4;\n  if (n < 100000) return 5;\n  if (n < 1000000) return 6;\n  if (n < 10000000) return 7;\n  if (n < 100000000) return 8;\n  if (n < 1000000000) return 9;\n  return 10;\n}\n\nfunction writeNonce(off, n, digits) {\n  let x = n;\n  for (let i = digits - 1; i >= 0; i--) {\n    block[off + i] = 48 + (x % 10);\n    x = (x / 10) | 0;\n  }\n}\n\nfunction prepareBand(prefix, digits) {\n  const msgLen = prefix.length + digits;\n  block.fill(0);\n  block.set(prefix, 0);\n  block[msgLen] = 0x80;\n  const bitLen = msgLen << 3;\n  block[60] = (bitLen >>> 24) & 0xff;\n  block[61] = (bitLen >>> 16) & 0xff;\n  block[62] = (bitLen >>> 8) & 0xff;\n  block[63] = bitLen & 0xff;\n  return msgLen;\n}\n\nself.onmessage = (ev) => {\n  const { challenge, difficulty, start, step } = ev.data;\n  const prefix = new Uint8Array(String(challenge).length + 1);\n  for (let i = 0; i < String(challenge).length; i++) prefix[i] = String(challenge).charCodeAt(i);\n  prefix[prefix.length - 1] = 58;\n  const t0 = performance.now();\n  let nonce = start | 0;\n  const stride = step | 1;\n  let n = 0;\n  let digits = digitsOf(nonce);\n  let bandEnd = 10 ** digits;\n  prepareBand(prefix, digits);\n  const pLen = prefix.length;\n  for (;;) {\n    while (nonce >= bandEnd) {\n      digits++;\n      bandEnd *= 10;\n      prepareBand(prefix, digits);\n    }\n    writeNonce(pLen, nonce, digits);\n    if (sha1ok(difficulty)) {\n      self.postMessage({ type: 'done', nonce, ms: Math.round(performance.now() - t0) });\n      return;\n    }\n    nonce += stride;\n    n++;\n    if ((n & 0x3ffff) === 0) self.postMessage({ type: 'tick', delta: 0x40000 });\n  }\n};\n"], {
+                        type: "application/javascript"
+                    }),
+                    c = URL.createObjectURL(s),
+                    l = [];
+                let d = !1,
+                    u = 0;
+                const p = performance.now(),
+                    m = Math.pow(2, Math.max(0, t - 1)),
+                    h = () => {
+                        for (const e of l) try {
+                            e.terminate()
+                        } catch {}
+                        URL.revokeObjectURL(c)
+                    };
+                try {
+                    for (let a = 0; a < i; a++) {
+                        const s = new Worker(c);
+                        l.push(s), s.onmessage = e => {
+                            const t = e.data;
+                            if ("tick" === t?.type) {
+                                u += t.delta || 0;
+                                const e = Math.min(99, Math.round(100 * (1 - Math.exp(-u / m))));
+                                return void n(`Almost there… ${e}%`)
+                            }
+                            var o;
+                            "done" === t?.type && void 0 !== t.nonce && (o = t.nonce, d || (d = !0, h(), r({
+                                nonce: o,
+                                ms: Math.round(performance.now() - p)
+                            })))
+                        }, s.onerror = () => {
+                            d || (d = !0, h(), o(new Error("pow worker")))
+                        }, s.postMessage({
+                            challenge: e,
+                            difficulty: t,
+                            start: a,
+                            step: i
+                        })
+                    }
+                } catch (f) {
+                    h(), o(f)
+                }
+            }))(String(v.challenge), _),
+            [S, E] = await Promise.all([L, b]),
+            I = a.querySelector(".pow-captcha__box");
+        if (I) {
+            const e = I.getBoundingClientRect(),
+                t = e.left + Math.max(4, .2 * e.width),
+                n = e.top + Math.max(4, .5 * e.height);
+            try {
+                g.recordPointer?.(new PointerEvent("pointerdown", {
+                    bubbles: !0,
+                    clientX: t,
+                    clientY: n,
+                    pointerId: 1,
+                    pointerType: "mouse",
+                    isPrimary: !0
+                })), g.recordClick?.(new MouseEvent("click", {
+                    bubbles: !0,
+                    clientX: t,
+                    clientY: n
+                }))
+            } catch {}
+        }
+        let R = "";
+        try {
+            R = g.collect?.() || ""
+        } catch {}
+        const x = (e, t) => {
+            const n = d.querySelector(`input[name="${e}"]`);
+            n && (n.value = t)
+        };
+        x("pow_id", v.id), x("pow_nonce", String(S.nonce)), x("pow_elapsed", String(S.ms)), x("pow_pauses", "0"), x("pow_data", R), x("pow_x", E || ""), n("Opening downloads…"), "function" == typeof d.requestSubmit ? d.requestSubmit() : d.submit()
+    })().catch(t)
+}
+
+function It(e, t) {
+    chrome.scripting.executeScript({
+        target: void 0 === t ? {
+            tabId: e
+        } : {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: Et
+    })
+}
+
+function Rt() {
+    const e = window;
+    if (e.__swLksfyAdblock) return;
+    e.__swLksfyAdblock = !0;
+    const t = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|code\.jquery\.com/i,
+        n = e => t.test(String(e ?? "")),
+        r = XMLHttpRequest.prototype.open,
+        o = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(e, t, n, o, a) {
+        return this.__swMethod = e, this.__swUrl = String(t), r.call(this, e, t, n ?? !0, o, a)
+    }, XMLHttpRequest.prototype.send = function(e) {
+        return n(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
+            configurable: !0,
+            get: () => 200
+        }), Object.defineProperty(this, "readyState", {
+            configurable: !0,
+            get: () => 4
+        }), Object.defineProperty(this, "responseText", {
+            configurable: !0,
+            get: () => ""
+        }), void queueMicrotask(() => {
+            this.onreadystatechange?.call(this, null), this.onload?.call(this, null)
+        })) : o.call(this, e)
+    };
+    const a = window.fetch.bind(window);
+    window.fetch = (e, t) => {
+        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e.url,
+            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e.method) || "GET").toUpperCase();
+        return n(r) && "HEAD" === o ? Promise.resolve(new Response(null, {
+            status: 200,
+            statusText: "OK"
+        })) : a(e, t)
+    };
+    const i = () => {
+        try {
+            const e = window.app_vars;
+            e && (e.force_disable_adblock = "0")
+        } catch {}
+    };
+    try {
+        let e = window.app_vars;
+        Object.defineProperty(window, "app_vars", {
+            configurable: !0,
+            enumerable: !0,
+            get: () => e,
+            set: t => {
+                e = t && "object" == typeof t ? t : e, e && (e.force_disable_adblock = "0")
+            }
+        }), e && (e.force_disable_adblock = "0")
+    } catch {
+        i()
+    }
+    i(), window.setInterval(i, 250)
+}
+
+function xt(e, t) {
+    chrome.scripting.executeScript({
+        target: void 0 === t ? {
+            tabId: e
+        } : {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: Rt
+    })
+}
+var At = "rinku-flow-tabs",
+    Nt = /^[A-Za-z0-9_-]{3,}$/,
+    $t = /(?:^|\/)backup\/w\/?$/i,
+    Tt = e => {
+        try {
+            return t = new URL(e).hostname, ue(t, "cuty")
+        } catch {
+            return Promise.resolve(!1)
+        }
+        var t
+    },
+    Mt = /^\/quick\/?$/i;
+var Ot = ["cuttty.com", "cuty.io"];
+
+function Ct(e = location.search) {
+    const t = new URLSearchParams(e).get("url");
+    if (!t) return null;
+    try {
+        const e = new URL(t);
+        return "http:" !== e.protocol && "https:" !== e.protocol || (e => {
+            const t = e.toLowerCase();
+            return Ot.some(e => t === e || t.endsWith(`.${e}`))
+        })(e.hostname) ? null : e.href
+    } catch {
+        return null
+    }
+}
+async function Ut() {
+    const e = document.getElementById("submit-form");
+    if (!(e instanceof HTMLFormElement && e.querySelector('[name="data"]') && e.querySelector('[name="_token"]'))) return {
+        ok: !1,
+        err: "Unlock form missing. Reload and try again."
+    };
+    const {
+        vhit: t
+    } = window;
+    return t?.report ? (await t.report(), HTMLFormElement.prototype.submit.call(e), {
+        ok: !0
+    }) : {
+        ok: !1,
+        err: "cuty view report blocked. Pause adblock for this site, then try again."
+    }
+}
+
+function Pt(e) {
+    try {
+        const t = new URL(e);
+        return ue(t.hostname, "cuty").then(e => e && function(e = location.pathname) {
+            return Mt.test(e)
+        }(t.pathname) ? Ct(t.search) : null)
+    } catch {
+        return Promise.resolve(null)
+    }
+}
+
+function Wt() {
+    const e = window;
+    if (e.__swStorylineCountDown) return;
+    e.__swStorylineCountDown = !0;
+    const t = () => {
+        const n = e.DS?.resolver?.getPresentationContext?.()?.variables?.().models.find(e => "CountDown" === e.get("name"));
+        if (!n) return void window.setTimeout(t, 50);
+        const r = Object.getPrototypeOf(n);
+        if (r.__swCountDownPatched) return;
+        r.__swCountDownPatched = !0;
+        const o = r.changeValue;
+        r.changeValue = function(e, t) {
+            return "CountDown" !== this.get("name") ? o.call(this, e, t) : Number(e) > 0 && 0 === Number(this.value()) ? (o.call(this, 1, t), o.call(this, 0, t)) : o.call(this, 0, t)
+        }, 0 !== Number(n.value()) && n.changeValue(0)
+    };
+    t()
+}
+var qt = /^https:\/\/link4m\.co\/full\/\?/i,
+    Dt = /vexgoijaada='[^']*';\s*hgeyioahwuk='(\{.*?\})';/g;
+
+function jt(e) {
+    const t = new Uint8Array(e.length / 2);
+    for (let n = 0; n < t.length; n++) t[n] = parseInt(e.slice(2 * n, 2 * n + 2), 16);
+    return t
+}
+
+function Ft(e) {
+    const t = e.length,
+        n = 8 * t;
+    let r = t + 1;
+    for (; r % 64 != 56;) r++;
+    r += 8;
+    const o = new Uint8Array(r);
+    o.set(e), o[t] = 128;
+    const a = new DataView(o.buffer);
+    a.setUint32(r - 8, n >>> 0, !0), a.setUint32(r - 4, Math.floor(n / 4294967296), !0);
+    let i = 1732584193,
+        s = 4023233417,
+        c = 2562383102,
+        l = 271733878;
+    const d = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21],
+        u = Uint32Array.from({
+            length: 64
+        }, (e, t) => Math.floor(4294967296 * Math.abs(Math.sin(t + 1)))),
+        p = (e, t) => e << t | e >>> 32 - t;
+    for (let f = 0; f < r; f += 64) {
+        const e = new Uint32Array(16);
+        for (let i = 0; i < 16; i++) e[i] = a.getUint32(f + 4 * i, !0);
+        let t = i,
+            n = s,
+            r = c,
+            o = l;
+        for (let a = 0; a < 64; a++) {
+            let i, s;
+            a < 16 ? (i = n & r | ~n & o, s = a) : a < 32 ? (i = o & n | ~o & r, s = (5 * a + 1) % 16) : a < 48 ? (i = n ^ r ^ o, s = (3 * a + 5) % 16) : (i = r ^ (n | ~o), s = 7 * a % 16), i = i + t + u[a] + e[s] >>> 0, t = o, o = r, r = n, n = n + p(i, d[a]) >>> 0
+        }
+        i = i + t >>> 0, s = s + n >>> 0, c = c + r >>> 0, l = l + o >>> 0
+    }
+    const m = new Uint8Array(16),
+        h = new DataView(m.buffer);
+    return h.setUint32(0, i, !0), h.setUint32(4, s, !0), h.setUint32(8, c, !0), h.setUint32(12, l, !0), m
+}
+async function Bt(e) {
+    try {
+        const t = JSON.parse(e);
+        if (!t.ct || !t.iv || !t.s) return null;
+        const n = new Uint8Array(function(e, t, n) {
+                let r = new Uint8Array(0);
+                const o = new Uint8Array(n);
+                let a = 0;
+                for (; a < n;) {
+                    const i = new Uint8Array(r.length + e.length + t.length);
+                    i.set(r), i.set(e, r.length), i.set(t, r.length + e.length), r = new Uint8Array(Ft(i));
+                    const s = Math.min(16, n - a);
+                    o.set(r.subarray(0, s), a), a += s
+                }
+                return o
+            }((new TextEncoder).encode("pcenxoqnzrc"), jt(t.s), 32)),
+            r = new Uint8Array(jt(t.iv)),
+            o = new Uint8Array(function(e) {
+                const t = atob(e),
+                    n = new Uint8Array(t.length);
+                for (let r = 0; r < t.length; r++) n[r] = t.charCodeAt(r);
+                return n
+            }(t.ct)),
+            a = await crypto.subtle.importKey("raw", n, "AES-CBC", !1, ["decrypt"]),
+            i = await crypto.subtle.decrypt({
+                name: "AES-CBC",
+                iv: r
+            }, a, o),
+            s = JSON.parse((new TextDecoder).decode(i));
+        return "string" == typeof s && s ? `https://${s}` : null
+    } catch {
+        return null
+    }
+}
+async function Ht(e, t) {
+    const n = [...e.matchAll(Dt)].map(e => e[1]).filter(Boolean);
+    if (n.length < 2) return null;
+    const r = await Bt(n[n.length - 1]);
+    return r ? function(e, t) {
+        if (!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(t)) return null;
+        try {
+            const n = new URL(e);
+            return n.protocol = "https:", n.host = `${t.replaceAll(".","-")}.top`, n.href
+        } catch {
+            return null
+        }
+    }(r, t) : null
+}
+async function zt(e, t, n) {
+    const r = await fetch("https://wickradio.com/Please-Wait.php", {
+        method: "POST",
+        body: new URLSearchParams({
+            id: e,
+            filename: t,
+            filesize: n
+        }),
+        credentials: "omit",
+        cache: "no-store",
+        headers: {
+            Accept: "text/html,*/*",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        }
+    });
+    return r.ok ? Ht(await r.text(), e) : null
+}
+async function Vt(e) {
+    const t = new AbortController,
+        n = (await fetch(e, {
+            redirect: "follow",
+            credentials: "omit",
+            cache: "no-store",
+            signal: t.signal
+        })).url;
+    if (t.abort(), new URL(n).hostname === new URL(e).hostname) throw new Error("same host");
+    return n
+}
+var Kt = /\/download\/\d+\/?$/i;
+
+function Gt() {
+    const e = window;
+    if (e.__swGetmodsapk) return;
+    e.__swGetmodsapk = !0, Object.defineProperty(window, "onload", {
+        configurable: !0,
+        enumerable: !0,
+        get: () => null,
+        set() {}
+    });
+    const t = () => {
+        const e = document.getElementById("progress-bar"),
+            t = document.getElementById("download-button"),
+            n = e?.parentElement;
+        if (!e || !t || !n) return;
+        n.style.display = "none", t.classList.remove("hidden");
+        const r = document.createElement("div");
+        r.id = "skipwait-getmodsapk-brand", r.className = "bg-[var(--post-color-lighter)] rounded-xl p-4 mb-4", r.setAttribute("role", "status");
+        const o = document.createElement("h2");
+        o.className = "text-base font-semibold text-gray-800 dark:text-white mb-2 flex items-center";
+        const a = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        a.setAttribute("class", "w-5 h-5 mr-2"), a.setAttribute("fill", "none"), a.setAttribute("stroke", "currentColor"), a.setAttribute("viewBox", "0 0 24 24");
+        const i = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        i.setAttribute("stroke-linecap", "round"), i.setAttribute("stroke-linejoin", "round"), i.setAttribute("stroke-width", "2"), i.setAttribute("d", "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"), a.append(i), o.append(a, document.createTextNode("Skip Wait"));
+        const s = document.createElement("p");
+        s.className = "text-gray-700 dark:text-gray-300", s.textContent = "5-second reveal skipped — download is ready now.", r.append(o, s), t.before(r)
+    };
+    "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", t, {
+        once: !0
+    }) : t()
+}
+var Zt = /\/download\//i;
+
+function Xt() {
+    const e = window;
+    if (e.__swApkvision) return;
+    e.__swApkvision = !0;
+    let t = !1;
+    const n = () => {
+            if (t) return;
+            const e = document.querySelector(".download-loading"),
+                n = document.querySelector(".download-ready");
+            if (!e || !n) return;
+            t = !0, e.style.display = "none", n.style.display = "block";
+            const r = document.createElement("div");
+            r.id = "skipwait-apkvision-brand", r.className = "b-dwn-spoiler__instruction", r.setAttribute("role", "status");
+            const o = document.createElement("strong");
+            o.textContent = "Skip Wait", r.append(o, document.createTextNode(" 7-second timer skipped — download is ready now.")), n.before(r)
+        },
+        r = window.setInterval.bind(window);
+    window.setInterval = (e, t, ...o) => 1e3 === t && document.querySelector(".download-loading") && document.querySelector(".download-ready") ? (queueMicrotask(n), 0) : r(e, t, ...o), "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", n, {
+        once: !0
+    }) : n()
+}
+var Jt = /\/download\//i;
+
+function Yt() {
+    const e = window;
+    if (e.__swApkaward) return;
+    e.__swApkaward = !0;
+    let t = !1;
+    const n = () => {
+            if (t) return;
+            const e = document.getElementById("page-cdn-btns");
+            if (!e?.classList.contains("counter-active")) return;
+            t = !0, e.classList.remove("counter-active");
+            for (const t of e.querySelectorAll(".offcounter")) t.style.removeProperty("display");
+            const n = document.createElement("div");
+            n.id = "skipwait-apkaward-brand", n.className = "noteccc", n.setAttribute("role", "status");
+            const r = document.createElement("strong");
+            r.textContent = "Skip Wait", n.append(r, document.createTextNode(" 5-second timer skipped — download is ready now.")), e.before(n)
+        },
+        r = window.setInterval.bind(window);
+    window.setInterval = (e, t, ...o) => 1e3 === t && document.getElementById("page-cdn-btns")?.classList.contains("counter-active") ? (queueMicrotask(n), 0) : r(e, t, ...o), "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", n, {
+        once: !0
+    }) : n()
+}
+var Qt = /\/download(?:-step)?\/\d+\/?$/i;
+
+function en() {
+    const e = window;
+    if (e.__swFuzyapk) return;
+    e.__swFuzyapk = !0, Object.defineProperty(e, "fuzy_smartlink_url", {
+        configurable: !0,
+        enumerable: !0,
+        get: () => "",
+        set: () => {}
+    });
+    let t = !1;
+    const n = () => {
+        if (t || !/\/download\/\d+\/?$/i.test(location.pathname)) return;
+        const n = document.getElementById("fuzy-real-download"),
+            r = n?.querySelector(".fuzy-download-text"),
+            o = document.getElementById("fuzy-download-btn-wrap");
+        if (!n || !r || !o) return;
+        t = !0;
+        const a = e.fuzy_file_size || "0MB",
+            i = e.fuzy_real_download;
+        n.classList.remove("loading", "disabled"), r.innerText = "vi" === e.fuzy_lang ? `Tải xuống (${a})` : `Download (${a})`, n.onclick = e => {
+            e.preventDefault(), i && (location.href = i)
+        };
+        const s = document.createElement("div");
+        s.id = "skipwait-fuzyapk-brand", s.className = "fuzy-download-notice", s.setAttribute("role", "status");
+        const c = document.createElement("strong");
+        c.textContent = "Skip Wait", s.append(c, document.createTextNode(" 10-second timer skipped — download is ready now.")), o.after(s)
+    };
+    "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", () => setTimeout(n, 0), {
+        once: !0
+    }) : setTimeout(n, 0)
+}
+var tn = /\/(?:apps|games)\/[^/]+\/[^/]+\/(?!history\/?$)[^/]+\/?$/i;
+
+function nn() {
+    const e = window;
+    if (e.__swModdroid) return;
+    e.__swModdroid = !0;
+    const t = {
+            en: "5-second prepare skipped — download is ready now.",
+            pt: "preparação de 5 segundos ignorada — o download está pronto.",
+            es: "preparación de 5 segundos omitida — la descarga está lista.",
+            id: "persiapan 5 detik dilewati — unduhan siap sekarang.",
+            ru: "5-секундная подготовка пропущена — загрузка уже доступна.",
+            ar: "تم تخطي التحضير لمدة 5 ثوانٍ — التنزيل جاهز الآن.",
+            tr: "5 saniyelik hazırlık atlandı — indirme hazır.",
+            de: "5-Sekunden-Vorbereitung übersprungen — Download ist bereit.",
+            fr: "préparation de 5 secondes ignorée — le téléchargement est prêt.",
+            it: "preparazione di 5 secondi saltata — il download è pronto."
+        },
+        n = () => {
+            const n = document.getElementById("download-button"),
+                r = document.querySelectorAll(".download-progress");
+            if (!n || !r.length) return !1;
+            for (const e of r) e.style.display = "none";
+            if ("function" == typeof e.isMobile && e.isMobile()) {
+                const e = document.getElementById("download-app-button");
+                e && (e.style.display = "flex")
+            }
+            return n.style.display = "flex", (() => {
+                if (document.getElementById("skipwait-moddroid-brand")) return;
+                const e = document.querySelector(".download-loading .download-ad-notice");
+                if (!e) return;
+                const n = document.documentElement.lang.toLowerCase().split("-")[0] ?? "",
+                    r = location.hostname.split(".")[0]?.toLowerCase() ?? "",
+                    o = t[n] ? n : t[r] ? r : "en",
+                    a = document.createElement("div");
+                a.id = "skipwait-moddroid-brand", a.className = "download-ad-notice", a.lang = o, "ar" === o && (a.dir = "rtl");
+                const i = e.querySelector(".download-ad-notice__icon")?.cloneNode(!0),
+                    s = document.createElement("span"),
+                    c = document.createElement("strong");
+                c.textContent = "Skip Wait", s.append(c, document.createTextNode(` ${t[o]}`)), i && a.append(i), a.append(s), e.before(a)
+            })(), !0
+        };
+    n() || "loading" === document.readyState && document.addEventListener("DOMContentLoaded", () => {
+        n()
+    }, {
+        once: !0
+    })
+}
+var rn = /\/download\/\d+\/?$/i;
+
+function on() {
+    const e = window;
+    if (e.__swModded1) return;
+    e.__swModded1 = !0;
+    const t = () => {
+        const e = document.getElementById("download"),
+            t = document.getElementById("download-loading");
+        return !(!e || !t) && (t.style.display = "none", e.style.display = "block", (() => {
+            if (document.getElementById("skipwait-modded1-brand")) return;
+            const e = document.getElementById("download");
+            if (!e) return;
+            const t = document.createElement("div");
+            t.id = "skipwait-modded1-brand", t.className = "super-container", t.setAttribute("role", "status");
+            const n = document.createElement("div");
+            n.className = "super-container-title", n.textContent = "Skip Wait";
+            const r = document.createElement("p");
+            r.textContent = "4-second loading skipped — download is ready now.", t.append(n, r), e.after(t)
+        })(), !0)
+    };
+    t() || "loading" === document.readyState && document.addEventListener("DOMContentLoaded", () => {
+        t()
+    }, {
+        once: !0
+    })
+}
+var an = /\/file\/?$/i;
+
+function sn() {
+    const e = window;
+    if (e.__swModsmaniac) return;
+    e.__swModsmaniac = !0;
+    const t = () => {
+            if (document.getElementById("skipwait-modsmaniac-brand")) return;
+            const e = document.querySelector("div#download");
+            if (!e) return;
+            const t = document.createElement("p");
+            t.id = "skipwait-modsmaniac-brand", t.className = "text-center text-muted mb-2", t.setAttribute("role", "status");
+            const n = document.createElement("strong");
+            n.textContent = "Skip Wait", t.append(n, document.createTextNode(" — ~15s wait skipped; download is ready now.")), e.after(t)
+        },
+        n = window.setInterval.bind(window);
+    window.setInterval = (e, r, ...o) => 900 === r && "function" == typeof e && document.getElementById("progress_new") && document.getElementsByClassName("waitme")[0] ? (queueMicrotask(() => {
+        for (let t = 0; t < 20; t++) try {
+            e()
+        } catch {
+            break
+        }
+        t()
+    }), 0) : n(e, r, ...o);
+    const r = () => !(!document.getElementById("progress_new") && !document.getElementsByClassName("waitme")[0]) && (!!(() => {
+        if (document.getElementById("no-link")) return !0;
+        const e = new URL(location.href).searchParams.get("urls"),
+            t = document.getElementById("progress_new");
+        if (!e || !t) return !1;
+        const n = window.setInterval(() => {}, 1e6);
+        for (let s = 1; s <= n; s++) window.clearInterval(s);
+        const r = document.createElement("div");
+        r.id = "download", r.className = "text-center mb-4", r.style.display = "block";
+        const o = document.createElement("a");
+        o.id = "no-link", o.className = "btn btn-secondary px-5", o.href = e, o.setAttribute("download", "");
+        const a = document.createElement("span");
+        a.className = "align-middle", a.textContent = "Download", o.append(a), r.append(o);
+        const i = t.nextElementSibling;
+        return i instanceof HTMLParagraphElement && !i.id ? i.replaceWith(r) : t.after(r), !0
+    })() && ((() => {
+        const e = document.getElementById("notifx"),
+            t = document.getElementById("progress_new"),
+            n = document.getElementsByClassName("waitme")[0];
+        e && (e.style.display = "none"), t && (t.style.display = "none"), n && (n.style.display = "none")
+    })(), t(), !0));
+    r() || "loading" === document.readyState && document.addEventListener("DOMContentLoaded", () => {
+        r()
+    }, {
+        once: !0
+    })
+}
+var cn = /https?:\/\/du\d+\.devuploads\.com\/d\/[A-Za-z0-9._~/-]+/i,
+    ln = async e => {
+        const t = await fetch(`https://devuploads.com/${e}`, {
+            method: "POST",
+            credentials: "omit",
+            cache: "no-store",
+            headers: {
+                Accept: "text/html,*/*",
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                Referer: `https://devuploads.com/${e}`
+            },
+            body: new URLSearchParams({
+                op: "download2",
+                id: e,
+                rand: "",
+                referer: "",
+                xd: "1",
+                tsty: "0",
+                ransite: "3",
+                dnumber: "0",
+                adblock_detected: "0",
+                ipp: ""
+            })
+        });
+        return t.ok ? (await t.text()).match(cn)?.[0] ?? null : null
+    }, dn = /^[a-z0-9]{8,16}$/i, un = /^https:\/\/fs\d+\.dupload\.xyz\/files\/\S+/i, pn = /File Not Found|could not be found/i;
+
+function mn() {
+    const e = window;
+    if (e.__swDuploadHold) return;
+    e.__swDuploadHold = !0;
+    const t = HTMLFormElement.prototype.submit;
+    HTMLFormElement.prototype.submit = function() {
+        if (!this.querySelector('input[name="op"][value="download2"]')) {
+            try {
+                const e = new URL(this.action, location.href).hostname.toLowerCase();
+                if (e !== location.hostname && "dupload.xyz" !== e && !e.endsWith(".dupload.xyz")) return
+            } catch {}
+            return t.call(this)
+        }
+    }
+}
+
+function hn() {
+    const e = window;
+    if (e.__swSvbTrial) return;
+    e.__swSvbTrial = !0;
+    const t = "skipwait-svb-brand",
+        n = window.setInterval.bind(window);
+    window.setInterval = (e, t, ...r) => 1e3 === t && "function" == typeof e && Function.prototype.toString.call(e).includes("timeLeft") ? (queueMicrotask(() => {
+        for (let t = 0; t < 241; t++) e()
+    }), n(() => {}, 1e9)) : n(e, t, ...r);
+    const r = () => {
+        if (document.getElementById(t)) return;
+        const e = document.querySelector(".submit-wrapper");
+        if (!e) return;
+        const n = Object.assign(document.createElement("div"), {
+            id: t,
+            innerHTML: '<strong style="display:block;font-size:13px;font-weight:700;margin-bottom:2px">Skip Wait</strong><span style="font-size:12px;font-weight:500;line-height:1.45">Preparing timer skipped — complete reCAPTCHA and start your free trial.</span>'
+        });
+        n.setAttribute("role", "status"), n.style.cssText = "text-align:center;margin:0 0 12px;padding:10px 14px;box-sizing:border-box;width:100%;border-radius:8px;background:#e8f0ff;border:1px solid #0057ff;font:12px/1.45 Inter,system-ui,sans-serif;color:#003399", e.before(n)
+    };
+    "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", r, {
+        once: !0
+    }) : r()
+}
+var fn = /^\/[0-9][A-Za-z0-9]{2,11}(?:\/[^/]+)?\/?$/;
+async function wn(e) {
+    try {
+        const t = new URL(e);
+        return !!(await ue(t.hostname, "workink")) && fn.test(t.pathname)
+    } catch {
+        return !1
+    }
+}
+
+function yn(e = "skip-wait-workink") {
+    const t = window,
+        n = "FOyWLycLacw35PbZpwK8Q3N6ouw6PBQ2snZHMIDmXrUXoCUXv7XgOiVlrl9NMn2p",
+        r = "FMEB197nNpP8ge1zElwAHAqufR3U7KZ4jIDqBPQzous0k5cUkjQ96994zIM0qSFd",
+        o = (e, t) => {
+            const n = [...t].map(e => 255 & e.charCodeAt(0));
+            let r = Number.parseInt(e.slice(0, 2), 16);
+            const o = e.slice(2).match(/.{1,2}/g) ?? [],
+                a = [];
+            for (const [i, s] of o.entries()) {
+                const e = Number.parseInt(s, 16);
+                a.push(255 & ((e - i % 8 + 256) % 256 ^ n[(2 * i + r) % n.length])), r = (19 * r + 29) % 256
+            }
+            return (new TextDecoder).decode(Uint8Array.from(a))
+        },
+        a = (e, t) => {
+            const n = [...t].map(e => 255 & e.charCodeAt(0)),
+                r = (new TextEncoder).encode(e);
+            let o = Math.floor(256 * Math.random());
+            const a = [o.toString(16).padStart(2, "0")];
+            for (const [i, s] of r.entries()) a.push((((s ^ n[(2 * i + o) % n.length]) + i % 8) % 256).toString(16).padStart(2, "0")), o = (19 * o + 29) % 256;
+            return a.join("")
+        },
+        i = t => {
+            window.postMessage({
+                source: e,
+                ...t
+            }, location.origin)
+        },
+        s = e => {
+            try {
+                return String(e.url).includes("/_api/v2/ws")
+            } catch {
+                return !1
+            }
+        },
+        c = () => {
+            const e = t.__swWorkinkWs;
+            var o, s;
+            t.__swWorkinkForged || t.__swWorkinkUnlock || !e || 1 !== e.readyState || (t.__swWorkinkForged = !0, e.send((o = "c_premium_modal_done", s = {}, a(JSON.stringify({
+                type: o,
+                payload: a(JSON.stringify(s), r)
+            }), n))), i({
+                type: "forged"
+            }))
+        },
+        l = e => {
+            const a = e;
+            s(a) && (t.__swWorkinkWs = a, 1 === a.readyState ? i({
+                type: "ready"
+            }) : a.addEventListener("open", () => i({
+                type: "ready"
+            }), {
+                once: !0
+            }), a.__swWorkinkAttached || (a.__swWorkinkAttached = !0, a.addEventListener("message", e => {
+                if ("string" != typeof e.data) return;
+                let a = null;
+                try {
+                    a = (e => {
+                        const t = JSON.parse(o(e, n));
+                        return "string" == typeof t.payload && /^[0-9a-f]+$/i.test(t.payload) && (t.payload = JSON.parse(o(t.payload, r))), t
+                    })(e.data)
+                } catch {
+                    return
+                }
+                if (a?.type) {
+                    if ("s_lkds" === a.type) {
+                        const e = "object" == typeof a.payload ? a.payload?.url : void 0;
+                        if (!e) return;
+                        return t.__swWorkinkUnlock = e, void i({
+                            type: "unlock",
+                            url: e
+                        })
+                    }
+                    "s_tstc" !== a.type && "s_sthc" !== a.type ? "s_hcok" !== a.type && "s_tsac" !== a.type || (i({
+                        type: "gate-done",
+                        gate: a.type
+                    }), "s_hcok" === a.type && c()) : i({
+                        type: "gate-start",
+                        gate: a.type
+                    })
+                }
+            })))
+        };
+    if (!t.__swWorkinkWsProto) {
+        t.__swWorkinkWsProto = !0;
+        const e = WebSocket.prototype.send;
+        WebSocket.prototype.send = function(t) {
+            return s(this) && l(this), e.call(this, t)
+        };
+        const n = WebSocket.prototype.addEventListener;
+        WebSocket.prototype.addEventListener = function(e, t, r) {
+            return "message" === e && l(this), n.call(this, e, t, r)
+        };
+        const r = Object.getOwnPropertyDescriptor(WebSocket.prototype, "onmessage");
+        if (r?.set && r.get) {
+            const e = r.get,
+                t = r.set;
+            Object.defineProperty(WebSocket.prototype, "onmessage", {
+                configurable: !0,
+                enumerable: !!r.enumerable,
+                get() {
+                    return e.call(this)
+                },
+                set(e) {
+                    return l(this), t.call(this, e)
+                }
+            })
+        }
+    }
+    if (!t.__swWorkinkWsHooked) {
+        t.__swWorkinkWsHooked = !0, t.__swWorkinkWs = t.__swWorkinkWs ?? null, t.__swWorkinkForged = !1, t.__swWorkinkUnlock = null;
+        const e = window.WebSocket;
+        window.WebSocket = function(t, n) {
+            const r = void 0 === n ? new e(t) : new e(t, n);
+            return String(t).includes("/_api/v2/ws") && l(r), r
+        }, window.WebSocket.prototype = e.prototype, Object.assign(window.WebSocket, e), window.WebSocket.toString = () => "function WebSocket() { [native code] }";
+        const n = window.open.bind(window);
+        window.open = (e, r, o) => {
+            const a = String(e ?? "");
+            return t.__swWorkinkUnlock && a && (a === t.__swWorkinkUnlock || a.includes("outgoing.work.ink")) ? null : n(e, r, o)
+        }
+    }
+    1 === t.__swWorkinkWs?.readyState && i({
+        type: "ready"
+    })
+}
+var gn = async (e, t = 0) => {
+    await chrome.scripting.executeScript({
+        target: {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: yn,
+        args: ["skip-wait-workink"]
+    })
+};
+var bn = /^\/download\/([A-Za-z0-9]+)(?:\/|$)/i;
+
+function kn() {
+    const e = window;
+    if (e.__skipWaitVexVerifyHook) return;
+    e.__skipWaitVexVerifyHook = !0;
+    const t = window.fetch.bind(window);
+    window.fetch = async (e, n) => {
+        const r = await t(e, n);
+        if (!("string" == typeof e ? e : e instanceof Request ? e.url : String(e)).includes("/verify-cf-captcha")) return r;
+        try {
+            (await r.clone().json()).success && document.documentElement.setAttribute("data-sw-vex-verified", "1")
+        } catch {}
+        return r
+    }
+}
+var vn = async e => {
+    try {
+        const t = new URL(e);
+        return !!bn.test(t.pathname) && ue(t.hostname, "vexfile")
+    } catch {
+        return !1
+    }
+};
+
+function _n(e, t) {
+    chrome.scripting.executeScript({
+        target: void 0 === t ? {
+            tabId: e
+        } : {
+            tabId: e,
+            frameIds: [t]
+        },
+        world: "MAIN",
+        injectImmediately: !0,
+        func: kn
+    })
+}
+var Ln = "https://backendapi.dlsurf.com";
+
+function Sn(e) {
+    if (!e) return;
+    const t = window.turnstile;
+    if (t?.remove) try {
+        t.remove(e)
+    } catch {}
+}
+
+function En(e, t, n) {
+    const r = document.getElementById(e);
+    if (!r) return void window.postMessage({
+        source: n,
+        type: "err",
+        err: "mount"
+    }, location.origin);
+    const o = e => {
+            window.postMessage({
+                source: n,
+                ...e
+            }, location.origin)
+        },
+        a = e => {
+            (() => {
+                const e = r.getAttribute("data-sw-ts-id"),
+                    t = window.turnstile;
+                if (e && t?.remove) try {
+                    t.remove(e)
+                } catch {}
+                r.removeAttribute("data-sw-ts-id"), r.replaceChildren()
+            })();
+            try {
+                const n = e.render(r, {
+                    sitekey: t,
+                    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+                    callback: e => o({
+                        type: "token",
+                        token: e
+                    })
+                });
+                n && r.setAttribute("data-sw-ts-id", n), o({
+                    type: "ready"
+                })
+            } catch {
+                o({
+                    type: "err",
+                    err: "render"
+                })
+            }
+        },
+        i = e => {
+            const t = window.turnstile;
+            t?.render ? a(t) : Date.now() > e ? o({
+                type: "err",
+                err: "timeout"
+            }) : setTimeout(() => i(e), 50)
+        };
+    i(Date.now() + 15e3)
+}
+async function In(e) {
+    const t = async n => {
+        const r = await fetch(`${e}/api/account/check-auth/`, {
+            credentials: "include",
+            cache: "no-store"
+        });
+        return 401 !== r.status || n ? r : (await fetch(`${e}/api/account/token/refresh/`, {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: "{}"
+        })).ok ? t(!0) : r
+    };
+    return (await t(!1)).ok
+}
+async function Rn(e, t) {
+    const n = async r => {
+        const o = await fetch(`${e}/api/file/request-download/file/${t}`, {
+            credentials: "include",
+            cache: "no-store"
+        });
+        return 401 !== o.status || r ? o : (await fetch(`${e}/api/account/token/refresh/`, {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: "{}"
+        })).ok ? n(!0) : o
+    }, r = await n(!1);
+    let o = {};
+    try {
+        o = await r.json()
+    } catch {}
+    return r.ok && "success" === o.status && "string" == typeof o.data?.token ? o.data.token : ""
+}
+async function xn(e, t, n, r) {
+    const o = async (t, n, r) => {
+        const a = await fetch(`${e}${t}`, {
+            credentials: "include",
+            cache: "no-store",
+            ...n
+        });
+        return 401 !== a.status || r ? a : (await fetch(`${e}/api/account/token/refresh/`, {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: "{}"
+        })).ok ? o(t, n, !0) : a
+    }, a = async e => {
+        try {
+            return await e.json()
+        } catch {
+            return {}
+        }
+    }, i = (e, t) => "string" == typeof e.errors?.detail && e.errors.detail || "string" == typeof e.message && e.message || t;
+    let s = r;
+    if (!s) {
+        const e = await o(`/api/file/request-download/file/${t}`, void 0, !1),
+            n = await a(e);
+        if (!e.ok || "success" !== n.status || "string" != typeof n.data?.token) return {
+            ok: !1,
+            err: i(n, e.ok ? "token" : `auth ${e.status}`)
+        };
+        s = n.data.token
+    }
+    const c = await o("/api/file/new-download-file/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                token: s,
+                captcha_token: n
+            })
+        }, !1),
+        l = await a(c),
+        d = l.data?.download_url;
+    return "string" == typeof d && d ? {
+        ok: !0,
+        url: d
+    } : {
+        ok: !1,
+        err: i(l, c.ok ? "download" : `unlock ${c.status}`)
+    }
+}
+var An = async e => {
+    if (!e) return !1;
+    try {
+        return ue(new URL(e).hostname, "dlsurf")
+    } catch {
+        return !1
+    }
+};
+var Nn = "alpharede",
+    $n = /^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{8,}$/,
+    Tn = e => /^https?:\/\//i.test(e),
+    Mn = async (e, t) => {
+        const n = (e, n, r) => {
+            t?.({
+                lead: e,
+                detail: n,
+                status: r
+            })
+        };
+        n("Hang tight — unlocking your link.", "Skip Wait is working. You don't need to tap anything.", "Opening your short link");
+        const r = await fetch(e, {
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow",
+                headers: {
+                    Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+                }
+            }),
+            o = new URL(r.url);
+        if (o.hostname === new URL(e).hostname) throw new Error("gate");
+        const a = o.origin;
+        n("Skipping the wait pages.", "Those ad steps stay in the background — nothing to click.", "Starting your session");
+        const i = await fetch(`${a}/api/session-info`, {
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                Accept: "application/json"
+            }
+        });
+        if (!i.ok) throw new Error("session");
+        const s = await i.json();
+        if (!(e => {
+                if (!e || "object" != typeof e) return !1;
+                const t = e;
+                return !0 === t.hasSession && "string" == typeof t.sessionToken && !!t.sessionToken && "number" == typeof t.stageId && "number" == typeof t.stageNumber && "number" == typeof t.totalStage && t.totalStage >= 1
+            })(s)) throw new Error("session");
+        const {
+            sessionToken: c,
+            stageId: l,
+            stageNumber: d,
+            totalStage: u
+        } = s;
+        for (let p = d + 1; p <= u + 1; p++) {
+            const e = Math.min(p, u);
+            n(`Unlocking step ${e} of ${u}.`, "Skip Wait is advancing each step for you. You don't need to tap anything.", p <= u ? `Skipping step ${e} of ${u}` : "Fetching your destination");
+            const t = encodeURIComponent(JSON.stringify({
+                    0: {
+                        json: {
+                            token: c,
+                            progress: p,
+                            stageId: l
+                        }
+                    }
+                })),
+                r = (await (await fetch(`${a}/api/trpc/linkSession.nextStage?batch=1&input=${t}`, {
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: {
+                        Accept: "application/json"
+                    }
+                })).json())[0]?.result?.data?.json?.destinationLink;
+            if ("string" == typeof r && Tn(r)) return n("Almost there.", "Opening your destination now.", "Opening your link"), r
+        }
+        throw new Error("dest")
+    }, On = 918400, Cn = () => Array.from({
+        length: 8
+    }, (e, t) => On + t), Un = async () => {
+        const e = await pe(Nn);
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Cn(),
+            addRules: e.slice(0, 8).map((e, t) => ({
+                id: On + t,
+                priority: 1,
+                action: {
+                    type: "redirect",
+                    redirect: {
+                        regexSubstitution: `chrome-extension://${chrome.runtime.id}/working.html?site=${Nn}&u=https://${e}/\\1`
+                    }
+                },
+                condition: {
+                    regexFilter: `^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*[0-9][A-Za-z0-9]*|[A-Za-z0-9]*[0-9][A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,
+                    resourceTypes: ["main_frame"]
+                }
+            }))
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Cn(),
+            addRules: []
+        })
+    }, Pn = "skip-wait-alpharede", Wn = ((() => {
+        let e = null,
+            t = null,
+            n = 0,
+            r = "",
+            o = "",
+            a = "";
+        const i = () => `${r}${".".repeat(n+1)}`,
+            s = () => {
+                e && (n = (n + 1) % 3, e.setStatus(i()))
+            },
+            c = () => {
+                n = 0, e && (e?.setNote({
+                    lead: o,
+                    detail: a
+                }), e.setStatus(i()), null == t && (t = window.setInterval(s, 450)))
+            },
+            l = () => (document.documentElement.classList.add(ve(Pn)), e || (e = Ie({
+                id: Pn,
+                brand: "Skip Wait",
+                note: {
+                    lead: o,
+                    detail: a
+                },
+                status: i(),
+                countdownLabel: "Your link opens in"
+            }), e))
+    })(), "earnlinks"), qn = /^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/, Dn = e => /^https?:\/\//i.test(e), jn = 918498, Fn = (e, t) => {
+        e?.(t)
+    }, Bn = (e, t) => {
+        try {
+            const n = new URL(e.replace(/&amp;/g, "&").replace(/\\\//g, "/"), t);
+            return Dn(n.href) ? n.href : null
+        } catch {
+            return null
+        }
+    }, Hn = (e, t) => glEngine.field(e, t), zn = e => !!Hn(e, "ad_form_data") && !!Hn(e, "_csrfToken"), Vn = (e, t, n) => glEngine.withReferer(jn, e, t, n), Kn = async (e, t) => {
+        const n = async () => {
+            const t = await fetch(e, {
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow",
+                headers: {
+                    Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+                }
+            });
+            if (!t.ok) throw new Error("hop");
+            return {
+                url: t.url || e,
+                html: await t.text()
+            }
+        };
+        return t ? Vn(e, t, n) : n()
+    }, Gn = (e, t, n) => {
+        const r = new URL(n).hostname,
+            o = (e => {
+                const [t] = new URL(e).pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+                return t ?? ""
+            })(n),
+            a = [],
+            i = e => {
+                e && ((e, t) => {
+                    t && !e.includes(t) && e.push(t)
+                })(a, Bn(e, t))
+            };
+        for (const c of e.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>[\s\S]{0,500}?<button\b[^>]*\bid=["'](?:tp-snp2|notarobot)["']/gi)) i(c[1]);
+        for (const c of e.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>[\s\S]{0,240}?Click here to continue/gi)) i(c[1]);
+        if (o) {
+            const t = o.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                n = r.replace(/\./g, "\\.");
+            for (const r of e.matchAll(new RegExp(`href=["']([^"']*[?&](?:dsp|grey|isp)=${t}[^"']*)["']`, "gi"))) i(r[1]);
+            for (const r of e.matchAll(new RegExp(`href=["'](https?://[^"']*${n}/${t}/?[^"']*)["']`, "gi"))) i(r[1])
+        }
+        const s = a.filter(e => {
+            try {
+                return new URL(e).hostname !== r
+            } catch {
+                return !1
+            }
+        });
+        return s.length ? s : a
+    }, Zn = (e, t) => ((e, t) => {
+        if (e.length > 8e3) return null;
+        const n = (e.match(/<meta[^>]*http-equiv=["']?refresh["']?[^>]*content=["'][^"']*URL=['"]?([^"'\s>]+)/i) ?? e.match(/<meta[^>]*content=["'][^"']*URL=['"]?([^"'\s>]+)[^"']*["'][^>]*http-equiv=["']?refresh/i) ?? e.match(/(?:window\.)?location(?:\.href)?\s*=\s*["']([^"']+)["']/i) ?? e.match(/location\.replace\(\s*["']([^"']+)["']/i))?.[1]?.trim().replace(/['"]+$/, "");
+        return n ? Bn(n, t) : null
+    })(e.html, e.url) ?? Gn(e.html, e.url, t)[0] ?? null, Xn = async (e, t) => {
+        Fn(t, {
+            lead: "Hang tight — unlocking your link.",
+            detail: "Skip Wait is working. You don't need to tap anything.",
+            status: "Opening your short link"
+        });
+        const n = await (async (e, t) => {
+                let n = null,
+                    r = await Kn(e, n);
+                for (let o = 0; o < 24; o++) {
+                    if (zn(r.html)) return r;
+                    const a = Zn(r, e);
+                    if (!a) throw new Error("hop");
+                    n = r.url, Fn(t, {
+                        lead: "Skipping the wait pages.",
+                        detail: "Flyer hops stay in the background — nothing to click.",
+                        status: 0 === o ? "Starting unlock" : `Skipping step ${o+1}`
+                    }), r = await Kn(a, n)
+                }
+                if (!zn(r.html)) throw new Error("banner");
+                return r
+            })(e, t),
+            r = new URL(n.url).origin === new URL(e).origin ? n.url : e,
+            o = glEngine.counterSeconds(n.html, 0, !0);
+        var a;
+        o > 0 && (Fn(t, {
+            lead: "Unlocking your link.",
+            detail: "Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",
+            status: "Waiting for unlock timer"
+        }), await (a = 1e3 * o, new Promise(e => setTimeout(e, a)))), Fn(t, {
+            lead: "Unlocking your link.",
+            detail: "Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",
+            status: "Getting your link"
+        });
+        const i = await glEngine.postGo(r, n.html, {
+            ruleId: jn
+        });
+        return Fn(t, {
+            lead: "Almost there.",
+            detail: "Opening your destination now.",
+            status: "Opening your link"
+        }), i
+    }, Jn = 918500, Yn = () => Array.from({
+        length: 32
+    }, (e, t) => Jn + t), Qn = async () => {
+        const e = await pe(Wn);
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Yn(),
+            addRules: e.slice(0, 32).map((e, t) => ({
+                id: Jn + t,
+                priority: 1,
+                action: {
+                    type: "redirect",
+                    redirect: {
+                        regexSubstitution: `chrome-extension://${chrome.runtime.id}/working.html?site=${Wn}&u=https://${e}/\\1`
+                    }
+                },
+                condition: {
+                    regexFilter: `^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,
+                    resourceTypes: ["main_frame"]
+                }
+            }))
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Yn(),
+            addRules: []
+        })
+    }, er = "skip-wait-earnlinks", tr = ((() => {
+        let e = null,
+            t = null,
+            n = 0,
+            r = "",
+            o = "",
+            a = "";
+        const i = () => `${r}${".".repeat(n+1)}`,
+            s = () => {
+                e && (n = (n + 1) % 3, e.setStatus(i()))
+            },
+            c = () => {
+                n = 0, e && (e?.setNote({
+                    lead: o,
+                    detail: a
+                }), e.setStatus(i()), null == t && (t = window.setInterval(s, 450)))
+            },
+            l = () => (document.documentElement.classList.add(ve(er)), e || (e = Ie({
+                id: er,
+                brand: "Skip Wait",
+                note: {
+                    lead: o,
+                    detail: a
+                },
+                status: i(),
+                countdownLabel: "Your link opens in"
+            }), e))
+    })(), /^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/), nr = e => /Session expired! Please verify captcha again/i.test(e) || /CAPTCHA not detected or missing keys/i.test(e) || /Captcha Verification Failed/i.test(e), rr = 918521, or = ["go_d2", "getmylink", "nextpage"], ar = (e, t) => {
+        e?.(t)
+    }, ir = (e, t) => glEngine.field(e, t), sr = (e, t, n) => glEngine.withReferer(rr, e, t, n), cr = (e, t, n) => (async (e, t, n) => {
+        const r = async () => {
+            const n = await fetch(e, {
+                ...t,
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow"
+            });
+            if (!n.ok) throw new Error("hop");
+            return {
+                url: n.url || e,
+                html: await n.text()
+            }
+        };
+        return n ? sr(e, n, r) : r()
+    })(e, {
+        method: "POST",
+        headers: {
+            Accept: "text/html,*/*",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams(t)
+    }, n), lr = e => {
+        const t = ir(e, "token"),
+            n = ir(e, "alias");
+        if (!t || !n) return null;
+        const r = {
+            token: t,
+            alias: n
+        };
+        for (const o of ["c_d", "c_t", "url", "visit_token", "mysite", "ad_type", "next_page"]) {
+            const t = ir(e, o);
+            null != t && (r[o] = t)
+        }
+        return r
+    }, dr = (e, t) => {
+        const n = e.match(new RegExp(`<form\\b[^>]*\\bid="${t}"[^>]*>`, "i"));
+        if (!n) return null;
+        const r = n[0].match(/\baction="([^"]+)"/i)?.[1]?.trim() ?? "";
+        if (!/^https?:\/\//i.test(r)) return null;
+        const o = e.slice(n.index + n[0].length),
+            a = o.search(/<\/form>/i),
+            i = lr(a < 0 ? o : o.slice(0, a));
+        return i ? {
+            action: r,
+            fields: i
+        } : null
+    }, ur = (e, t) => {
+        for (const n of or) {
+            const t = dr(e, n);
+            if (t) return t
+        }
+        return ((e, t) => {
+            for (const n of e.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/gi)) {
+                const e = n[1] ?? "",
+                    r = (n[0].match(/^<form\b[^>]*/i)?.[0] ?? "").match(/\baction="([^"]+)"/i)?.[1]?.trim() ?? "";
+                if (!/^https?:\/\//i.test(r) || !ir(e, "visit_token")) continue;
+                try {
+                    if (new URL(r).origin === t) continue
+                } catch {
+                    continue
+                }
+                const o = lr(e);
+                if (o) return {
+                    action: r,
+                    fields: o
+                }
+            }
+            return null
+        })(e, new URL(t).origin)
+    }, pr = e => null != ir(e, "ad_form_data"), mr = async (e, t, n) => {
+        ar(n, {
+            lead: "Hang tight — unlocking your link.",
+            detail: "You don't need to tap anything on the page.",
+            status: "Skipping wait pages"
+        });
+        const r = await (async (e, t, n) => {
+                let r = {
+                    url: e,
+                    html: t
+                };
+                for (let o = 0; o < 12; o++) {
+                    if (nr(r.html)) throw new Error("reject");
+                    if (pr(r.html)) return r;
+                    const t = ur(r.html, e);
+                    if (!t) throw new Error("form");
+                    ar(n, {
+                        lead: "Skipping the wait pages.",
+                        detail: "Mediator hops run in the background — nothing to click.",
+                        status: 0 === o ? "Starting unlock" : `Skipping step ${o+1}`
+                    }), r = await cr(t.action, t.fields, r.url)
+                }
+                if (!pr(r.html)) throw new Error("shell");
+                return r
+            })(e, t, n),
+            o = new URL(r.url).origin === new URL(e).origin ? r.url : e,
+            a = glEngine.counterSeconds(r.html);
+        var i;
+        return a > 0 && (ar(n, {
+            lead: "Unlocking your link.",
+            detail: "Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",
+            status: "Your link is almost ready",
+            countdownSec: a
+        }), await (i = 1e3 * a, new Promise(e => setTimeout(e, i)))), ar(n, {
+            lead: "Unlocking your link.",
+            detail: "Skip Wait is finishing the Get Link step for you. You don't need to tap anything.",
+            status: "Getting your destination"
+        }), glEngine.postGo(o, r.html, {
+            ruleId: rr,
+            csrf: !1,
+            tokenFields: !1
+        })
+    }, hr = "skip-wait-shrinkpe", fr = e => e.replace(/\.+$/, ""), wr = ((() => {
+        let e = null,
+            t = null,
+            n = 0,
+            r = "",
+            o = "Hang tight — unlocking your link.",
+            a = "You don't need to tap anything on the page.",
+            i = !1;
+        const s = () => {
+                null != t && (clearInterval(t), t = null)
+            },
+            c = () => `${r}${".".repeat(n+1)}`,
+            l = () => {
+                e?.setNote({
+                    lead: o,
+                    detail: a
+                })
+            },
+            d = () => {
+                e && !i && (n = (n + 1) % 3, e.setStatus(c()))
+            },
+            u = () => (document.documentElement.classList.add(ve(hr)), e || (e = Ie({
+                id: hr,
+                brand: "Skip Wait",
+                note: {
+                    lead: o,
+                    detail: a
+                },
+                status: c(),
+                countdownLabel: "Get Link ready in"
+            }), e))
+    })(), /^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/), yr = e => /^https?:\/\//i.test(e), gr = "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8", br = 918610, kr = [/window\.location\.href\s*=\s*"((?:\\.|[^"\\])+)"/i, /window\.location\.href\s*=\s*'((?:\\.|[^'\\])+)'/i, /location\.replace\(\s*"((?:\\.|[^"\\])+)"\s*\)/i, /location\.replace\(\s*'((?:\\.|[^'\\])+)'\s*\)/i], vr = (e, t) => {
+        e?.(t)
+    }, _r = (e, t) => {
+        const n = t.replace(/[[\]]/g, "\\$&"),
+            r = e.match(new RegExp(`name="${n}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${n}"`, "i"));
+        return r?.[1] ?? r?.[2] ?? null
+    }, Lr = async (e, t) => {
+        const n = await chrome.cookies.get({
+            url: e,
+            name: t
+        });
+        if (!n?.value) return "";
+        try {
+            return decodeURIComponent(n.value)
+        } catch {
+            return n.value
+        }
+    }, Sr = async e => {
+        const t = await Lr(e, "XSRF-TOKEN");
+        if (!t) throw new Error("xsrf");
+        const n = `#${btoa("a".repeat(64))}`;
+        return t.slice(0, Math.max(0, 128 - n.length)) + n
+    }, Er = async (e, t, n, r) => {
+        const o = await Lr(e, "XSRF-TOKEN");
+        if (!o) throw new Error("xsrf");
+        const a = `${e}${t}`;
+        return glEngine.withReferer(br, a, r, async () => {
+            const e = await fetch(a, {
+                    method: "POST",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        "X-XSRF-TOKEN": o
+                    },
+                    body: JSON.stringify(n)
+                }),
+                r = await e.text();
+            let i;
+            try {
+                i = JSON.parse(r)
+            } catch {
+                throw new Error(`${t} json`)
+            }
+            if (!e.ok) throw new Error(`${t} ${e.status}`);
+            return i
+        })
+    }, Ir = e => {
+        for (const t of kr) {
+            const n = t.exec(e);
+            if (!n?.[1]) continue;
+            const r = n[1].replace(/\\\//g, "/").replace(/\\u002f/gi, "/").trim();
+            if (yr(r)) return r
+        }
+        return null
+    }, Rr = async (e, t) => {
+        vr(t, {
+            lead: "Hang tight — unlocking your link.",
+            detail: "Skip Wait skips the mediator pages in the background.",
+            status: "Reading your short link…"
+        });
+        const {
+            bindUrl: n,
+            origin: r
+        } = await (async e => {
+            const t = await fetch(e, {
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                    Accept: gr
+                }
+            });
+            if (!t.ok) throw new Error("landing");
+            const n = await t.text(),
+                r = n.match(/<form[^>]+id="form"[^>]+action="([^"]+)"/i)?.[1] ?? n.match(/<form[^>]+action="([^"]+)"[^>]+id="form"/i)?.[1] ?? "",
+                o = _r(n, "alias")?.trim() ?? "",
+                a = _r(n, "ray_id")?.trim() ?? "";
+            if (!yr(r) || !o || !a) throw new Error("form");
+            const i = new URL(r);
+            if (i.searchParams.set("ray_id", a), i.searchParams.set("alias", o), !(await ue(i.hostname, "sfl-blog"))) throw new Error("bind host");
+            return {
+                bindUrl: i.href,
+                origin: i.origin
+            }
+        })(e);
+        vr(t, {
+            lead: "Skipping mediator waits.",
+            detail: "Binding the unlock session without opening those pages.",
+            status: "Binding session…"
+        });
+        const o = await (async (e, t) => {
+            const n = await fetch(e, {
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow",
+                headers: {
+                    Accept: gr
+                }
+            });
+            if (!n.ok) throw new Error("bind");
+            const r = n.url;
+            if (new URL(r).origin !== t || /redirect\.php/i.test(r)) throw new Error("blog");
+            return r
+        })(n, r);
+        return vr(t, {
+            lead: "Unlocking your link.",
+            detail: "Those gate timers stay in the background — you don't need to tap anything.",
+            status: "Starting unlock…"
+        }), (async (e, t, n) => {
+            let r = await Er(e, "/api/session", {
+                _token: await Sr(e)
+            }, t);
+            for (let o = 0; o < 6; o++) {
+                const o = Number(r.step);
+                if (!Number.isFinite(o)) throw new Error("step");
+                if (1 !== o) {
+                    vr(n, {
+                        lead: "Almost there.",
+                        detail: "Fetching your destination from the unlock page.",
+                        status: "Getting destination…"
+                    });
+                    const r = Math.floor(1e3 * Math.random()),
+                        o = `${2*(1440+r)}.${2*(900+r)}`,
+                        a = (await Er(e, "/api/go", {
+                            key: r,
+                            size: o
+                        }, t)).url?.trim() ?? "";
+                    if (!yr(a)) throw new Error("ready");
+                    const i = await fetch(a, {
+                        credentials: "include",
+                        cache: "no-store",
+                        headers: {
+                            Accept: gr
+                        }
+                    });
+                    if (!i.ok) throw new Error("ready fetch");
+                    const s = Ir(await i.text());
+                    if (!s) throw new Error("dest");
+                    return s
+                }
+                if (null != r.captcha && "" !== r.captcha) throw new Error("captcha");
+                vr(n, {
+                    lead: "Still unlocking.",
+                    detail: "Skip Wait is verifying the session — no continue taps needed.",
+                    status: "Verifying unlock…"
+                }), await Er(e, "/api/verify", {
+                    _a: 0,
+                    captcha: "",
+                    passcode: ""
+                }, t), r = await Er(e, "/api/session", {
+                    _token: await Sr(e)
+                }, t)
+            }
+            throw new Error("loop")
+        })(r, o, t)
+    }, xr = 918620, Ar = () => Array.from({
+        length: 8
+    }, (e, t) => xr + t), Nr = async () => {
+        const e = await pe("sfl");
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Ar(),
+            addRules: e.slice(0, 8).map((e, t) => ({
+                id: xr + t,
+                priority: 1,
+                action: {
+                    type: "redirect",
+                    redirect: {
+                        regexSubstitution: `chrome-extension://${chrome.runtime.id}/working.html?site=sfl&u=https://${e}/\\1`
+                    }
+                },
+                condition: {
+                    regexFilter: `^https?://${e.replace(/\./g,"\\.")}/([A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*)/?$`,
+                    resourceTypes: ["main_frame"]
+                }
+            }))
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: Ar(),
+            addRules: []
+        })
+    }, $r = "skip-wait-sfl", Tr = ["Binding session…", "Skipping gate waits…", "Verifying unlock…", "Fetching destination…"], Mr = ((() => {
+        let e = null,
+            t = null,
+            n = 0,
+            r = !1;
+        const o = (t, n, r) => {
+            document.documentElement.classList.add(ve($r));
+            const o = {
+                lead: n ?? "Hang tight — unlocking your link.",
+                detail: r ?? "Skip Wait skips the mediator pages in the background."
+            };
+            return e ? (e.setNote(o), e.setStatus(t), e) : (e = Ie({
+                id: $r,
+                brand: "Skip Wait",
+                note: o,
+                status: t,
+                countdownLabel: "Your link opens in"
+            }), e)
+        }
+    })(), "liteshort"), Or = /^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/, Cr = e => /^https?:\/\//i.test(e), Ur = e => {
+        const [t, ...n] = e.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+        return t && 0 === n.length && Or.test(t) ? t : null
+    }, Pr = 918701, Wr = "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8", qr = (e, t) => glEngine.field(e, t), Dr = (e, t, n) => glEngine.withReferer(Pr, e, t, n), jr = async (e, t) => {
+        const n = await fetch(`${e}/${encodeURIComponent(t)}`, {
+            credentials: "include",
+            cache: "no-store",
+            redirect: "follow",
+            headers: {
+                Accept: Wr
+            }
+        });
+        if (!n.ok) throw new Error("entry");
+        const r = (e => {
+            const t = (e.match(/<a[^>]*class="[^"]*\bbtn\b[^"]*"[^>]*href="(https?:\/\/[^"]+)"/i) ?? e.match(/href="(https?:\/\/[^"]+)"[^>]*>\s*Continue to Destination/i))?.[1]?.trim() ?? "";
+            return Cr(t) ? t : null
+        })(await n.text());
+        if (!r) throw new Error("continue");
+        return r
+    }, Fr = (e, t) => Dr(e, t, async () => {
+        const t = await fetch(e, {
+            credentials: "include",
+            cache: "no-store",
+            redirect: "manual",
+            headers: {
+                Accept: Wr
+            }
+        });
+        if ("opaqueredirect" === t.type || t.status >= 300 && t.status < 400) throw new Error("unlock redirect");
+        if (!t.ok) throw new Error("unlock");
+        const n = await t.text();
+        if (!(e => !!qr(e, "ad_form_data"))(n)) throw new Error("form");
+        return n
+    }), Br = async (e, t) => {
+        const n = (e => {
+            try {
+                return Ur(new URL(e).pathname)
+            } catch {
+                return null
+            }
+        })(e);
+        if (!n) throw new Error("alias");
+        const {
+            entry: r,
+            unlock: o
+        } = await (async () => {
+            const e = await s(Mr),
+                t = e[0],
+                n = e[1];
+            if (!t || !n) throw new Error("hosts");
+            return {
+                entry: `https://${t}`,
+                unlock: `https://${n}`
+            }
+        })(), a = `${o}/${encodeURIComponent(n)}`, i = await jr(r, n), c = await Fr(a, i), l = glEngine.counterSeconds(c, 5);
+        var d;
+        return l > 0 && (t?.({
+            waitEndTs: Date.now() + 1e3 * l
+        }), await (d = 1e3 * l, new Promise(e => setTimeout(e, d)))), glEngine.postGo(a, c, {
+            ruleId: Pr
+        })
+    }, Hr = 918700, zr = async () => {
+        const e = await pe(Mr);
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [Hr],
+            addRules: [{
+                id: Hr,
+                priority: 2,
+                action: {
+                    type: "modifyHeaders",
+                    responseHeaders: [{
+                        header: "Location",
+                        operation: "remove"
+                    }]
+                },
+                condition: {
+                    requestDomains: e,
+                    resourceTypes: ["main_frame"]
+                }
+            }]
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [Hr],
+            addRules: []
+        })
+    }, Vr = "skip-wait-liteshort", Kr = ["Opening LiteShort", "Skipping Continue to Destination", "Waiting on Get Link", "Opening your destination"], Gr = "LiteShort is unlocking.", Zr = "Skip Wait clears Continue pages and waits only for the real Get Link timer.", Xr = ((() => {
+        let e = null,
+            t = null,
+            n = null,
+            r = 0,
+            o = 0,
+            a = !1,
+            i = "";
+        const s = () => {
+                null != t && (clearInterval(t), t = null), null != n && (clearInterval(n), n = null)
+            },
+            c = () => `${Kr[o]}${".".repeat(r+1)}`,
+            l = (t, n) => {
+                document.documentElement.classList.add(ve(Vr));
+                const r = {
+                        lead: t ?? Gr,
+                        detail: n ?? Zr
+                    },
+                    o = a ? i : c();
+                return e ? (e.setNote(r), e.setStatus(o), e.setError(null), e) : (e = Ie({
+                    id: Vr,
+                    brand: "Skip Wait",
+                    note: r,
+                    status: o,
+                    countdownLabel: "Get Link ready in"
+                }), e)
+            },
+            d = () => {
+                a || (null == t && (t = window.setInterval(() => {
+                    !a && e && (r = (r + 1) % 3, e.setStatus(c()))
+                }, 450)), null == n && (n = window.setInterval(() => {
+                    !a && e && (o >= Kr.length - 1 ? null != n && (clearInterval(n), n = null) : (o += 1, r = 0, e.setStatus(c())))
+                }, 1800)))
+            }
+    })(), /^(?=.*[A-Za-z])[A-Za-z0-9]{4,}$/), Jr = e => /^https?:\/\//i.test(e), Yr = e => {
+        const [t, ...n] = e.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+        return t && 0 === n.length && Xr.test(t) ? t : null
+    }, Qr = 918711, eo = "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8", to = (e, t) => {
+        e?.(t)
+    }, no = (e, t) => glEngine.field(e, t, !0), ro = e => !!no(e, "ad_form_data") && !!no(e, "_csrfToken"), oo = (e, t, n) => glEngine.withReferer(Qr, e, t, n), ao = async (e, t) => {
+        const n = (e => {
+            try {
+                return Yr(new URL(e).pathname)
+            } catch {
+                return null
+            }
+        })(e);
+        if (!n) throw new Error("alias");
+        const r = `${new URL(e).origin}/${encodeURIComponent(n)}`;
+        to(t, {
+            lead: "Hang tight — unlocking your link.",
+            detail: "Skip Wait is working. You don’t need to tap anything.",
+            status: "Opening Nitro Link"
+        });
+        const o = await (async e => {
+            const t = await fetch(e, {
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow",
+                headers: {
+                    Accept: eo
+                }
+            });
+            if (!t.ok) throw new Error("entry");
+            const n = await t.text();
+            if (ro(n)) return {
+                referer: e,
+                html: n
+            };
+            const r = t.url || e;
+            if (!Jr(r)) throw new Error("gate");
+            return {
+                referer: r
+            }
+        })(r);
+        to(t, {
+            lead: "Hang tight — unlocking your link.",
+            detail: "Skip Wait is unlocking Get Link in the background.",
+            status: "Loading Get Link"
+        });
+        const a = o.html ?? await ((e, t) => oo(e, t, async () => {
+                const t = await fetch(e, {
+                    credentials: "include",
+                    cache: "no-store",
+                    redirect: "follow",
+                    headers: {
+                        Accept: eo
+                    }
+                });
+                if (!t.ok) throw new Error("unlock");
+                const n = await t.text();
+                if (!ro(n)) throw new Error("form");
+                return n
+            }))(r, o.referer),
+            i = glEngine.counterSeconds(a);
+        if (i > 0) {
+            const e = Date.now() + 1e3 * i;
+            to(t, {
+                lead: "Your link is almost ready.",
+                detail: "Skip Wait is waiting for the Get Link timer from this page.",
+                status: "Waiting for Get Link",
+                waitEndTs: e
+            }), await (s = 1e3 * i, new Promise(e => setTimeout(e, s)))
+        }
+        var s;
+        to(t, {
+            lead: "Almost there.",
+            detail: "Skip Wait is unlocking Get Link now.",
+            status: "Posting Get Link"
+        });
+        const c = await glEngine.postGo(r, a, {
+            ruleId: Qr,
+            abCookie: !1,
+            originHeader: !0,
+            decode: !0
+        });
+        return to(t, {
+            lead: "Almost there.",
+            detail: "Opening your destination now.",
+            status: "Opening your destination"
+        }), c
+    }, io = 918710, so = async () => {
+        const e = await pe("nitrolink");
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [io],
+            addRules: [{
+                id: io,
+                priority: 2,
+                action: {
+                    type: "modifyHeaders",
+                    responseHeaders: [{
+                        header: "Location",
+                        operation: "remove"
+                    }]
+                },
+                condition: {
+                    requestDomains: e,
+                    resourceTypes: ["main_frame"]
+                }
+            }]
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [io],
+            addRules: []
+        })
+    }, co = "skip-wait-nitrolink", lo = ((() => {
+        let e = null,
+            t = null,
+            n = 0,
+            r = "",
+            o = "",
+            a = "",
+            i = !1;
+        const s = () => {
+                null != t && (clearInterval(t), t = null)
+            },
+            c = () => `${r}${".".repeat(n+1)}`,
+            l = () => (document.documentElement.classList.add(ve(co)), e || (e = Ie({
+                id: co,
+                brand: "Skip Wait",
+                note: {
+                    lead: o,
+                    detail: a
+                },
+                status: c(),
+                countdownLabel: "Your link opens in"
+            }), e)),
+            d = () => {
+                const e = l();
+                return e.setNote({
+                    lead: o,
+                    detail: a
+                }), e.setStatus(i ? r : c()), e
+            }
+    })(), "unlocktoearn"), uo = /^(?=.*[A-Za-z])[A-Za-z0-9]{4,12}$/, po = e => /^https?:\/\//i.test(e), mo = async e => {
+        const t = await (async e => {
+                const t = (await s(lo))[0];
+                if (!t) throw new Error("hosts");
+                return `https://${t}/${encodeURIComponent(e)}`
+            })(e),
+            n = new URL(t).origin,
+            r = (await fetch(t, {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                redirect: "follow",
+                headers: {
+                    Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    Origin: n,
+                    Referer: t
+                },
+                body: new URLSearchParams({
+                    referdomain: "Direct",
+                    submit: ""
+                })
+            })).url;
+        if (!po(r) || new URL(r).origin === n) throw new Error("dest");
+        return r
+    }, ho = 918800, fo = 918801, wo = new Map, yo = e => {
+        const t = wo.get(e);
+        if (t) return t;
+        const n = mo(e).finally(() => {
+            wo.delete(e)
+        });
+        return wo.set(e, n), n
+    }, go = async () => {
+        const e = await pe(lo),
+            t = [ho, fo];
+        e.length ? await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: t,
+            addRules: [{
+                id: ho,
+                priority: 2,
+                action: {
+                    type: "modifyHeaders",
+                    responseHeaders: [{
+                        header: "Location",
+                        operation: "remove"
+                    }]
+                },
+                condition: {
+                    requestDomains: e,
+                    resourceTypes: ["main_frame"],
+                    requestMethods: ["get"]
+                }
+            }, {
+                id: fo,
+                priority: 2,
+                action: {
+                    type: "modifyHeaders",
+                    responseHeaders: [{
+                        header: "Content-Security-Policy",
+                        operation: "set",
+                        value: "script-src 'none'"
+                    }]
+                },
+                condition: {
+                    requestDomains: e,
+                    resourceTypes: ["main_frame"]
+                }
+            }]
+        }) : await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: t,
+            addRules: []
+        })
+    }, bo = "skip-wait-unlocktoearn", ko = ["Starting UnlockToEarn", "Clearing unlock steps", "Resolving your destination", "Opening your destination"], vo = "UnlockToEarn is finishing.", _o = "Skip Wait stays on UnlockToEarn and opens your destination when ready.";
+(() => {
+    let e = null,
+        t = null,
+        n = null,
+        r = 0,
+        o = 0,
+        a = !1,
+        i = "";
+    const s = () => {
+            null != t && (clearInterval(t), t = null), null != n && (clearInterval(n), n = null)
+        },
+        c = () => `${ko[o]}${".".repeat(r+1)}`,
+        l = (t, n) => {
+            document.documentElement.classList.add(ve(bo));
+            const r = {
+                    lead: t ?? vo,
+                    detail: n ?? _o
+                },
+                o = a ? i : c();
+            return e ? (e.setNote(r), e.setStatus(o), e.setError(null), e) : (e = Ie({
+                id: bo,
+                brand: "Skip Wait",
+                note: r,
+                status: o,
+                countdownLabel: "Ready in"
+            }), e)
+        }
+})();
+
+function Lo() {
+    const e = window;
+    if (e.__swCpmlinkNetAdblock) return;
+    e.__swCpmlinkNetAdblock = !0;
+    const t = () => {},
+        n = {
+            onDetected() {
+                return this
+            },
+            onNotDetected() {
+                return this
+            }
+        },
+        r = (t, n) => {
+            try {
+                Object.defineProperty(e, t, {
+                    configurable: !0,
+                    enumerable: !0,
+                    get: () => n,
+                    set: () => {}
+                })
+            } catch {
+                e[t] = n
+            }
+        };
+    r("Det", t), r("NotDet", t), r("blockAdBlock", n);
+    const o = () => {
+        document.getElementById("disable")?.remove()
+    };
+    o(), new MutationObserver(o).observe(document.documentElement, {
+        childList: !0,
+        subtree: !0
+    })
+}
+var So = () => {
+        try {
+            window.grecaptcha?.reset()
+        } catch {}
+    },
+    Eo = (e, t, n) => {
+        chrome.scripting.executeScript({
+            target: {
+                tabId: e,
+                frameIds: [t]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: n
+        })
+    };
+chrome.tabs.onRemoved.addListener(fe), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("SKIP_WAIT_COOMEET_MAIN" !== e?.type) return !1;
+    const r = t.tab?.id,
+        o = t.frameId;
+    return void 0 === r || void 0 === o ? (n({
+        ok: !1
+    }), !1) : ((async () => {
+        if (t.tab?.url && !(await async function(e) {
+                try {
+                    return ue(new URL(e).hostname, "coomeet-iframe")
+                } catch {
+                    return !1
+                }
+            }(t.tab.url))) return void n({
+            ok: !1
+        });
+        const e = `${r}:${o}`;
+        if (he.has(e)) n({
+            ok: !0,
+            skipped: !0
+        });
+        else try {
+            await chrome.scripting.executeScript({
+                target: {
+                    tabId: r,
+                    frameIds: [o]
+                },
+                world: "MAIN",
+                files: ["content.js"]
+            }), he.add(e), n({
+                ok: !0
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0)
+}), chrome.tabs.onUpdated.addListener((e, t, n) => {
+    if ("loading" !== t.status) return;
+    const r = n.url || n.pendingUrl;
+    if (!r || !URL.canParse(r)) return;
+    const {
+        hostname: o,
+        pathname: a
+    } = new URL(r);
+    ye.test(a) && ue(o, "xdmovies").then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: we
+        })
+    })
+}), chrome.runtime.onMessage.addListener((e, t, n) => !("INJECT_VISIBILITY_SPOOF" !== e?.type || !t.tab?.id || (chrome.scripting.executeScript({
+    target: {
+        tabId: t.tab.id
+    },
+    func: we,
+    world: "MAIN",
+    injectImmediately: !0
+}).then(n).catch(n), 0))), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("FCLC_ALERT_SUPPRESS" !== e?.type) return !1;
+    const r = t.tab?.id,
+        o = t.tab?.url ?? "";
+    return !(void 0 === r || !o || ((async () => {
+        try {
+            if (!(await ue(new URL(o).hostname, "fclc"))) return void n(void 0)
+        } catch {
+            return void n(void 0)
+        }
+        chrome.scripting.executeScript({
+            target: {
+                tabId: r
+            },
+            func: Re,
+            world: "MAIN",
+            injectImmediately: !0
+        }).then(n).catch(n)
+    })(), 0))
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("FCLC_LINKS_GO" !== e?.type) return !1;
+    const r = "string" == typeof e.action ? e.action : "",
+        o = "string" == typeof e.referer ? e.referer : "",
+        a = e.fields && "object" == typeof e.fields ? e.fields : null;
+    return r && a && xe(r) ? (async function(e, t, n) {
+        try {
+            const r = await fetch(e, {
+                    method: "POST",
+                    body: new URLSearchParams(t),
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                        "X-Requested-With": "XMLHttpRequest",
+                        Referer: n
+                    }
+                }),
+                o = JSON.parse(await r.text()),
+                a = "string" == typeof o.url ? o.url.trim() : "";
+            return "success" === o.status && a && xe(a) ? {
+                url: a,
+                message: ""
+            } : {
+                url: null,
+                message: o.message || o.status || "unlock failed"
+            }
+        } catch {
+            return {
+                url: null,
+                message: "network error"
+            }
+        }
+    }(r, a, o).then(n), !0) : (n({
+        url: null,
+        message: "invalid request"
+    }), !1)
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && async function(e) {
+        try {
+            const {
+                hostname: t,
+                pathname: n
+            } = new URL(e);
+            return await ue(t, "ankergames") && Ae.test(n)
+        } catch {
+            return !1
+        }
+    }(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: Ne
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && Te(e.url).then(t => {
+        t && Me(e.tabId, 0)
+    })
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("ANYGAME_MAIN_DIRECT" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || (async () => {
+        t.tab?.url && !(await Te(t.tab.url)) || Me(n, t.frameId ?? 0)
+    })(), !1
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && Ce(e.url).then(t => {
+        t && Ue(e.tabId, 0)
+    })
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("APKTEAL_MAIN_DIRECT" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || (async () => {
+        t.tab?.url && !(await Ce(t.tab.url)) || Ue(n, t.frameId ?? 0)
+    })(), !1
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("FILECR_EXTRACT_LINK" !== e?.type) return !1;
+    const r = "string" == typeof e.url ? e.url : "";
+    return /^https?:\/\//i.test(r) ? (fetch(r, {
+        credentials: "omit",
+        cache: "no-store",
+        headers: {
+            Accept: "text/html,*/*"
+        }
+    }).then(e => e.ok ? e.text() : Promise.reject()).then(e => n({
+        url: Pe(r, e)
+    })).catch(() => n({
+        url: null
+    })), !0) : (n({
+        url: null
+    }), !1)
+}), chrome.webNavigation.onHistoryStateUpdated.addListener(e => {
+    0 === e.frameId && (async () => {
+        let t;
+        try {
+            t = new URL(e.url).hostname
+        } catch {
+            return
+        }
+        await ue(t, "filecr") && chrome.tabs.sendMessage(e.tabId, {
+            type: "FILECR_ROUTE"
+        }).catch(() => {})
+    })()
+}), chrome.tabs.onUpdated.addListener((e, t, n) => {
+    if ("loading" !== t.status) return;
+    const r = t.url ?? n.url;
+    (async () => {
+        if (await async function(e) {
+                if (!e || !URL.canParse(e)) return !1;
+                const t = new URL(e);
+                return !!We.test(t.pathname) && ue(t.hostname, "flightsim")
+            }(r)) try {
+            await chrome.scripting.executeScript({
+                target: {
+                    tabId: e,
+                    allFrames: !1
+                },
+                world: "MAIN",
+                injectImmediately: !0,
+                func: qe
+            })
+        } catch {}
+    })()
+}), je(), me(() => {
+    je()
+}), chrome.webNavigation.onBeforeNavigate.addListener(e => {
+    0 === e.frameId && (async () => {
+        try {
+            if (!(await ue(new URL(e.url).hostname, "multiup"))) return
+        } catch {
+            return
+        }
+        const t = !(n = e.url).includes("multiup") || n.includes("/en/mirror/") ? null : n.match(He)?.[1] ?? n.match(Fe)?.[1] ?? n.match(Be)?.[1] ?? null;
+        var n;
+        t && (le(), chrome.tabs.update(e.tabId, {
+            url: `https://multiup.io/en/mirror/${t}`
+        }))
+    })()
+}), chrome.webNavigation.onBeforeNavigate.addListener(e => {
+    0 === e.frameId && qt.test(e.url) && (async () => {
+        try {
+            if (!(await ue(new URL(e.url).hostname, "link4m"))) return
+        } catch {
+            return
+        }
+        const t = new URL(e.url).searchParams.get("url")?.trim();
+        if (!t) throw new Error("link4m url");
+        const n = atob(t);
+        if (!/^https?:\/\//i.test(n)) throw new Error("link4m dest");
+        le(), chrome.tabs.update(e.tabId, {
+            url: n
+        })
+    })()
+}, {
+    url: [{
+        hostEquals: "link4m.co",
+        pathPrefix: "/full/"
+    }]
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    if (0 === e.frameId) try {
+        const t = new URL(e.url);
+        Ye(t.pathname, t.search) && nt(e.tabId, 0, tt)
+    } catch {}
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if (void 0 === r) return !1;
+    const o = t.tab?.url ?? "";
+    if ("INJECT_LOOT" === e?.type) return !!rt(o) && (nt(r, t.frameId ?? 0, tt), !1);
+    if ("INJECT_LOOT_CAPTCHA" === e?.type) {
+        if (!rt(o)) return !1;
+        const e = t.frameId ?? 0;
+        return 0 !== e ? nt(r, e, et) : ((e, t) => {
+            chrome.scripting.executeScript({
+                target: {
+                    tabId: e,
+                    allFrames: !0
+                },
+                world: "MAIN",
+                injectImmediately: !0,
+                func: t,
+                args: [Qe]
+            }).catch(() => {})
+        })(r, et), !1
+    }
+    return "LOOT_CAPTCHA_VERIFY" === e?.type && "string" == typeof e.url && "string" == typeof e.token && ((async () => {
+        if (!(await async function(e) {
+                try {
+                    const t = new URL(e);
+                    return await ue(t.hostname, "lootlabs") && Je(t.pathname, t.search)
+                } catch {
+                    return !1
+                }
+            }(o))) return void n({
+            ok: !1
+        });
+        const t = new URL(e.url),
+            r = t.searchParams.get("urid");
+        n(r ? {
+            ok: (await fetch(`${t.origin}/captcha/verify`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    urid: r,
+                    token: e.token
+                })
+            })).ok
+        } : {
+            ok: !1
+        })
+    })(), !0)
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    return !(void 0 === r || ("CLOVER_LOOT_PENDING" === e?.type ? (Ve.add(r), Xe(r), (e => {
+        const t = Ke.get(e);
+        null != t && clearInterval(t);
+        let n = 0;
+        const r = setInterval(() => {
+            if (!Ve.has(e) || n++ > 40) return clearInterval(r), void Ke.delete(e);
+            Xe(e)
+        }, 400);
+        Ke.set(e, r)
+    })(r), n({
+        ok: !0
+    }), 0) : "CLOVER_LOOT_SCAN" === e?.type ? !Ve.has(r) || (Xe(r), n({
+        ok: !0
+    }), 0) : "CLOVER_LOOT_DONE" !== e?.type || (Ve.delete(r), (e => {
+        const t = Ke.get(e);
+        null != t && clearInterval(t), Ke.delete(e)
+    })(r), 1)))
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    Ve.has(e.tabId) && Ge(e.url) && Ze(e.tabId, e.frameId)
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("XDMOVIES_MAIN_WORLD_RUN" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || chrome.scripting.executeScript({
+        target: {
+            tabId: n,
+            frameIds: [t.frameId ?? 0]
+        },
+        world: "MAIN",
+        func: ot,
+        args: [e.payload]
+    }), !1
+}), ft(), me(() => {
+    ft()
+}), chrome.tabs.onRemoved.addListener(e => {
+    wt(e)
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if ("AROLINKS_MEDIATOR_REFERER" === e.type) {
+        const t = "string" == typeof e.shortUrl ? e.shortUrl : "",
+            r = "string" == typeof e.assigned ? e.assigned : "";
+        return mt(t) && mt(r) ? ((async () => {
+            try {
+                const e = new URL(t).hostname;
+                if (!(await ue(e, "arolinks"))) return void n(null);
+                n(await (async (e, t) => {
+                    let n = t,
+                        r = e,
+                        o = `${new URL(t).origin}/`;
+                    for (let a = 0; a < 10; a++) {
+                        const e = await ut(n, r);
+                        o = `${new URL(e.url).origin}/`;
+                        const t = lt(e.html, e.url);
+                        if (t) {
+                            const a = await ut(t, e.url),
+                                i = ct(a.html, t);
+                            if (!i) break;
+                            r = t, n = i, o = `${new URL(t).origin}/`;
+                            continue
+                        }
+                        const a = ct(e.html, e.url);
+                        if (!a || a === e.url) break;
+                        r = e.url, n = a
+                    }
+                    return o
+                })(t, r))
+            } catch {
+                n(null)
+            }
+        })(), !0) : (n(null), !1)
+    }
+    if ("AROLINKS_OPEN_DEST" === e.type) {
+        const o = "string" == typeof e.url ? e.url : "";
+        return null != r && mt(o) ? ((async () => {
+            try {
+                const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+                if (!e || !(await ue(e, "arolinks"))) return void n(!1);
+                await wt(r), await chrome.tabs.update(r, {
+                    url: o
+                }), n(!0)
+            } catch {
+                n(!1)
+            }
+        })(), !0) : (n(!1), !1)
+    }
+    if ("AROLINKS_ARM_REFERER" !== e.type) return !1;
+    const o = "string" == typeof e.url ? e.url : "",
+        a = "string" == typeof e.referer ? e.referer : "";
+    return null != r && mt(o) && mt(a) ? ((async () => {
+        try {
+            if (!(await ue(new URL(o).hostname, "arolinks"))) return void n(!1);
+            n(await (async (e, t, n) => {
+                const r = ht(e);
+                try {
+                    return await chrome.declarativeNetRequest.updateSessionRules({
+                        removeRuleIds: [r],
+                        addRules: [{
+                            id: r,
+                            priority: 1,
+                            action: {
+                                type: "modifyHeaders",
+                                requestHeaders: [{
+                                    header: "Referer",
+                                    operation: "set",
+                                    value: n
+                                }]
+                            },
+                            condition: {
+                                urlFilter: `|${t}`,
+                                resourceTypes: ["main_frame"],
+                                tabIds: [e]
+                            }
+                        }]
+                    }), !0
+                } catch {
+                    return !1
+                }
+            })(r, o, a))
+        } catch {
+            n(!1)
+        }
+    })(), !0) : (n(!1), !1)
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("TIPSGURU_GET_DEST" !== e?.type) return !1;
+    const r = t.tab?.url ?? t.url ?? "";
+    return r ? ((async () => {
+        try {
+            if (!(await ue(new URL(r).hostname, "tipsguru"))) return void n({
+                url: null
+            })
+        } catch {
+            return void n({
+                url: null
+            })
+        }
+        var e;
+        n({
+            url: await (e = r, new Promise(t => {
+                chrome.cookies.getAll({
+                    url: e
+                }, e => {
+                    if (chrome.runtime.lastError || !e?.length) return void t(null);
+                    const n = e.filter(e => gt.has(e.name.toLowerCase())),
+                        r = e.filter(e => !gt.has(e.name.toLowerCase()));
+                    for (const o of [...n, ...r]) {
+                        if (bt.has(o.name.toLowerCase())) continue;
+                        const e = kt(o.value);
+                        if (e) return void t(e)
+                    }
+                    t(null)
+                })
+            }))
+        })
+    })(), !0) : (n({
+        url: null
+    }), !1)
+}), chrome.webNavigation.onCommitted.addListener(({
+    frameId: e,
+    tabId: t,
+    url: n
+}) => {
+    0 === e && (async () => {
+        await vt(n) && St(t, 0, _t)
+    })()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id,
+        o = t.frameId ?? 0;
+    return "EXEIO_ADBLOCK_BYPASS" === e?.type ? ((async () => {
+        void 0 !== r && (t.tab?.url && !(await vt(t.tab.url)) || St(r, o, _t))
+    })(), !1) : "EXEIO_GO_UNLOCK" === e?.type && void 0 !== r && ((async () => {
+        !t.tab?.url || await vt(t.tab.url) ? chrome.scripting.executeScript({
+            target: {
+                tabId: r,
+                frameIds: [o]
+            },
+            world: "MAIN",
+            func: Lt
+        }).then(e => n(e[0]?.result ?? {
+            ok: !1,
+            err: "no result"
+        })).catch(e => n({
+            ok: !1,
+            err: String(e)
+        })) : n({
+            ok: !1,
+            err: "not exeio"
+        })
+    })(), !0)
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && /\/Container\//i.test(e.url) && (async () => {
+        await async function(e) {
+            try {
+                return ue(new URL(e).hostname, "filecrypt")
+            } catch {
+                return !1
+            }
+        }(e.url) && It(e.tabId, 0)
+    })()
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("FILECRYPT_POW" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || It(n, t.frameId ?? 0), !1
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && async function(e) {
+        try {
+            return ue(new URL(e).hostname, "lksfy")
+        } catch {
+            return !1
+        }
+    }(e.url).then(t => {
+        t && xt(e.tabId, 0)
+    })
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("LKSFY_ADBLOCK_BYPASS" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || xt(n, t.frameId ?? 0), !1
+}), (() => {
+    const e = new Set;
+    let t = chrome.storage.session.get(At).then(t => {
+        const n = t[At];
+        if (Array.isArray(n))
+            for (const r of n) "number" == typeof r && e.add(r)
+    });
+    const n = e => {
+            t = t.then(e)
+        },
+        r = () => chrome.storage.session.set({
+            [At]: [...e]
+        });
+    chrome.webNavigation.onBeforeNavigate.addListener(({
+        frameId: t,
+        tabId: o,
+        url: a
+    }) => {
+        0 === t && a.startsWith("http") && (async e => {
+            try {
+                const t = new URL(e);
+                if ($t.test(t.pathname)) {
+                    const e = t.searchParams.get("get"),
+                        n = t.searchParams.get("short");
+                    return null !== e && null !== n && Nt.test(e) && await ue(n, "rinku")
+                }
+                if (!(await ue(t.hostname, "rinku"))) return !1;
+                const [n, ...r] = t.pathname.split("/").filter(Boolean);
+                return void 0 !== n && 0 === r.length && Nt.test(n)
+            } catch {
+                return !1
+            }
+        })(a).then(t => {
+            t && n(() => {
+                if (!e.has(o)) return e.add(o), r()
+            })
+        })
+    }), chrome.runtime.onMessage.addListener((t, r, o) => {
+        const a = r.tab?.id;
+        return "RINKU_FLOW_TAB" === t.type && null != a && (n(() => {
+            o(e.has(a))
+        }), !0)
+    }), chrome.tabs.onRemoved.addListener(t => {
+        n(() => {
+            if (e.delete(t)) return r()
+        })
+    })
+})(), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    return "CUTY_GO_UNLOCK" === e?.type && void 0 !== r && ((async () => {
+        !t.tab?.url || await Tt(t.tab.url) ? chrome.scripting.executeScript({
+            target: {
+                tabId: r,
+                frameIds: [t.frameId ?? 0]
+            },
+            world: "MAIN",
+            func: Ut
+        }).then(e => n(e[0]?.result ?? {
+            ok: !1,
+            err: "no result"
+        })).catch(e => n({
+            ok: !1,
+            err: String(e)
+        })) : n({
+            ok: !1,
+            err: "not cuty"
+        })
+    })(), !0)
+}), chrome.webNavigation.onBeforeNavigate.addListener(e => {
+    0 === e.frameId && Pt(e.url).then(t => {
+        t && (le(), chrome.tabs.update(e.tabId, {
+            url: t
+        }))
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    (async function(e) {
+        try {
+            const t = new URL(e);
+            return !!(await ue(t.hostname, "storyline-scorm")) && (t.pathname.includes("index_lms.html") || t.pathname.includes("package_uploads"))
+        } catch {
+            return !1
+        }
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [e.frameId]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: Wt
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    (async function(e) {
+        try {
+            const t = new URL(e);
+            return await ue(t.hostname, "streamerviewerbot") && t.pathname.includes("/trial/trial.php")
+        } catch {
+            return !1
+        }
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [e.frameId]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: hn
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && wn(e.url).then(t => {
+        t && gn(e.tabId, 0)
+    })
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("WORKINK_HOOKS" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || (async () => {
+        t.tab?.url && !(await wn(t.tab.url)) || await gn(n, t.frameId ?? 0)
+    })(), !1
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("OCEANOFGAMES_RESOLVE_CDN" !== e?.type) return !1;
+    const r = "string" == typeof e.id ? e.id : "",
+        o = "string" == typeof e.filename ? e.filename : "",
+        a = "string" == typeof e.filesize ? e.filesize : "";
+    return r && o ? ((async () => {
+        try {
+            const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+            if (!e || !(await ue(e, "oceanofgames"))) return void n({
+                url: null
+            });
+            n({
+                url: await zt(r, o, a)
+            })
+        } catch {
+            n({
+                url: null
+            })
+        }
+    })(), !0) : (n({
+        url: null
+    }), !1)
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("GAPKMOD_RESOLVE_DOWNLOAD_LINK" !== e.type || "string" != typeof e.href || !e.href) return !1;
+    const r = e.href;
+    return (async () => {
+        try {
+            const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+            if (!e || !(await ue(e, "gapkmod"))) return void n({
+                url: null
+            });
+            n({
+                url: await Vt(r)
+            })
+        } catch {
+            n({
+                url: null
+            })
+        }
+    })(), !0
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!Kt.test(t.pathname) && ue(t.hostname, "getmodsapk")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: Gt
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!Zt.test(t.pathname) && ue(t.hostname, "apkvision")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: Xt
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!Jt.test(t.pathname) && ue(t.hostname, "apkaward")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: Yt
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    if (0 !== e.frameId || !URL.canParse(e.url)) return;
+    const t = new URL(e.url);
+    Qt.test(t.pathname) && ue(t.hostname, "fuzyapk").then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: en
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!tn.test(t.pathname) && ue(t.hostname, "moddroid")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: nn
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!rn.test(t.pathname) && ue(t.hostname, "modded-1")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: on
+        })
+    })
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && (async e => {
+        if (!URL.canParse(e)) return !1;
+        const t = new URL(e);
+        return !!an.test(t.pathname) && ue(t.hostname, "modsmaniac")
+    })(e.url).then(t => {
+        t && chrome.scripting.executeScript({
+            target: {
+                tabId: e.tabId,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: sn
+        })
+    })
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("DEVUPLOADS_DOWNLOAD2" !== e.type) return !1;
+    const r = "string" == typeof e.id ? e.id.trim() : "";
+    return r ? ((async () => {
+        try {
+            const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+            if (!e || !(await ue(e, "devuploads-mediator"))) return void n({
+                url: null
+            });
+            n({
+                url: await ln(r)
+            })
+        } catch {
+            n({
+                url: null
+            })
+        }
+    })(), !0) : (n({
+        url: null
+    }), !1)
+}), chrome.webNavigation.onCommitted.addListener(({
+    frameId: e,
+    tabId: t,
+    url: n
+}) => {
+    0 === e && (async () => {
+        await (async e => {
+            try {
+                const t = new URL(e);
+                if (!(await ue(t.hostname, "dupload"))) return !1;
+                const n = t.pathname.replace(/^\/+|\/+$/g, "");
+                return Boolean(n) && !n.includes("/") && dn.test(n)
+            } catch {
+                return !1
+            }
+        })(n) && chrome.scripting.executeScript({
+            target: {
+                tabId: t,
+                frameIds: [0]
+            },
+            world: "MAIN",
+            injectImmediately: !0,
+            func: mn
+        })
+    })()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("DUPLOAD_DOWNLOAD2" !== e.type) return !1;
+    const r = "string" == typeof e.id ? e.id.trim() : "";
+    return r ? ((async () => {
+        try {
+            const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+            if (!e || !(await ue(e, "dupload"))) return void n({
+                url: null
+            });
+            n(await (async e => {
+                const t = `https://dupload.net/${e}`,
+                    n = new AbortController,
+                    r = await fetch(t, {
+                        method: "POST",
+                        credentials: "omit",
+                        cache: "no-store",
+                        signal: n.signal,
+                        headers: {
+                            Accept: "text/html,*/*",
+                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                            Referer: t
+                        },
+                        body: new URLSearchParams({
+                            op: "download2",
+                            id: e,
+                            rand: "",
+                            referer: "",
+                            method_free: "",
+                            method_premium: "",
+                            adblock_detected: "0"
+                        })
+                    });
+                if (un.test(r.url)) return n.abort(), {
+                    url: r.url
+                };
+                const o = await r.text();
+                return {
+                    url: null,
+                    missing: pn.test(o)
+                }
+            })(r))
+        } catch {
+            n({
+                url: null
+            })
+        }
+    })(), !0) : (n({
+        url: null
+    }), !1)
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    0 === e.frameId && vn(e.url).then(t => {
+        t && _n(e.tabId, 0)
+    })
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("skip-wait-vexfile-verify-hook" !== e?.type) return !1;
+    const n = t.tab?.id,
+        r = t.tab?.url;
+    return !(void 0 === n || !r || (vn(r).then(e => {
+        e && _n(n, t.frameId ?? 0)
+    }), 1))
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if (void 0 === r || !e?.type) return !1;
+    const o = {
+            tabId: r,
+            frameIds: [t.frameId ?? 0]
+        },
+        a = (e, t, r, o) => {
+            e ? t().then(e => n(r(e))).catch(() => n(o)) : n(o)
+        };
+    if ("skip-wait-dlsurf-turnstile" === e.type) {
+        const r = "string" == typeof e.mountId ? e.mountId : "";
+        return r ? (An(t.tab?.url).then(e => a(e, () => chrome.scripting.executeScript({
+            target: o,
+            world: "MAIN",
+            func: En,
+            args: [r, "0x4AAAAAABbfHaaMuK4MmNeI", "skip-wait-dlsurf"]
+        }), () => ({
+            ok: !0
+        }), {
+            ok: !1
+        })), !0) : (n({
+            ok: !1
+        }), !1)
+    }
+    if ("skip-wait-dlsurf-turnstile-remove" === e.type) {
+        const r = "string" == typeof e.widgetId ? e.widgetId : "";
+        return r ? (An(t.tab?.url).then(e => a(e, () => chrome.scripting.executeScript({
+            target: o,
+            world: "MAIN",
+            func: Sn,
+            args: [r]
+        }), () => ({
+            ok: !0
+        }), {
+            ok: !1
+        })), !0) : (n({
+            ok: !1
+        }), !1)
+    }
+    if ("skip-wait-dlsurf-auth" === e.type) return An(t.tab?.url).then(e => a(e, () => chrome.scripting.executeScript({
+        target: o,
+        world: "MAIN",
+        func: In,
+        args: [Ln]
+    }), e => ({
+        ok: !0 === e[0]?.result
+    }), {
+        ok: !1
+    })), !0;
+    if ("skip-wait-dlsurf-prefetch" === e.type) {
+        const r = "string" == typeof e.slug ? e.slug : "";
+        return r ? (An(t.tab?.url).then(e => a(e, () => chrome.scripting.executeScript({
+            target: o,
+            world: "MAIN",
+            func: Rn,
+            args: [Ln, r]
+        }), e => ({
+            token: e[0]?.result ?? ""
+        }), {
+            token: ""
+        })), !0) : (n({
+            token: ""
+        }), !1)
+    }
+    if ("skip-wait-dlsurf-unlock" === e.type) {
+        const r = "string" == typeof e.slug ? e.slug : "",
+            i = "string" == typeof e.captchaToken ? e.captchaToken : "",
+            s = "string" == typeof e.jwt ? e.jwt : "";
+        return r && i ? (An(t.tab?.url).then(e => a(e, () => chrome.scripting.executeScript({
+            target: o,
+            world: "MAIN",
+            func: xn,
+            args: [Ln, r, i, s]
+        }), e => e[0]?.result ?? {
+            ok: !1,
+            err: "empty"
+        }, {
+            ok: !1,
+            err: e ? "inject" : "host"
+        })), !0) : (n({
+            ok: !1,
+            err: "args"
+        }), !1)
+    }
+    return !1
+}), Un(), me(() => {
+    Un()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("ALPHAREDE_RESOLVE" !== e.type) return !1;
+    const r = "string" == typeof e.unlockUrl ? e.unlockUrl : "";
+    if (!(e => {
+            try {
+                const t = new URL(e);
+                if (!Tn(t.href)) return !1;
+                const [n, ...r] = t.pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+                return !!n && 0 === r.length && $n.test(n)
+            } catch {
+                return !1
+            }
+        })(r)) return n({
+        ok: !1
+    }), !1;
+    const o = e => {
+        chrome.runtime.sendMessage({
+            type: "ALPHAREDE_PROGRESS",
+            ...e
+        }).catch(() => {})
+    };
+    return (async () => {
+        try {
+            if (!(await ue(new URL(r).hostname, "alpharede"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await Mn(r, o)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), Qn(), me(() => {
+    Qn()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("EARNLINKS_RESOLVE" !== e.type) return !1;
+    const r = "string" == typeof e.unlockUrl ? e.unlockUrl : "";
+    if (!(e => {
+            try {
+                const t = new URL(e);
+                if (!Dn(t.href)) return !1;
+                const [n, ...r] = t.pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+                return !!n && 0 === r.length && qn.test(n)
+            } catch {
+                return !1
+            }
+        })(r)) return n({
+        ok: !1
+    }), !1;
+    const o = e => {
+        chrome.runtime.sendMessage({
+            type: "EARNLINKS_PROGRESS",
+            ...e
+        }).catch(() => {})
+    };
+    return (async () => {
+        try {
+            if (!(await ue(new URL(r).hostname, "earnlinks"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await Xn(r, o)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("SHRINKPE_RESOLVE" !== e.type) return !1;
+    const r = "string" == typeof e.unlockUrl ? e.unlockUrl : "",
+        o = "string" == typeof e.pageHtml ? e.pageHtml : "";
+    if (!(e => {
+            try {
+                const t = new URL(e);
+                if (!/^https?:\/\//i.test(t.href)) return !1;
+                const [n, ...r] = t.pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+                return !!n && 0 === r.length && tr.test(n)
+            } catch {
+                return !1
+            }
+        })(r) || !o) return n({
+        ok: !1
+    }), !1;
+    const a = t.tab?.id,
+        i = e => {
+            const t = {
+                type: "SHRINKPE_PROGRESS",
+                unlockUrl: r,
+                ...e
+            };
+            null != a ? chrome.tabs.sendMessage(a, t).catch(() => {}) : chrome.runtime.sendMessage(t).catch(() => {})
+        };
+    return (async () => {
+        try {
+            if (!(await ue(new URL(r).hostname, "shrinkpe"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await mr(r, o, i)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), Nr(), me(() => {
+    Nr()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    if ("SFL_RESOLVE" !== e.type) return !1;
+    const r = "string" == typeof e.unlockUrl ? e.unlockUrl : "";
+    if (!(e => {
+            try {
+                const t = new URL(e);
+                if (!yr(t.href)) return !1;
+                const [n, ...r] = t.pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+                return !!n && 0 === r.length && wr.test(n)
+            } catch {
+                return !1
+            }
+        })(r)) return n({
+        ok: !1
+    }), !1;
+    const o = e => {
+        chrome.runtime.sendMessage({
+            type: "SFL_PROGRESS",
+            ...e
+        }).catch(() => {})
+    };
+    return (async () => {
+        try {
+            if (!(await ue(new URL(r).hostname, "sfl"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await Rr(r, o)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), zr(), me(() => {
+    zr()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if ("LITESHORT_OPEN_DEST" === e.type) {
+        const o = "string" == typeof e.url ? e.url : "";
+        return null != r && Cr(o) ? ((async () => {
+            try {
+                const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+                if (!e || !(await ue(e, "liteshort"))) return void n(!1);
+                n(await (async (e, t) => {
+                    try {
+                        return await chrome.tabs.update(e, {
+                            url: t
+                        }), !0
+                    } catch {
+                        return !1
+                    }
+                })(r, o))
+            } catch {
+                n(!1)
+            }
+        })(), !0) : (n(!1), !1)
+    }
+    if ("LITESHORT_RESOLVE" !== e.type) return !1;
+    const o = "string" == typeof e.pageUrl ? e.pageUrl : "";
+    return (async () => {
+        try {
+            if (!(await (async e => {
+                    try {
+                        const t = new URL(e);
+                        return !!Cr(t.href) && !!(await c(t.hostname, "liteshort")) && null != Ur(t.pathname)
+                    } catch {
+                        return !1
+                    }
+                })(o))) return void n({
+                ok: !1
+            });
+            if (!(await ue(new URL(o).hostname, "liteshort"))) return void n({
+                ok: !1
+            });
+            const e = e => {
+                chrome.runtime.sendMessage({
+                    type: "LITESHORT_PROGRESS",
+                    ...e
+                }).catch(() => {})
+            };
+            n({
+                ok: !0,
+                dest: await Br(o, e)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), so(), me(() => {
+    so()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if ("NITROLINK_OPEN_DEST" === e.type) {
+        const o = "string" == typeof e.url ? e.url : "";
+        return null != r && Jr(o) ? ((async () => {
+            try {
+                const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+                if (!e || !(await ue(e, "nitrolink"))) return void n(!1);
+                n(await (async (e, t) => {
+                    try {
+                        return await chrome.tabs.update(e, {
+                            url: t
+                        }), !0
+                    } catch {
+                        return !1
+                    }
+                })(r, o))
+            } catch {
+                n(!1)
+            }
+        })(), !0) : (n(!1), !1)
+    }
+    if ("NITROLINK_RESOLVE" !== e.type) return !1;
+    const o = "string" == typeof e.pageUrl ? e.pageUrl : "";
+    return (async () => {
+        try {
+            if (!(await (async e => {
+                    try {
+                        const t = new URL(e);
+                        return !(!Jr(t.href) || !(await c(t.hostname, "nitrolink"))) && null != Yr(t.pathname)
+                    } catch {
+                        return !1
+                    }
+                })(o))) return void n({
+                ok: !1
+            });
+            if (!(await ue(new URL(o).hostname, "nitrolink"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await ao(o, e => ((e, t) => {
+                    null != e && chrome.tabs.sendMessage(e, {
+                        type: "NITROLINK_PROGRESS",
+                        ...t
+                    }).catch(() => {})
+                })(r, e))
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0
+}), go(), me(() => {
+    go()
+}), chrome.runtime.onMessage.addListener((e, t, n) => {
+    const r = t.tab?.id;
+    if ("UNLOCKTOEARN_OPEN_DEST" === e.type) {
+        const o = "string" == typeof e.url ? e.url : "";
+        return null != r && po(o) ? ((async () => {
+            try {
+                const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+                if (!e || !(await ue(e, "unlocktoearn"))) return void n(!1);
+                n(await (async (e, t) => {
+                    try {
+                        return await chrome.tabs.update(e, {
+                            url: t
+                        }), !0
+                    } catch {
+                        return !1
+                    }
+                })(r, o))
+            } catch {
+                n(!1)
+            }
+        })(), !0) : (n(!1), !1)
+    }
+    if ("UNLOCKTOEARN_RESOLVE" !== e.type) return !1;
+    const o = "string" == typeof e.alias ? e.alias.trim() : "";
+    return (e => {
+        const [t, ...n] = e.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+        return t && 0 === n.length && uo.test(t) ? t : null
+    })(`/${o}`) ? ((async () => {
+        try {
+            const e = t.tab?.url ? new URL(t.tab.url).hostname : "";
+            if (!e || !(await ue(e, "unlocktoearn"))) return void n({
+                ok: !1
+            });
+            n({
+                ok: !0,
+                dest: await yo(o)
+            })
+        } catch {
+            n({
+                ok: !1
+            })
+        }
+    })(), !0) : (n({
+        ok: !1
+    }), !1)
+}), chrome.webNavigation.onCommitted.addListener(e => {
+    if (0 === e.frameId) try {
+        ue(new URL(e.url).hostname, "cpmlink-net").then(t => {
+            t && Eo(e.tabId, 0, Lo)
+        })
+    } catch {}
+}), chrome.runtime.onMessage.addListener((e, t) => {
+    if ("CPMLINK_NET_RESET_CAPTCHA" !== e?.type) return !1;
+    const n = t.tab?.id;
+    return void 0 === n || Eo(n, t.frameId ?? 0, So), !1
+}), chrome.runtime.onStartup.addListener(() => {
+    i()
+}), chrome.runtime.onInstalled.addListener(() => {
+    i()
+}), i()

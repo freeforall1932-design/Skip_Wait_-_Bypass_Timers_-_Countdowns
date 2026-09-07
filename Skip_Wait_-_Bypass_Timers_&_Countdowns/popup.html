@@ -57,6 +57,30 @@
         </div>
       </section>
 
+      <!-- Audio captcha assist (optional, manual-first) -->
+      <section class="custom">
+        <button class="custom-head" id="audio-toggle" type="button" aria-expanded="false">
+          <span class="custom-title">Audio captcha assist (optional)</span>
+          <span class="custom-caret" aria-hidden="true"></span>
+        </button>
+        <div class="custom-body" id="audio-body" hidden>
+          <p class="custom-note">
+            Adds a “Try audio assist” button to the Skip Wait overlay when a page is
+            stuck on a reCAPTCHA. <strong>Nothing runs on its own</strong> — the attempt
+            happens only when you press that button. The audio clip is sent only to the
+            speech-to-text server you configure below (e.g. your own Whisper server).
+            Leave empty to disable; you always solve manually first.
+          </p>
+          <label class="custom-label" for="audio-endpoint">Speech-to-text endpoint (POST audio/wav, returns text)</label>
+          <div class="custom-row">
+            <input id="audio-endpoint" class="custom-input" type="text" inputmode="url"
+                   placeholder="e.g. http://127.0.0.1:9000/asr" spellcheck="false" autocomplete="off" />
+            <button id="audio-save" class="custom-add" type="button">Save</button>
+          </div>
+          <p class="custom-err" id="audio-status" hidden></p>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="foot">
         <span id="ver" class="ver">Skip Wait</span>

@@ -185,6 +185,12 @@ body {
   color: #2b3a5c;
 }
 .custom-head:hover { background: rgba(37, 99, 235, 0.06); }
+.custom-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #2b3a5c;
+}
 .custom-caret {
   width: 8px;
   height: 8px;

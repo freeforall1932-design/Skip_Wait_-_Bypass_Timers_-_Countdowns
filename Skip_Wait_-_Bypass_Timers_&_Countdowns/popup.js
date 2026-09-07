@@ -179,4 +179,71 @@
     });
 
   refresh();
+
+  // --- Audio captcha assist endpoint (optional, manual-first) --------------
+  var AUDIO_KEY = "skipWaitSttEndpoint";
+  var audioToggle = document.getElementById("audio-toggle");
+  var audioBody = document.getElementById("audio-body");
+  var audioInput = document.getElementById("audio-endpoint");
+  var audioSave = document.getElementById("audio-save");
+  var audioStatus = document.getElementById("audio-status");
+
+  function audioNote(msg, isError) {
+    if (!audioStatus) return;
+    if (msg) {
+      audioStatus.textContent = msg;
+      audioStatus.hidden = false;
+      audioStatus.style.color = isError ? "#b91c1c" : "#166534";
+    } else {
+      audioStatus.hidden = true;
+      audioStatus.textContent = "";
+    }
+  }
+
+  if (audioToggle && audioBody && hasStorage) {
+    audioToggle.addEventListener("click", function () {
+      var open = audioBody.hasAttribute("hidden");
+      if (open) audioBody.removeAttribute("hidden");
+      else audioBody.setAttribute("hidden", "");
+      audioToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      audioToggle.classList.toggle("open", open);
+      if (open) {
+        try {
+          chrome.storage.local.get(AUDIO_KEY, function (res) {
+            if (audioInput && res)
+              audioInput.value = (res && res[AUDIO_KEY]) || "";
+          });
+        } catch (e) {}
+        audioNote("");
+      }
+    });
+
+    if (audioSave)
+      audioSave.addEventListener("click", function () {
+        var raw = String((audioInput && audioInput.value) || "").trim();
+        if (!raw) {
+          try {
+            chrome.storage.local.remove(AUDIO_KEY, function () {
+              audioNote("Audio assist disabled (no endpoint).");
+            });
+          } catch (e) {
+            audioNote("Audio assist disabled (no endpoint).");
+          }
+          return;
+        }
+        if (!/^https?:\/\//i.test(raw)) {
+          audioNote("Enter an http(s) URL, e.g. http://127.0.0.1:9000/asr", true);
+          return;
+        }
+        var patch = {};
+        patch[AUDIO_KEY] = raw;
+        try {
+          chrome.storage.local.set(patch, function () {
+            audioNote("Saved. The overlay button will use this endpoint.");
+          });
+        } catch (e) {
+          audioNote("Could not save the endpoint.", true);
+        }
+      });
+  }
 })();

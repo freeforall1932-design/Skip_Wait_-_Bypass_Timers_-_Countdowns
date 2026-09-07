@@ -25,8 +25,8 @@ for you when a real confirmation is needed.
 
 ## How it works
 
-The extension only acts on the **exact hostnames listed in `hosts.json`** (330+ hostnames
-across 170 flow types). When you land on a supported delay/wait page it either skips straight
+The extension only acts on the **exact hostnames listed in `hosts.json`** (460+ hostnames
+across 171 flow types). When you land on a supported delay/wait page it either skips straight
 to the destination or automates the remaining wait + Continue steps. If a site isn't matched,
 nothing runs — so coverage is by hostname list, not a blanket rule.
 

@@ -38,6 +38,8 @@ const fetchLog = [];
 const cookieSetLog = [];
 const alarmsLog = { created: [], cleared: [] };
 const dnrLog = [];
+const injectionLog = [];
+const tabsMessages = [];
 const tabsReloaded = [];
 let extensionReloads = 0;
 
@@ -131,7 +133,10 @@ const real = {
   tabs: {
     query: async () => [],
     update: async () => ({}),
-    sendMessage: async () => ({}),
+    sendMessage: async (id, msg) => {
+      tabsMessages.push({ id, msg });
+      return {};
+    },
     reload: (id) => {
       tabsReloaded.push(id);
     },
@@ -142,7 +147,12 @@ const real = {
     },
     getSessionRules: async () => [],
   },
-  scripting: { executeScript: async () => [{ result: undefined }] },
+  scripting: {
+    executeScript: async (details) => {
+      injectionLog.push(details);
+      return [{ result: undefined }];
+    },
+  },
   cookies: {
     get: async () => undefined,
     set: async (details) => {
@@ -416,6 +426,164 @@ check(
   customResp?.ok === true && customResp?.dest === "https://destination.example/custom",
   `custom-host override binds a new domain to the engine at runtime (got ${JSON.stringify(customResp)})`,
 );
+
+/* ------------------------------------------------------------------ *
+ *  Scenario 4: MAIN-world injection plumbing                          *
+ * ------------------------------------------------------------------ */
+
+// 4a. SKIP_WAIT_PAGE_CALL injects into the sender tab with the whitelisted name.
+await dispatch(
+  { type: "SKIP_WAIT_PAGE_CALL", name: "wpsafegenerate" },
+  { tab: { id: 42, url: "https://horoscop.info/" }, frameId: 3 },
+);
+await new Promise((r) => setTimeout(r, 50));
+const pageCall = injectionLog.find(
+  (i) => i.func && i.args?.[0] === "wpsafegenerate",
+);
+check(
+  !!pageCall && pageCall.world === "MAIN" && pageCall.target?.tabId === 42,
+  "SKIP_WAIT_PAGE_CALL injects the requested page function into the tab (MAIN world)",
+);
+check(
+  JSON.stringify(pageCall?.target?.frameIds) === "[3]",
+  "SKIP_WAIT_PAGE_CALL targets the sender frame",
+);
+
+// 4b. Non-identifier names must never be injected.
+injectionLog.length = 0;
+await dispatch(
+  { type: "SKIP_WAIT_PAGE_CALL", name: "alert(1); eval" },
+  { tab: { id: 43, url: "https://horoscop.info/" } },
+);
+await new Promise((r) => setTimeout(r, 50));
+check(
+  injectionLog.length === 0,
+  "SKIP_WAIT_PAGE_CALL rejects non-identifier function names",
+);
+
+// 4c. Every injection the SW performs ships a serializable function with
+//     JSON-safe args (executeScript serializes both — a captured closure
+//     variable would silently break in the page).
+check(
+  injectionLog.every((i) => typeof i.func === "function" || i.func === undefined),
+  "captured injections are functions",
+);
+check(
+  injectionLog.every((i) => i.args === undefined || (() => { try { return JSON.parse(JSON.stringify(i.args)) !== undefined; } catch { return false; } })()),
+  "injection args are JSON-safe",
+);
+
+// 4d. The shipped swStealth MAIN-world script actually runs: pull its source
+//     out of background.js and execute it in a fake page environment.
+{
+  const m = src.match(/function swStealth\(e\) \{[\s\S]*?\n\}/);
+  check(!!m, "swStealth function found in background.js");
+  if (m) {
+    const vm = await import("node:vm");
+    const sandbox = {};
+    sandbox.window = sandbox;
+    sandbox.self = sandbox;
+    sandbox.XMLHttpRequest = function () {};
+    sandbox.XMLHttpRequest.prototype.open = function () {};
+    sandbox.XMLHttpRequest.prototype.send = function () {};
+    sandbox.Response = class {
+      constructor(_body, init) {
+        this.status = init?.status ?? 200;
+        this.statusText = init?.statusText ?? "";
+      }
+    };
+    sandbox.queueMicrotask = (fn) => fn();
+    let stealthTicks = 0;
+    sandbox.setInterval = (fn) => {
+      stealthTicks += 1;
+      try { fn(); } catch {}
+      return 1;
+    };
+    sandbox.clearInterval = () => {};
+    sandbox.app_vars = { force_disable_adblock: "1" };
+    let headSpoofed = false;
+    sandbox.fetch = async () => {
+      return { spoofed: false };
+    };
+    vm.createContext(sandbox);
+    vm.runInContext(m[0], sandbox);
+    vm.runInContext("swStealth('googlesyndication|adtest-example')", sandbox);
+    // After the stealth run the page fetch must fake HEAD answers for ad hosts…
+    headSpoofed = await vm.runInContext(
+      "fetch('https://adtest-example/x.js', { method: 'HEAD' }).then(r => r.status)",
+      sandbox,
+    );
+    check(headSpoofed === 200, "swStealth: ad-host HEAD requests are spoofed as 200");
+    const passthrough = await vm.runInContext(
+      "fetch('https://example-normal.test/page').then(r => r.spoofed === false || r.status)",
+      sandbox,
+    );
+    check(passthrough === true, "swStealth: non-ad requests pass through untouched");
+    check(
+      vm.runInContext("window.app_vars.force_disable_adblock", sandbox) === "0",
+      "swStealth: app_vars.force_disable_adblock forced to 0",
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Scenario 5: reCAPTCHA audio-assist plumbing (manual-first)         *
+ * ------------------------------------------------------------------ */
+
+{
+  // START from the top frame must be relayed to the tab's frames.
+  await dispatch(
+    { type: "SKIP_WAIT_AUDIO_ASSIST_START" },
+    { tab: { id: 77, url: "https://horoscop.info/x" } },
+  );
+  await new Promise((r) => setTimeout(r, 50));
+  check(
+    tabsMessages.some((m) => m.id === 77 && m.msg?.type === "SKIP_WAIT_AUDIO_ASSIST_FRAME"),
+    "audio assist: START is relayed to the tab's frames",
+  );
+
+  // RESULT from the bframe is relayed back to the tab.
+  await dispatch(
+    { type: "SKIP_WAIT_AUDIO_ASSIST_RESULT", ok: false, err: "no-backend" },
+    { tab: { id: 77, url: "https://www.google.com/recaptcha/api2/bframe" } },
+  );
+  await new Promise((r) => setTimeout(r, 50));
+  check(
+    tabsMessages.some((m) => m.id === 77 && m.msg?.type === "SKIP_WAIT_AUDIO_ASSIST_RESULT"),
+    "audio assist: frame results are relayed back to the tab",
+  );
+
+  // STT with no endpoint configured must refuse (manual-first default).
+  await chrome.storage.local.remove("skipWaitSttEndpoint");
+  const noBackend = await dispatch({ type: "SKIP_WAIT_AUDIO_STT", wav: "aGVsbG8=" });
+  check(
+    noBackend?.ok === false && noBackend?.err === "no-backend",
+    `audio assist: no transcription endpoint configured -> refuses (${JSON.stringify(noBackend)})`,
+  );
+
+  // STT with an endpoint posts the wav and parses the transcript.
+  scriptFetch(
+    (url, method) => method === "POST" && url === "http://127.0.0.1:9000/asr",
+    () => JSON.stringify({ text: "7 3 5" }),
+  );
+  await chrome.storage.local.set({ skipWaitSttEndpoint: "http://127.0.0.1:9000/asr" });
+  const stt = await dispatch({ type: "SKIP_WAIT_AUDIO_STT", wav: "aGVsbG8=" });
+  check(
+    stt?.ok === true && stt?.text === "7 3 5",
+    `audio assist: configured endpoint transcribes (${JSON.stringify(stt)})`,
+  );
+  await chrome.storage.local.remove("skipWaitSttEndpoint");
+
+  // Audio fetch guard: only google.com recaptcha audio URLs are fetched.
+  const badFetch = await dispatch({
+    type: "SKIP_WAIT_AUDIO_STT_FETCH",
+    url: "https://evil.example/audio.mp3",
+  });
+  check(
+    badFetch?.ok === false && badFetch?.err === "bad-audio-url",
+    "audio assist: non-google audio URLs are refused",
+  );
+}
 
 console.log(
   failures === 0

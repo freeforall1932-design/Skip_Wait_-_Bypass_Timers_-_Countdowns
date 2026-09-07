@@ -224,14 +224,18 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
         swStealth (background) already landed; remaining: merge exeio's extended stealth
         variant into it (two-injection split: swStealth + exeio-extras) and dedupe the
         per-site math/digit-order captcha snippets in content.js.
-      - **D3a resolution-API fallback — still undecided; the developer asked for detail
-        before choosing.** Summary given in chat 2026-09-07: a resolver API takes the
-        shortlink URL/ID, solves the server-side gate on someone else's infrastructure, and
-        returns the destination — the only realistic way to cover fully server-locked sites,
-        but it discloses the destination to a third party, adds an availability/trust
-        dependency, and is the most ToS-fragile pattern. If adopted, mirror the audio-assist
-        model: **off by default, user-supplied endpoint, zero calls unless opted in.**
-        (Decision pending — do not implement without an explicit go.)
+      - **D3a resolution-API fallback — RESOLVED: DROPPED (2026-09-07).** After a detailed
+        walkthrough of the pattern (a resolver API takes the shortlink URL/ID, solves the
+        server-side gate on someone else's infrastructure/browser-farm, and returns the
+        destination), the developer decided the trade is not worth it for a browser
+        extension: the third party would see every stuck link AND its destination, the
+        feature depends on their uptime/pricing/honesty, and it is the most ToS-fragile
+        bypass pattern ("too much hassle and too big"). Server-locked sites (work.ink-style
+        server clocks, offerwall confirmation callbacks, server-validated captchas) are
+        therefore **out of scope permanently** — the C1 answer for those is the honest "this
+        gate can't be bypassed locally". Do not re-pitch unless the developer asks; if that
+        ever changes, the agreed shape was: off by default, user-supplied endpoint, visible
+        third-party warning, per-domain opt-in.
 - D4. B1 (donate) stays on hold until coverage is visibly larger. *(Coverage grew ~38% this
       pass; still holding per instruction.)*
 
@@ -376,6 +380,12 @@ repo is allowed to lag slightly behind.
   developer's Chrome):** the live-site half of §3.1 — unpacked load, real-site skips
   (try a horoscop-cluster flow + indobo.com for the new engine), DevTools network check,
   popup render at v2.2.0. **D3 question put to the developer.**
+- **2026-09-07 (7th pass, part 3 — D3a closed)** — Developer reviewed the resolver-API
+  trade-offs and **dropped D3a permanently** (third-party link exposure, service
+  dependency, ToS fragility — "too much hassle and too big"). Server-locked sites are out
+  of scope; no code changes (the feature was never implemented). Remaining queue: the
+  developer's live-site §3.1 pass on the newly shipped engines, then D3c (stealth/captcha
+  dedupe) per the approved order, with host-porting as the fallback.
 - **2026-09-07 (7th pass, part 2 — D3b audio assist shipped, D3 decisions logged)** —
   Implemented the developer-approved **manual-first reCAPTCHA audio assist**: overlay
   "Try audio assist" button (wpsafelink-button engine, only while an unsolved captcha is

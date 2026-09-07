@@ -585,6 +585,105 @@ check(
   );
 }
 
+/* ------------------------------------------------------------------ *
+ *  Scenario 6: exeio split — shared stealth + DOM extras              *
+ * ------------------------------------------------------------------ */
+
+{
+  // The ADBLOCK_BYPASS request for an exeio tab must inject BOTH scripts.
+  await dispatch(
+    { type: "EXEIO_ADBLOCK_BYPASS" },
+    { tab: { id: 91, url: "https://exe.io/short" }, frameId: 0 },
+  );
+  await new Promise((r) => setTimeout(r, 120));
+  const exeioInjections = injectionLog.filter((i) => i.target?.tabId === 91);
+  check(
+    exeioInjections.length === 2,
+    `exeio: stealth + extras both injected (${exeioInjections.length} scripts)`,
+  );
+  check(
+    exeioInjections.some((i) => i.func?.name === "swStealth") &&
+      exeioInjections.some((i) => i.func?.name === "swExeioExtras"),
+    "exeio: swStealth and swExeioExtras are the injected pair",
+  );
+  check(
+    JSON.stringify(exeioInjections.find((i) => i.func?.name === "swStealth")?.args?.[0]).includes("netpub"),
+    "exeio: stealth gets exeio's extended ad-domain pattern",
+  );
+
+  // The shipped swExeioExtras must evaluate and run against an empty DOM.
+  {
+    const m = src.match(/function swExeioExtras\(\) \{[\s\S]*?\n\}/);
+    check(!!m, "swExeioExtras function found in background.js");
+    if (m) {
+      const vm = await import("node:vm");
+      const el = () => ({
+        nodeType: 1,
+        children: [],
+        classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
+        style: {},
+        setAttribute() {},
+        getAttribute: () => null,
+        appendChild() {},
+        replaceWith() {},
+        insertBefore() {},
+        querySelector: () => null,
+        querySelectorAll: () => [],
+        addEventListener() {},
+        removeEventListener() {},
+        disabled: false,
+      });
+      const doc = el();
+      doc.documentElement = el();
+      doc.head = el();
+      doc.body = el();
+      doc.readyState = "complete";
+      doc.getElementById = () => null;
+      doc.querySelector = () => null;
+      doc.querySelectorAll = () => [];
+      doc.createElement = () => el();
+      doc.addEventListener = () => {};
+      const sandbox = {
+        window: null,
+        document: doc,
+        MutationObserver: class {
+          observe() {}
+          disconnect() {}
+        },
+        HTMLButtonElement: class {},
+        queueMicrotask: (fn) => fn(),
+        setTimeout: (fn) => fn(),
+        app_vars: { turnstile_site_key: "sitekey-x", force_disable_adblock: "1" },
+      };
+      sandbox.window = sandbox;
+      let turnstileRenderAttempts = 0;
+      sandbox.turnstile = {
+        render: () => {
+          turnstileRenderAttempts += 1;
+          return {};
+        },
+      };
+      vm.createContext(sandbox);
+      let threw = null;
+      try {
+        vm.runInContext(m[0], sandbox);
+        vm.runInContext("swExeioExtras(); swExeioExtras();", sandbox); // twice: guard must hold
+      } catch (e) {
+        threw = e;
+      }
+      check(threw === null, `swExeioExtras evaluates and runs on an empty DOM${threw ? " — " + threw.message : ""}`);
+      check(
+        vm.runInContext("window.__swExeioExtras", sandbox) === true,
+        "swExeioExtras: window guard set (second call was a no-op)",
+      );
+      check(
+        turnstileRenderAttempts === 0,
+        "swExeioExtras: turnstile render skipped when #captchaShortlink is absent",
+      );
+    }
+  }
+}
+
 console.log(
   failures === 0
     ? "\nsmoke: OK — background.js loads cleanly and is licensing-free."

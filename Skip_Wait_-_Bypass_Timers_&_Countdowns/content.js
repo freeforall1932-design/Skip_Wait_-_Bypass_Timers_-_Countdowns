@@ -79,6 +79,18 @@
             })
         })
     }
+    /*
+     * Shared per-family constants (deduped from dozens of per-flow copies —
+     * D3c): the promise delay helper, the Turnstile iframe selectors, the
+     * Turnstile token input selector, and the "Confirm you're human" note.
+     */
+    var swDelay = swDelay,
+        swTnFrames = swTnFrames,
+        swTnToken = swTnToken,
+        swTnNote = {
+            lead: "Confirm you\u2019re human.",
+            detail: "Complete the Turnstile check below. We\u2019ll continue automatically when it\u2019s done."
+        };
     var st = ["gdrive", "mediafire", "dropbox", "onedrive", "pixeldrain", "gofile", "usersdrive", "torrent", "cloud", "box", "vikingfile"],
         ct = "oke-link",
         lt = "downloadButtons",
@@ -663,7 +675,7 @@
         Ye = !1,
         Ge = !1,
         Ve = !1,
-        Ze = t => new Promise(e => setTimeout(e, t)),
+        Ze = swDelay,
         Je = t => /^https?:\/\//i.test(t),
         Xe = () => {
             chrome.runtime.sendMessage({
@@ -1281,7 +1293,7 @@
         },
         ao = null,
         so = !1,
-        co = t => new Promise(e => setTimeout(e, t)),
+        co = swDelay,
         lo = (t = "Getting things ready…") => {
             const e = kt(oo);
             if (document.documentElement.classList.add(e), !document.getElementById(ro)) {
@@ -1416,10 +1428,7 @@
             lead: "Hang tight — unlocking your link.",
             detail: "Skip Wait is handling JobSheel for you."
         },
-        $o = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        };
+        $o = swTnNote;
 
     function Ao() {
         chrome.runtime.sendMessage({
@@ -1446,9 +1455,9 @@
     var _o = "skip-wait-jobsheel-baby",
         Mo = "skip-wait-jobsheel-baby-gate",
         Oo = "data-sw-jobsheel-pin",
-        Ro = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Ro = swTnFrames,
         Po = qo(_o, "skip-wait-jobsheel-baby-boot"),
-        Do = t => new Promise(e => setTimeout(e, t));
+        Do = swDelay;
 
     function No() {
         for (const t of document.querySelectorAll('[name="cf-turnstile-response"]')) {
@@ -1516,7 +1525,7 @@
         n && (Wo = !0, Uo("Skipping JobSheel gate…"), HTMLFormElement.prototype.submit.call(n))
     }
     var zo = qo("skip-wait-jobsheel-babylinks", "skip-wait-jobsheel-babylinks-boot"),
-        jo = t => new Promise(e => setTimeout(e, t)),
+        jo = swDelay,
         Yo = !1;
 
     function Go() {
@@ -1722,7 +1731,7 @@
             lead: "Unlocking your link",
             detail: "Skip Wait is completing the required wait, then opening your unlock page."
         },
-        wr = t => new Promise(e => setTimeout(e, t)),
+        wr = swDelay,
         gr = t => {
             const e = document.cookie.match(new RegExp(`(?:^|;\\s*)${t}=([^;]*)`));
             return e?.[1] ? decodeURIComponent(e[1]) : null
@@ -1813,18 +1822,15 @@
     var Lr = "skip-wait-gplinks-links-go",
         Cr = "skip-wait-gplinks-links-go-boot",
         Ir = "captchaLinksGo",
-        Tr = '[name="cf-turnstile-response"]',
-        $r = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Tr = swTnToken,
+        $r = swTnFrames,
         Ar = "drive.olamovies.download",
         qr = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        _r = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        Mr = t => new Promise(e => setTimeout(e, t)),
+        _r = swTnNote,
+        Mr = swDelay,
         Or = t => t.startsWith("http://") || t.startsWith("https://"),
         Rr = (t = document) => !!t.querySelector('#go-link,form[action*="/links/go"],a.get-link'),
         Pr = () => /[?&](?:pid|vid)=/.test(location.search) || Rr(),
@@ -2131,7 +2137,7 @@
         },
         mi = null,
         pi = !1,
-        hi = t => new Promise(e => setTimeout(e, t)),
+        hi = swDelay,
         fi = () => {
             const t = kt(li);
             if (document.documentElement.classList.add(t), document.getElementById(ui)) return;
@@ -2344,7 +2350,7 @@
         Vi = !1,
         Zi = !1,
         Ji = !1,
-        Xi = t => new Promise(e => setTimeout(e, t)),
+        Xi = swDelay,
         Ki = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2473,7 +2479,7 @@
         ha = !1,
         fa = !1,
         wa = !1,
-        ga = t => new Promise(e => setTimeout(e, t)),
+        ga = swDelay,
         ya = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2599,7 +2605,7 @@
         $a = null,
         Aa = !1,
         qa = !1,
-        _a = t => new Promise(e => setTimeout(e, t)),
+        _a = swDelay,
         Ma = () => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -2982,7 +2988,7 @@
         },
         Ys = null,
         Gs = !1,
-        Vs = t => new Promise(e => setTimeout(e, t)),
+        Vs = swDelay,
         Zs = (t = "Getting things ready…") => ((() => {
             const t = kt(Hs);
             if (document.documentElement.classList.add(t), document.getElementById(Fs)) return;
@@ -3166,12 +3172,9 @@
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        fc = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
-        wc = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        gc = '[name="cf-turnstile-response"]',
+        fc = swTnFrames,
+        wc = swTnNote,
+        gc = swTnToken,
         yc = ["#verificationForm", "#verificationFormm"],
         kc = null;
 
@@ -3301,15 +3304,12 @@
     var Ic = "skip-wait-fclc-mediator-overlay",
         Tc = 'input[name="fdata"]',
         $c = "#form12",
-        Ac = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Ac = swTnFrames,
         qc = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        _c = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        _c = swTnNote,
         Mc = null,
         Oc = null,
         Rc = null,
@@ -3528,7 +3528,7 @@
         dl = null,
         ml = !1,
         pl = !1,
-        hl = t => new Promise(e => setTimeout(e, t)),
+        hl = swDelay,
         fl = (t, e) => `Page ${t}/3 — ${e}`,
         wl = (t = "Getting ready…") => ((() => {
             const t = kt(al);
@@ -4950,7 +4950,7 @@
         },
         dp = null,
         mp = !1,
-        pp = t => new Promise(e => setTimeout(e, t)),
+        pp = swDelay,
         hp = () => new Promise(t => {
             chrome.runtime.sendMessage({
                 type: "INJECT_VISIBILITY_SPOOF"
@@ -5137,7 +5137,7 @@
     };
     var Cp = /^\/r\/[^/]+\/?$/i,
         Ip = /\bdata-destination=["'](https?:\/\/[^"']+)["']/i;
-    var Tp = t => new Promise(e => setTimeout(e, t)),
+    var Tp = swDelay,
         $p = () => {
             let t = "";
             for (let e = 0; e < 3; e++) t += crypto.randomUUID();
@@ -5560,7 +5560,7 @@
         }, fh = {
             lead: "Could not generate key",
             detail: "Refresh the page and try again."
-        }, wh = t => new Promise(e => setTimeout(e, t)), gh = (t, e) => {
+        }, wh = swDelay, gh = (t, e) => {
             t.setNote(hh), t.setStatus(""), t.setError(null);
             const n = t.turnstileMount;
             n.replaceChildren();
@@ -6068,7 +6068,7 @@
             lead: "Skipping the wait pages.",
             detail: "You don't need to tap anything on the page."
         },
-        Qf = t => new Promise(e => setTimeout(e, t)),
+        Qf = swDelay,
         tw = null,
         ew = !1,
         nw = !1,
@@ -6207,7 +6207,7 @@
     var qw = "skip-wait-olamovies-link-banner",
         _w = "sw-om-link-lock",
         Mw = "sw-om-link-lock-cta",
-        Ow = t => new Promise(e => setTimeout(e, t));
+        Ow = swDelay;
 
     function Rw(t, e) {
         const n = function() {
@@ -6715,19 +6715,16 @@
     var Pg = "skip-wait-shrtfly-mediator-overlay",
         Dg = "skip-wait-shrtfly-mediator-boot",
         Ng = "skip-wait-shrtfly-mediator-turnstile",
-        Bg = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        Bg = swTnFrames,
         Ug = new Set(["captcha", "progressbar", "countdown"]),
         Wg = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        Hg = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        Hg = swTnNote,
         Fg = null,
         zg = !1,
-        jg = t => new Promise(e => setTimeout(e, t)),
+        jg = swDelay,
         Yg = (t = Wg, e = "Getting things ready…") => {
             const n = kt(Pg);
             if (document.documentElement.classList.add(n), !document.getElementById(Dg)) {
@@ -6882,7 +6879,7 @@
         },
         gy = null,
         yy = !1,
-        ky = t => new Promise(e => setTimeout(e, t)),
+        ky = swDelay,
         by = (t = "Getting things ready…") => ((() => {
             const t = kt(py);
             if (document.documentElement.classList.add(t), document.getElementById(hy)) return;
@@ -7615,7 +7612,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         },
         Ok = null,
         Rk = !1,
-        Pk = t => new Promise(e => setTimeout(e, t)),
+        Pk = swDelay,
         Dk = (t = "Getting things ready…") => ((() => {
             const t = kt(Ak);
             if (document.documentElement.classList.add(t), document.getElementById(qk)) return;
@@ -8253,7 +8250,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         $v = null,
         Av = !1,
         qv = !1,
-        _v = t => new Promise(e => setTimeout(e, t)),
+        _v = swDelay,
         Mv = t => {
             const e = kt(Lv);
             if (document.documentElement.classList.add(e), !document.getElementById(Cv)) {
@@ -8400,7 +8397,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         }, Hv = "skip-wait-reshortfly", Fv = "skip-wait-reshortfly-boot", zv = /^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/, jv = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
-        }, Yv = null, Gv = !1, Vv = t => new Promise(e => setTimeout(e, t)), Zv = (t = "Getting things ready…") => ((() => {
+        }, Yv = null, Gv = !1, Vv = swDelay, Zv = (t = "Getting things ready…") => ((() => {
             const t = kt(Hv);
             if (document.documentElement.classList.add(t), document.getElementById(Fv)) return;
             const e = document.createElement("style");
@@ -8828,7 +8825,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         AE = ["#captcha-form", ".cf-turnstile", 'iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]', 'div[id^="cf-chl-widget"]'],
         qE = null,
         _E = !1,
-        ME = t => new Promise(e => setTimeout(e, t)),
+        ME = swDelay,
         OE = (t, e) => e ? {
             lead: t,
             detail: e
@@ -9542,7 +9539,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         gL = null,
         yL = null,
         kL = "",
-        bL = t => new Promise(e => setTimeout(e, t)),
+        bL = swDelay,
         vL = () => {
             const t = new Uint8Array(16);
             return crypto.getRandomValues(t), Array.from(t, t => t.toString(16).padStart(2, "0")).join("")
@@ -9650,7 +9647,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         OL = null,
         RL = "",
         PL = !1,
-        DL = t => new Promise(e => setTimeout(e, t)),
+        DL = swDelay,
         NL = () => {
             for (const t of document.querySelectorAll(".card-body p.fs-16.fw-semibold")) {
                 const e = t.textContent?.trim();
@@ -9821,20 +9818,17 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
     var oC = "skip-wait-cuty-overlay",
         rC = "skip-wait-cuty-boot",
         iC = "turnstile-container",
-        aC = '[name="cf-turnstile-response"]',
-        sC = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        aC = swTnToken,
+        sC = swTnFrames,
         cC = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        lC = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        lC = swTnNote,
         uC = "cuty blocked this visit because it detected your adblocker. Pause it for this site, then reload.",
         dC = null,
         mC = !1,
-        pC = t => new Promise(e => setTimeout(e, t)),
+        pC = swDelay,
         hC = (t = cC, e = "Getting things ready…") => ((() => {
             const t = kt(oC);
             if (document.documentElement.classList.add(t), document.getElementById(rC)) return;
@@ -10051,16 +10045,13 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
     var NC = "EXEIO_ADBLOCK_BYPASS",
         BC = "skip-wait-exeio-overlay",
         UC = "captchaShortlink",
-        WC = '[name="cf-turnstile-response"]',
-        HC = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        WC = swTnToken,
+        HC = swTnFrames,
         FC = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        zC = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
+        zC = swTnNote,
         jC = null,
         YC = !1,
         GC = t => {
@@ -10249,18 +10240,15 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
     }
     var iI = "skip-wait-lksfy-overlay",
         aI = "captchaLinksGo",
-        sI = ['iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]'],
+        sI = swTnFrames,
         cI = '#go-link, form[action*="/links/go"]',
         lI = /var\s+base64\s*=\s*['"]([^'"]+)['"]/,
         uI = {
             lead: "Hang tight — unlocking your link.",
             detail: "You don't need to tap anything on the page."
         },
-        dI = {
-            lead: "Confirm you’re human.",
-            detail: "Complete the Turnstile check below. We’ll continue automatically when it’s done."
-        },
-        mI = t => new Promise(e => setTimeout(e, t)),
+        dI = swTnNote,
+        mI = swDelay,
         pI = null,
         hI = !1,
         fI = () => {
@@ -10723,7 +10711,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         },
         yT = null,
         kT = !1,
-        bT = t => new Promise(e => setTimeout(e, t)),
+        bT = swDelay,
         vT = (t = "Getting things ready…") => ((() => {
             const t = kt(fT);
             if (document.documentElement.classList.add(t), document.getElementById(wT)) return;
@@ -10846,7 +10834,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         } : null
     }
     var BT = () => !_T() && Boolean(NT()),
-        UT = t => new Promise(e => setTimeout(e, t));
+        UT = swDelay;
     async function WT(t = {}) {
         const e = await async function(t) {
             for (let e = 0; e < 40; e++) {

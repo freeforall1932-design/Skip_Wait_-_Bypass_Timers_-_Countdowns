@@ -219,11 +219,24 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
         modern Buster solves on-device with a bundled ONNX model (transformers.js +
         onnxruntime + offscreen document), which is the natural v2 if we ever want
         automatic-by-default without an external service (big bundle, later decision).
-      - **D3c centralize stealth/captcha solvers — APPROVED as the next refactor**, but if it
-        hits a blocker, switch to porting more hosts first (developer's fallback order).
-        swStealth (background) already landed; remaining: merge exeio's extended stealth
-        variant into it (two-injection split: swStealth + exeio-extras) and dedupe the
-        per-site math/digit-order captcha snippets in content.js.
+      - **D3c centralize stealth/captcha solvers — DONE (2026-09-07, 8th pass), using only
+        pre-existing code as the developer required.** (a) **exeio's extended stealth merged
+        into the shared layer:** the per-site `_t` MAIN-world script was split — the
+        network/app_vars half is gone (shared `swStealth` now injected with exeio's longer
+        `exeioAdBlockRe`), and the DOM half (Turnstile auto-render into `#captchaShortlink` +
+        the disabled-button shape fixer) is the new `swExeioExtras`, injected right after
+        swStealth; the lazy app_vars trap was dropped from extras because swStealth installs
+        it eagerly (same effect). (b) **content.js constants deduped with initializer-only
+        swaps** (zero call-site changes): 4 new shared constants — `swDelay` (replaced 30
+        per-flow promise-delay arrows), `swTnFrames` (9 Turnstile iframe selector arrays),
+        `swTnToken` (5 `[name="cf-turnstile-response"]` consts), `swTnNote` (8 "Confirm
+        you're human" note objects) — 52 copies removed. (c) **Finding:** the backlog's
+        "per-site math/digit-order captcha solver copies" do **not exist** in this codebase
+        (the note described the userscript ecosystem; our flows never grew those copies) —
+        nothing to dedupe there, and a shared math solver should only be created when a
+        second site actually needs one. Smoke coverage: exeio double-injection assertions +
+        `swExeioExtras` executed in a fake DOM (guard, no-throw, turnstile-render gating);
+        verify-release 28/28 green.
       - **D3a resolution-API fallback — RESOLVED: DROPPED (2026-09-07).** After a detailed
         walkthrough of the pattern (a resolver API takes the shortlink URL/ID, solves the
         server-side gate on someone else's infrastructure/browser-farm, and returns the
@@ -398,6 +411,15 @@ repo is allowed to lag slightly behind.
   semantics + click wiring); `verify-release.mjs` 28/28 green. D3a explanation delivered,
   decision pending; D3c approved as the next refactor. **Still manual:** live reCAPTCHA
   audio run in Chrome (needs a real challenge + a configured STT endpoint).
+- **2026-09-07 (8th pass — D3c finished, data-free as required)** — exeio stealth merged
+  into the shared `swStealth` + new `swExeioExtras` (background), and content.js constants
+  deduped (`swDelay` ×30, `swTnFrames` ×9, `swTnToken` ×5, `swTnNote` ×8 — 52 initializer
+  swaps, no call-site changes). Confirmed the "math-captcha per-site copies" from the D3
+  note never existed in this codebase — nothing to dedupe. exeio smoke assertions + fake-DOM
+  execution added; 28/28 green. **Remaining D1 polish (optional, same data-free kind):**
+  extract the shared once-guard/DOM-ready/brand-note pattern used by the download-timer
+  MAIN-world functions (getmodsapk/apkvision/apkaward/fuzyapk/moddroid/modded-1…). The
+  substantive remaining work is live-site testing + host ports (needs external data).
 
 ### UI/UX review notes (final freeware popup)
 - Layout: one column, ~408px wide, `flex` gap 14px; header → hero card → footer.

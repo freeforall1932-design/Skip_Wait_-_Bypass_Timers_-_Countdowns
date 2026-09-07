@@ -1431,48 +1431,20 @@ var vt = e => {
     }
 };
 
-function _t() {
+/*
+ * exeio MAIN-world extras: auto-render the Turnstile widget into
+ * #captchaShortlink and repair the "button disabled" DOM shape the adblock
+ * bait produces. The network/app_vars stealth half is shared swStealth
+ * (injected separately with exeioAdBlockRe); this function is DOM-only.
+ */
+var exeioAdBlockRe = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i;
+
+function swExeioExtras() {
     const e = window;
-    if (e.__swExeioAdblock) return;
-    e.__swExeioAdblock = !0;
-    const t = /googlesyndication|doubleclick|pubmatic|taboola|adnxs|amazon-adsystem|adsbygoogle|adsboosters|netpub\.media|cleverwebserver|demand\.supply|portalfluently|protrafficinspector|sinisterblare|dampedvisored|llvpn|kettledroopingcontinuation|workdeadlinededicate|spendsdetachment|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|jsdelivr\.com|code\.jquery\.com|releases\.jquery\.com/i,
-        n = e => t.test(String(e ?? ""));
-    let r = null,
-        o = !1;
-    const a = XMLHttpRequest.prototype.open,
-        i = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function(e, t, n, r, o) {
-        return this.__swMethod = e, this.__swUrl = String(t), a.call(this, e, t, n ?? !0, r, o)
-    }, XMLHttpRequest.prototype.send = function(e) {
-        return n(this.__swUrl) && "HEAD" === String(this.__swMethod || "").toUpperCase() ? (Object.defineProperty(this, "status", {
-            configurable: !0,
-            get: () => 200
-        }), Object.defineProperty(this, "readyState", {
-            configurable: !0,
-            get: () => 4
-        }), Object.defineProperty(this, "responseText", {
-            configurable: !0,
-            get: () => ""
-        }), void queueMicrotask(() => {
-            this.onreadystatechange?.call(this, null), this.onload?.call(this, null)
-        })) : i.call(this, e)
-    };
-    const s = window.fetch.bind(window);
-    window.fetch = (e, t) => {
-        const r = "string" == typeof e ? e : e instanceof URL ? e.href : e.url,
-            o = (t?.method || ("string" == typeof e || e instanceof URL ? "GET" : e.method) || "GET").toUpperCase();
-        return n(r) && "HEAD" === o ? Promise.resolve(new Response(null, {
-            status: 200,
-            statusText: "OK"
-        })) : s(e, t)
-    };
-    const c = () => {
-            try {
-                const e = window.app_vars;
-                e && (e.force_disable_adblock = "0")
-            } catch {}
-        },
-        l = () => {
+    if (e.__swExeioExtras) return;
+    e.__swExeioExtras = !0;
+    let r = null;
+    const l = () => {
             const e = document.getElementById("captchaShortlink"),
                 t = window.turnstile,
                 n = window.app_vars?.turnstile_site_key;
@@ -1511,24 +1483,7 @@ function _t() {
                     return !!t && u(t)
                 }),
                 t = !!document.querySelector(".button.disabled.danger") && !document.querySelector("#before-captcha, #link-view, #go-link");
-            (e || t) && ((() => {
-                if (!o) {
-                    o = !0;
-                    try {
-                        let e = window.app_vars;
-                        Object.defineProperty(window, "app_vars", {
-                            configurable: !0,
-                            enumerable: !0,
-                            get: () => e,
-                            set: t => {
-                                e = t && "object" == typeof t ? t : e, e && (e.force_disable_adblock = "0")
-                            }
-                        }), e && (e.force_disable_adblock = "0")
-                    } catch {
-                        c()
-                    }
-                }
-            })(), c(), (() => {
+            (e || t) && (() => {
                 if (!r) return !1;
                 const e = document.createElement("div");
                 e.innerHTML = r;
@@ -1545,7 +1500,7 @@ function _t() {
                     return e?.nextSibling ? i.insertBefore(t, e.nextSibling) : i.appendChild(t), p(t), !0
                 }
                 return !1
-            })() && (queueMicrotask(l), window.setTimeout(l, 300)))
+            })() && (queueMicrotask(l), window.setTimeout(l, 300))
         };
     d(), m(), new MutationObserver(m).observe(document.documentElement, {
         childList: !0,
@@ -4270,13 +4225,13 @@ chrome.runtime.onMessage.addListener((e, t) => {
     url: n
 }) => {
     0 === e && (async () => {
-        await vt(n) && St(t, 0, _t)
+        await vt(n) && (St(t, 0, swStealth, [exeioAdBlockRe.source]), St(t, 0, swExeioExtras))
     })()
 }), chrome.runtime.onMessage.addListener((e, t, n) => {
     const r = t.tab?.id,
         o = t.frameId ?? 0;
     return "EXEIO_ADBLOCK_BYPASS" === e?.type ? ((async () => {
-        void 0 !== r && (t.tab?.url && !(await vt(t.tab.url)) || St(r, o, _t))
+        void 0 !== r && (t.tab?.url && !(await vt(t.tab.url)) || (St(r, o, swStealth, [exeioAdBlockRe.source]), St(r, o, swExeioExtras)))
     })(), !1) : "EXEIO_GO_UNLOCK" === e?.type && void 0 !== r && ((async () => {
         !t.tab?.url || await vt(t.tab.url) ? chrome.scripting.executeScript({
             target: {

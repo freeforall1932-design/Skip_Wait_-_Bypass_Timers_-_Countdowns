@@ -1,13 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Skip Wait</title>
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="./popup.js"></script>
+    <div class="pop">
+
+      <!-- Brand header -->
+      <header class="top">
+        <img class="logo" src="icon.png" alt="" width="46" height="46" />
+        <div class="titles">
+          <h1 class="name">Skip Wait</h1>
+          <span class="sub">Bypass timers &amp; download waits</span>
+        </div>
+        <span class="badge">Free &amp; Unlimited</span>
+      </header>
+
+      <!-- Hero -->
+      <section class="hero">
+        <p class="hero-title">No limits. No key. No account.</p>
+        <p class="hero-sub">Countdown timers and waiting pages are skipped automatically.</p>
+        <ul class="feats">
+          <li>Unlimited use</li>
+          <li>Clicks “Continue” when a real step needs it</li>
+          <li>Runs quietly in the background</li>
+        </ul>
+      </section>
+
+      <!-- Footer -->
+      <footer class="foot">
+        <span id="ver" class="ver">Skip Wait</span>
+        <span class="lic">Free &amp; open source · Apache-2.0</span>
+      </footer>
+
+    </div>
+    <script src="./popup.js"></script>
   </body>
 </html>

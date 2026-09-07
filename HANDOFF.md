@@ -99,7 +99,8 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
 - [ ] `git diff` on `background.js` / `content.js` shows **only** the intended swaps
       (`de/et` → `!0`, `Y/tt` → `({ok:!0})`, `le` → `{}`, survey block gone). Re-run
       `node --check background.js content.js popup.js` after **any** future edit to these
-      minified files.
+      files. NOTE (2026-09-07): both files are now shipped as readable beautified source;
+      additionally run `node tools/smoke-background.mjs` after any `background.js` edit.
 
 ### 3.2 Config notes (some resolved, some still open)
 - [x] **Remote hosts-update URL (RESOLVED — keep reusing).** In `background.js`, `i()` fetches
@@ -111,16 +112,15 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
 - [x] **Popup footer/branding (RESOLVED — minimal).** Popup surfaces **no** contact, **no** store
       link, **no** paid-edition identity — just a clean footer (version + Apache-2.0). README also
       carries no contact/email/store links. This keeps the two release accounts separate.
-- [ ] **Dead license code remains** in `background.js` / `content.js` (the EAS key parser,
-      `skipWaitLicense*` storage constants, `eas-x.com` strings). It is **unreachable** after the
-      gate swap and makes **zero** network calls, so it is harmless — but it is leftover bloat
-      and confusing to readers. Removing it from minified code is the risky part; prefer cleaning
-      it in a readable/unminified source if one is introduced (Work list A3).
+- [x] **Dead license code REMOVED (2026-09-07).** The EAS key parser, `skipWaitLicense*`
+      storage constants, `eas-x.com` strings, license alarms and watchers are deleted from
+      `background.js` and `content.js` (done from beautified readable source, which is now the
+      shipped format — see A3). `tools/smoke-background.mjs` proves zero licensing side-effects
+      even when legacy license data is seeded into storage.
 
 ### 3.3 Permissions / manifest hygiene (cleanup candidates — safe, low priority)
-- [ ] `permissions: ["alarms", ...]` — `alarms` were created only for license expiry. After the
-      gate swap no alarm is ever created, so the `alarms` permission is effectively unused and
-      could be dropped. Verify nothing else schedules an alarm before removing.
+- [x] `alarms` permission **dropped (2026-09-07)** — its only consumer was the removed license
+      scheduler; grep confirms zero `chrome.alarms` references remain.
 - [ ] `host_permissions: ["<all_urls>"]` is broad. Likely needed because bypass code runs across
       many domains via dynamic content scripts, so keep unless a scoped alternative is chosen.
 
@@ -131,8 +131,11 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
 **A. Decisions (mostly resolved this session)**
 - A1. **RESOLVED:** keep reusing the paid edition's host-data URL. (See 3.2.)
 - A2. **RESOLVED:** popup + README are minimal — no contact / store / paid identity. (See 3.2.)
-- A3. Still open: optionally clean the dead EAS/license code out of `background.js` + `content.js`
-      (best done from readable source, then re-minify).
+- A3. **RESOLVED (2026-09-07):** dead EAS/license code fully removed from `background.js` +
+      `content.js` (worked from beautified readable source, then shipped that readable source —
+      no re-minify). No `eas-x.com` references remain; `tools/smoke-background.mjs` asserts
+      zero licensing side-effects even with leftover license data in storage. The `alarms`
+      permission was dropped at the same time.
 
 **B. Feature / product (user has NOT decided; do not add without asking)**
 - B1. **Donate / Support** — the developer plans to add a donate option later (method/platform
@@ -144,11 +147,30 @@ verify nothing is missing, misaligned, or broken. Go through these one by one.
 **C. Robustness / maintenance**
 - C1. **"Doesn't work on some website"** — see Section 5. Capture the exact failing URLs the
       user reports, check the hostname is listed in `hosts.json`, and add/update flows.
-- C2. Consider an **end-user overrides** mechanism so a developer can add domains by editing a
-      local list rather than hardcoding flows (medium effort; improves the "site not covered"
-      pain point).
+- C2. **RESOLVED (2026-09-07):** end-user overrides shipped. The popup's "Site not covered?"
+      panel writes `skipWaitCustomHosts` to `chrome.storage.local`; `background.js` and
+      `content.js` merge it as a third host source (after bundled + remote), so a new domain
+      binds to an existing engine at runtime without a re-release. Effective on new page loads.
 - C3. Re-baseline on the developer's paid store edition from time to time to pick up new host
       flows, but keep this edition's paywall code stripped.
+
+**D. Coverage expansion (next, from the 2026-09-07 roadmap session)**
+- D1. **Consolidate the next engine families by DOM pattern** (same treatment as `glEngine`):
+      filecrypt pow-captcha, the reCAPTCHA/Turnstile-assisted unlockers (dlsurf, freedlink
+      hcaptcha, cuty, exeio, loot), WordPress-safelink blogs, and the download-timer sites.
+      Reuse the anygame/apkteal/ankergames React-fiber direct-download hack as the model of
+      "one generic engine, many hosts".
+- D2. **Port more flows** from the active userscripts — `nOneCode4u/bypass-shortlinks` (best
+      source of current recipes) and `adsbypasser`. Done so far: 35 AdLinkFly-style domains
+      added to `adlinkfly-links-go` (data-only). NOT done yet: the WPSafeLink-button plugin
+      sites (horoscop.info cluster, indobo.com, jobinmeghalaya.in…) need a dedicated
+      `wpsafelink-button` engine first; FastForward's `script.js` remains a reference library
+      only (do not switch base — it is unmaintained).
+- D3. **Optional upgrades (decide with the developer first):** resolution-API fallback for
+      hard server-side unlockers (bypass.city / adbypass.org pattern — weigh privacy/ToS);
+      reCAPTCHA audio-assist (dessant/buster style); centralize anti-adblock stealth +
+      math/digit-order captcha solvers instead of per-site copies.
+- D4. B1 (donate) stays on hold until coverage is visibly larger.
 
 ---
 
@@ -239,6 +261,24 @@ repo is allowed to lag slightly behind.
   unused assets (`icons/` folder, unused 500-weight woff2). Ran final code review (§2.4):
   all JS valid, manifest valid + references existing files only, popup classes/fonts match.
   **Next: load unpacked in `chrome://extensions` and run §3.1 checklist on real sites.**
+
+- **2026-09-07 (6th pass — coverage + consolidation roadmap)** — (1) **A3 done:** deleted all
+  dead EAS/license code from `background.js` + `content.js` (JWS verifier, lease/activation
+  storage, free-daily counter, license alarms/watchers) by working from beautified readable
+  source, then **shipped that readable source** (no re-minify). `alarms` permission dropped.
+  (2) **BIG WIN:** consolidated the ~5 duplicated AdLinkFly `links/go` resolver tails
+  (earnlinks, shrinkpe, liteshort, nitrolink) into ONE shared `glEngine` in `background.js`
+  (`field`/`goAction`/`counterSeconds`/`withReferer`/`postGo`); sfl's API client reuses
+  `withReferer`. Per-family quirks preserved. (3) **Ported 35 new shortener domains** from the
+  active `bypass-shortlinks` + `adsbypasser` userscripts into `adlinkfly-links-go` (data-only).
+  (4) **Custom-host override:** new `skipWaitCustomHosts` storage key merged as a third host
+  source (survives the remote refresh that clobbers `skipWaitHosts`) + a popup "Site not
+  covered?" panel — binds an unlisted domain to an existing engine at runtime, no re-release.
+  (5) Added **`tools/smoke-background.mjs`** — loads `background.js` in a mocked Chrome, asserts
+  it is licensing-free (even with seeded legacy license data) and functionally resolves links
+  through the consolidated engine + override. **All checks pass; run it after any
+  `background.js` edit.** **Next:** §3.1 live-site checklist; backlog D1–D4 (more engine
+  consolidation + flow ports).
 
 ### UI/UX review notes (final freeware popup)
 - Layout: one column, ~408px wide, `flex` gap 14px; header → hero card → footer.

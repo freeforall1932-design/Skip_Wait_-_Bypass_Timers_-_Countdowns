@@ -257,25 +257,44 @@
     ]
   },
   "reshortfly": {
-    "hosts": ["reshortfly.com"]
+    "hosts": [
+      "reshortfly.com"
+    ]
   },
   "rinku": {
-    "hosts": ["rinku.me", "rinku.pro", "7mb.io"]
+    "hosts": [
+      "rinku.me",
+      "rinku.pro",
+      "7mb.io"
+    ]
   },
   "prmovies": {
-    "hosts": ["prmovies.mba"]
+    "hosts": [
+      "prmovies.mba"
+    ]
   },
   "pling": {
-    "hosts": ["addons.videolan.org", "opendesktop.org", "store.kde.org"]
+    "hosts": [
+      "addons.videolan.org",
+      "opendesktop.org",
+      "store.kde.org"
+    ]
   },
   "playmods": {
-    "hosts": ["playmods.net"]
+    "hosts": [
+      "playmods.net"
+    ]
   },
   "pesktop": {
-    "hosts": ["pesktop.com"]
+    "hosts": [
+      "pesktop.com"
+    ]
   },
   "ouo": {
-    "hosts": ["ouo.press", "ouo.io"]
+    "hosts": [
+      "ouo.press",
+      "ouo.io"
+    ]
   },
   "onlinetools": {
     "hosts": [
@@ -293,58 +312,99 @@
     ]
   },
   "onhaxpk": {
-    "hosts": ["onhaxpk.net"]
+    "hosts": [
+      "onhaxpk.net"
+    ]
   },
   "olamovies-landing": {
-    "hosts": ["olamovies.dad", "olamovies.top"]
+    "hosts": [
+      "olamovies.dad",
+      "olamovies.top"
+    ]
   },
   "olamovies-link": {
-    "hosts": ["links.olamovies.mov"]
+    "hosts": [
+      "links.olamovies.mov"
+    ]
   },
   "oceanofgames": {
-    "hosts": ["oceanofgames.com", "oceansofgamess.com", "oceantogames.com"]
+    "hosts": [
+      "oceanofgames.com",
+      "oceansofgamess.com",
+      "oceantogames.com"
+    ]
   },
   "oceanofdmg": {
-    "hosts": ["oceanofdmg.com"]
+    "hosts": [
+      "oceanofdmg.com"
+    ]
   },
   "nitrolink": {
-    "hosts": ["nitro-link.com"]
+    "hosts": [
+      "nitro-link.com"
+    ]
   },
   "multiup": {
-    "hosts": ["multiup.io"]
+    "hosts": [
+      "multiup.io"
+    ]
   },
   "muhammadniaz": {
-    "hosts": ["muhammadniaz.link"]
+    "hosts": [
+      "muhammadniaz.link"
+    ]
   },
   "mp4upload": {
-    "hosts": ["mp4upload.com"]
+    "hosts": [
+      "mp4upload.com"
+    ]
   },
   "movies-mod": {
-    "hosts": ["episodes.modpro.blog", "links.modpro.blog", "leechpro.blog"]
+    "hosts": [
+      "episodes.modpro.blog",
+      "links.modpro.blog",
+      "leechpro.blog"
+    ]
   },
   "move2link-blog": {
-    "hosts": ["siendu.com"]
+    "hosts": [
+      "siendu.com"
+    ]
   },
   "move2link-go": {
-    "hosts": ["go.move2link.co"]
+    "hosts": [
+      "go.move2link.co"
+    ]
   },
   "mitly": {
-    "hosts": ["mitly.us"]
+    "hosts": [
+      "mitly.us"
+    ]
   },
   "mirrored": {
-    "hosts": ["mirrored.to"]
+    "hosts": [
+      "mirrored.to"
+    ]
   },
   "moddroid": {
-    "hosts": ["moddroid.com"]
+    "hosts": [
+      "moddroid.com"
+    ]
   },
   "modded-1": {
-    "hosts": ["modded-1.com"]
+    "hosts": [
+      "modded-1.com"
+    ]
   },
   "modsmaniac": {
-    "hosts": ["modsmaniac.com"]
+    "hosts": [
+      "modsmaniac.com"
+    ]
   },
   "mega4upload": {
-    "hosts": ["mega4upload.net"]
+    "hosts": [
+      "mega4upload.net"
+    ]
   },
   "lootlabs": {
     "hosts": [
@@ -368,43 +428,73 @@
     ]
   },
   "ll-safelink": {
-    "hosts": ["teknoasian.com"]
+    "hosts": [
+      "teknoasian.com"
+    ]
   },
   "ll-safelink-llac": {
-    "hosts": ["linegee.net"]
+    "hosts": [
+      "linegee.net"
+    ]
   },
   "lksfy": {
-    "hosts": ["lksfy.com", "linkshortify.com"]
+    "hosts": [
+      "lksfy.com",
+      "linkshortify.com"
+    ]
   },
   "lksfy-mediator": {
-    "hosts": ["recruitmentaim.in", "mahitiplus.com"]
+    "hosts": [
+      "recruitmentaim.in",
+      "mahitiplus.com"
+    ]
   },
   "liteshort": {
-    "hosts": ["liteshort.com", "link.liteshort.com"]
+    "hosts": [
+      "liteshort.com",
+      "link.liteshort.com"
+    ]
   },
   "liteapks": {
-    "hosts": ["liteapks.com"]
+    "hosts": [
+      "liteapks.com"
+    ]
   },
   "linkvertise": {
-    "hosts": ["linkvertise.com"]
+    "hosts": [
+      "linkvertise.com"
+    ]
   },
   "linkunlocker": {
-    "hosts": ["linkunlocker.com"]
+    "hosts": [
+      "linkunlocker.com"
+    ]
   },
   "linksterr": {
-    "hosts": ["linksterr.com"]
+    "hosts": [
+      "linksterr.com"
+    ]
   },
   "linknext": {
-    "hosts": ["linknext.io", "shorte.io"]
+    "hosts": [
+      "linknext.io",
+      "shorte.io"
+    ]
   },
   "linknext-mediator": {
-    "hosts": ["starkroboticsfrc.com"]
+    "hosts": [
+      "starkroboticsfrc.com"
+    ]
   },
   "linknext-blog": {
-    "hosts": ["randevuayir.com"]
+    "hosts": [
+      "randevuayir.com"
+    ]
   },
   "linkjust": {
-    "hosts": ["linkjust.com"]
+    "hosts": [
+      "linkjust.com"
+    ]
   },
   "link4sub": {
     "hosts": [
@@ -414,28 +504,44 @@
     ]
   },
   "linclik": {
-    "hosts": ["linclik.com"]
+    "hosts": [
+      "linclik.com"
+    ]
   },
   "latestmodapks": {
-    "hosts": ["latestmodapks.com"]
+    "hosts": [
+      "latestmodapks.com"
+    ]
   },
   "kotakanimeid": {
-    "hosts": ["kotakanimeid.link"]
+    "hosts": [
+      "kotakanimeid.link"
+    ]
   },
   "keyforge": {
-    "hosts": ["keyforge.win"]
+    "hosts": [
+      "keyforge.win"
+    ]
   },
   "jobsheel": {
-    "hosts": ["jobsheel.com"]
+    "hosts": [
+      "jobsheel.com"
+    ]
   },
   "jobsheel-babylinks": {
-    "hosts": ["go.babylinks.in"]
+    "hosts": [
+      "go.babylinks.in"
+    ]
   },
   "icutlink": {
-    "hosts": ["icutlink.com"]
+    "hosts": [
+      "icutlink.com"
+    ]
   },
   "icutlink-mediator": {
-    "hosts": ["toolskitpro.net"]
+    "hosts": [
+      "toolskitpro.net"
+    ]
   },
   "hdhub4u": {
     "hosts": [
@@ -474,97 +580,180 @@
     ]
   },
   "hdhub4u-hubcdn": {
-    "hosts": ["hubcdn.sbs", "hubcdn.fans"]
+    "hosts": [
+      "hubcdn.sbs",
+      "hubcdn.fans"
+    ]
   },
   "haxpc": {
-    "hosts": ["haxpc.net"]
+    "hosts": [
+      "haxpc.net"
+    ]
   },
   "gplinks": {
-    "hosts": ["gplinks.co", "gplinks.com"]
+    "hosts": [
+      "gplinks.co",
+      "gplinks.com"
+    ]
   },
   "gplinks-mediator": {
-    "hosts": ["rajcet.com", "skrresults.com"]
+    "hosts": [
+      "rajcet.com",
+      "skrresults.com"
+    ]
   },
   "goost": {
-    "hosts": ["goo.st"]
+    "hosts": [
+      "goo.st"
+    ]
   },
   "goost-mediator": {
-    "hosts": ["kreditexperte.online"]
+    "hosts": [
+      "kreditexperte.online"
+    ]
   },
   "genlink": {
-    "hosts": ["genlink.site", "rplinks.in"]
+    "hosts": [
+      "genlink.site",
+      "rplinks.in"
+    ]
   },
   "genlink-mediator": {
-    "hosts": ["jazbaat.in"]
+    "hosts": [
+      "jazbaat.in"
+    ]
   },
   "genlink-unlock": {
-    "hosts": ["crazymindhub.xyz"]
+    "hosts": [
+      "crazymindhub.xyz"
+    ]
   },
   "gapkmod": {
-    "hosts": ["gapkmod.net"]
+    "hosts": [
+      "gapkmod.net"
+    ]
   },
   "gamesnostalgia": {
-    "hosts": ["gamesnostalgia.com"]
+    "hosts": [
+      "gamesnostalgia.com"
+    ]
   },
   "getmodsapk": {
-    "hosts": ["getmodsapk.com"]
+    "hosts": [
+      "getmodsapk.com"
+    ]
   },
   "gaea-operations-lockr": {
-    "hosts": ["lockr.net", "lockr.so", "lockr.to"]
+    "hosts": [
+      "lockr.net",
+      "lockr.so",
+      "lockr.to"
+    ]
   },
   "flightsim": {
-    "hosts": ["flightsim.to"]
+    "hosts": [
+      "flightsim.to"
+    ]
   },
   "fuzyapk": {
-    "hosts": ["fuzyapk.com"]
+    "hosts": [
+      "fuzyapk.com"
+    ]
   },
   "finityrede": {
-    "hosts": ["finityrede.com"]
+    "hosts": [
+      "finityrede.com"
+    ]
   },
   "filespayouts": {
-    "hosts": ["filespayouts.com"]
+    "hosts": [
+      "filespayouts.com"
+    ]
   },
   "filepress": {
-    "hosts": ["filepress.baby"]
+    "hosts": [
+      "filepress.baby"
+    ]
   },
   "filehippo": {
-    "hosts": ["filehippo.com", "filehippo.de", "filehippo.jp", "filehippo.pl"]
+    "hosts": [
+      "filehippo.com",
+      "filehippo.de",
+      "filehippo.jp",
+      "filehippo.pl"
+    ]
   },
   "filecrypt": {
-    "hosts": ["filecrypt.cc", "filecrypt.to", "filecrypt.co"]
+    "hosts": [
+      "filecrypt.cc",
+      "filecrypt.to",
+      "filecrypt.co"
+    ]
   },
   "filecr": {
-    "hosts": ["filecr.com"]
+    "hosts": [
+      "filecr.com"
+    ]
   },
   "fclc": {
-    "hosts": ["fc-lc.xyz", "fc.lc", "oii.io"]
+    "hosts": [
+      "fc-lc.xyz",
+      "fc.lc",
+      "oii.io"
+    ]
   },
   "fclc-mediator": {
-    "hosts": ["jobzhub.store"]
+    "hosts": [
+      "jobzhub.store"
+    ]
   },
   "exeio": {
-    "hosts": ["exe.io", "exeygo.com"]
+    "hosts": [
+      "exe.io",
+      "exeygo.com"
+    ]
   },
   "earnlinks": {
-    "hosts": ["earnlinks.in", "linksgo.in"]
+    "hosts": [
+      "earnlinks.in",
+      "linksgo.in"
+    ]
   },
   "earn4link": {
-    "hosts": ["earn4link.in", "m.earn4link.in"]
+    "hosts": [
+      "earn4link.in",
+      "m.earn4link.in"
+    ]
   },
   "earn4link-mediator": {
-    "hosts": ["best-hosting.ffindia.in", "hosting.ffindia.in", "open2get.in"]
+    "hosts": [
+      "best-hosting.ffindia.in",
+      "hosting.ffindia.in",
+      "open2get.in"
+    ]
   },
   "dupload": {
-    "hosts": ["dupload.net"]
+    "hosts": [
+      "dupload.net"
+    ]
   },
   "freedlink": {
-    "hosts": ["frdl.by", "frdl.my", "frdl.is"]
+    "hosts": [
+      "frdl.by",
+      "frdl.my",
+      "frdl.is"
+    ]
   },
   "dlsurf": {
-    "hosts": ["dlsurf.com", "dl.surf"]
+    "hosts": [
+      "dlsurf.com",
+      "dl.surf"
+    ]
   },
   "droplink": {
-    "hosts": ["droplink.co"]
+    "hosts": [
+      "droplink.co"
+    ]
   },
   "devuploads-mediator": {
     "hosts": [
@@ -576,82 +765,189 @@
     ]
   },
   "cuty": {
-    "hosts": ["cuttty.com", "cuty.io"]
+    "hosts": [
+      "cuttty.com",
+      "cuty.io"
+    ]
   },
   "cutwin": {
-    "hosts": ["masrawytrend.com"]
+    "hosts": [
+      "masrawytrend.com"
+    ]
   },
   "cut4money": {
-    "hosts": ["adurl.io", "cut4money.com", "shr2.link"]
+    "hosts": [
+      "adurl.io",
+      "cut4money.com",
+      "shr2.link"
+    ]
   },
   "cut4money-mediator": {
-    "hosts": ["bigcarinsurance.com", "bitcotrade.net", "healthy4pepole.com"]
+    "hosts": [
+      "bigcarinsurance.com",
+      "bitcotrade.net",
+      "healthy4pepole.com"
+    ]
   },
   "cpmlink": {
-    "hosts": ["cpm.link", "cpmlink.pro"]
+    "hosts": [
+      "cpm.link",
+      "cpmlink.pro"
+    ]
   },
   "cpmlink-hop": {
-    "hosts": ["bildirim.online"]
+    "hosts": [
+      "bildirim.online"
+    ]
   },
   "cpmlink-net": {
-    "hosts": ["cpmlink.net"]
+    "hosts": [
+      "cpmlink.net"
+    ]
   },
   "clipi": {
-    "hosts": ["clipi.cc"]
+    "hosts": [
+      "clipi.cc"
+    ]
   },
   "cloverhub": {
-    "hosts": ["cloverhub.app"]
+    "hosts": [
+      "cloverhub.app"
+    ]
   },
   "cinefreak": {
-    "hosts": ["cinefreak.ca", "cinefreak.ch", "cinefreak.net", "cinefreak.top", "cinefreak.tv"]
+    "hosts": [
+      "cinefreak.ca",
+      "cinefreak.ch",
+      "cinefreak.net",
+      "cinefreak.top",
+      "cinefreak.tv"
+    ]
   },
   "bbmkts-subtounlock": {
-    "hosts": ["bbmkts.com"]
+    "hosts": [
+      "bbmkts.com"
+    ]
   },
   "bblink": {
-    "hosts": ["web.bbmkts.com"]
+    "hosts": [
+      "web.bbmkts.com"
+    ]
   },
   "bstshrt": {
-    "hosts": ["boostellar.com", "bstlar.com", "bstshrt.com"]
+    "hosts": [
+      "boostellar.com",
+      "bstlar.com",
+      "bstshrt.com"
+    ]
   },
   "boostylink": {
-    "hosts": ["boostylink.com"]
+    "hosts": [
+      "boostylink.com"
+    ]
   },
   "apunkagames": {
-    "hosts": ["akglinks.com", "apunkasoftware.net"]
+    "hosts": [
+      "akglinks.com",
+      "apunkasoftware.net"
+    ]
   },
   "apkaward": {
-    "hosts": ["apkaward.com"]
+    "hosts": [
+      "apkaward.com"
+    ]
   },
   "apkteal": {
-    "hosts": ["apkteal.com"]
+    "hosts": [
+      "apkteal.com"
+    ]
   },
   "apkvision": {
-    "hosts": ["apkvision.org"]
+    "hosts": [
+      "apkvision.org"
+    ]
   },
   "anygame": {
-    "hosts": ["anygame.net"]
+    "hosts": [
+      "anygame.net"
+    ]
   },
   "ankergames": {
-    "hosts": ["ankergames.net"]
+    "hosts": [
+      "ankergames.net"
+    ]
   },
   "an1": {
-    "hosts": ["an1.com"]
+    "hosts": [
+      "an1.com"
+    ]
   },
   "alpharede": {
-    "hosts": ["alpharede.com"]
+    "hosts": [
+      "alpharede.com"
+    ]
   },
   "adlinkfly-links-go": {
-    "hosts": ["go.zovo.ink", "linkjust.com", "pahe.plus", "shortnest.com"]
+    "hosts": [
+      "go.zovo.ink",
+      "linkjust.com",
+      "pahe.plus",
+      "shortnest.com",
+      "4hi.in",
+      "10short.com",
+      "animerigel.com",
+      "encurt4.com",
+      "encurtacash.com",
+      "finish.wlink.us",
+      "passivecryptos.xyz",
+      "fbol.top",
+      "kut.li",
+      "shortie.sbs",
+      "zippynest.online",
+      "faucetsatoshi.site",
+      "oii.si",
+      "ez4mods.com",
+      "sharedp.com",
+      "fastcars1.com",
+      "carbikenation.com",
+      "tech5s.co",
+      "a4a.site",
+      "rcccn.in",
+      "lopteapi.com",
+      "3link.com",
+      "web1s.com",
+      "vuotlinkvip.com",
+      "revly.click",
+      "clikern.com",
+      "kiddyshort.com",
+      "adsssy.com",
+      "link.whf.bz",
+      "shortex.in",
+      "easyshort.xyz",
+      "shorturlearn.xyz",
+      "2linkes.com",
+      "cutpaid.com",
+      "fir3.net"
+    ]
   },
   "shrinkpe": {
-    "hosts": ["aii.sh", "lnbz.la", "shrink.pe"]
+    "hosts": [
+      "aii.sh",
+      "lnbz.la",
+      "shrink.pe"
+    ]
   },
   "shrinkearn": {
-    "hosts": ["oii.la", "tpi.li"]
+    "hosts": [
+      "oii.la",
+      "tpi.li"
+    ]
   },
   "shrinkearn-mediator": {
-    "hosts": ["cloudhostt.com", "financeehelp.com"]
+    "hosts": [
+      "cloudhostt.com",
+      "financeehelp.com"
+    ]
   },
   "adsterra": {
     "hosts": [
@@ -660,39 +956,64 @@
     ]
   },
   "adfocus": {
-    "hosts": ["adfoc.us"]
+    "hosts": [
+      "adfoc.us"
+    ]
   },
   "oneshortlink": {
-    "hosts": ["1shortlink.com"]
+    "hosts": [
+      "1shortlink.com"
+    ]
   },
   "fourdownload": {
-    "hosts": ["4download.net"]
+    "hosts": [
+      "4download.net"
+    ]
   },
   "bitcotasks": {
-    "hosts": ["bitcotasks.com"]
+    "hosts": [
+      "bitcotasks.com"
+    ]
   },
   "cookiesceo": {
-    "hosts": ["cookiesceo.com"]
+    "hosts": [
+      "cookiesceo.com"
+    ]
   },
   "fastdl": {
-    "hosts": ["fastdl.zip"]
+    "hosts": [
+      "fastdl.zip"
+    ]
   },
   "kitokola": {
-    "hosts": ["kitokola.id"]
+    "hosts": [
+      "kitokola.id"
+    ]
   },
   "tinurlz-softinfo": {
-    "hosts": ["softinfo.blog", "tinurlz.com"]
+    "hosts": [
+      "softinfo.blog",
+      "tinurlz.com"
+    ]
   },
   "coomeet-iframe": {
-    "hosts": ["iframe.coomeet.com"]
+    "hosts": [
+      "iframe.coomeet.com"
+    ]
   },
   "workink": {
-    "hosts": ["work.ink"]
+    "hosts": [
+      "work.ink"
+    ]
   },
   "link4m": {
-    "hosts": ["link4m.co"]
+    "hosts": [
+      "link4m.co"
+    ]
   },
   "zifury": {
-    "hosts": ["zifury.com"]
+    "hosts": [
+      "zifury.com"
+    ]
   }
 }

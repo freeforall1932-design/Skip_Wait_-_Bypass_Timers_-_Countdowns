@@ -6,6 +6,9 @@ for you when a real confirmation is needed.
 
 **No license key. No account. No daily cap.** Everything is free and unlimited.
 
+**Current release:** synced with the developer’s 2026-09-09 update, including
+VexoLink, Movies4u and Molyn flows plus the Freedlink filename-route fix.
+
 ## Features
 
 - ⚡ Skips wait / countdown pages on supported URL shorteners and file hosts
@@ -25,8 +28,8 @@ for you when a real confirmation is needed.
 
 ## How it works
 
-The extension only acts on the **exact hostnames listed in `hosts.json`** (460+ hostnames
-across 171 flow types). When you land on a supported delay/wait page it either skips straight
+The extension only acts on the **exact hostnames listed in `hosts.json`** (480+ hostnames
+across 174 flow types). When you land on a supported delay/wait page it either skips straight
 to the destination or automates the remaining wait + Continue steps. If a site isn't matched,
 nothing runs — so coverage is by hostname list, not a blanket rule.
 
@@ -54,6 +57,7 @@ the chosen engine; it can't invent support for a brand-new layout.
 - The toolbar **popup** (`popup.html`) is a clean, minimal freeware UI with a version + license
   footer plus the custom-site override panel.
 - New domains are added to **`hosts.json`** and matched in `background.js` / `content.js`.
+- Version 2.4.0 follows the active source through commit `7602a26` (2026-09-09) while preserving this edition’s free, unlimited gate.
 - `tools/smoke-background.mjs` loads `background.js` in a mocked Chrome and asserts it is
   licensing-free and that the generic engine still resolves links end-to-end:
   `node tools/smoke-background.mjs`

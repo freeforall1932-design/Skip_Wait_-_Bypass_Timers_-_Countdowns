@@ -131,6 +131,17 @@ check(
   "content.js: EAS validator module fully deleted (no tt= validate remnant)",
   !/\btt\s*=\s*async\s*\(\)\s*=>/.test(ct)
 );
+check(
+  "upstream sync: Freedlink accepts every one-leaf file route",
+  ct.includes("Ib = /^\\/([A-Za-z0-9]+)\\/[^/]+$/i,")
+);
+check(
+  "upstream sync: VexoLink resolver and all three page-flow initializers ship",
+  bg.includes('const vexolinkSite = "vexolink";') &&
+    ct.includes("function initVexolink()") &&
+    ct.includes("function initMovies4u()") &&
+    ct.includes("function initMolyn()")
+);
 
 /* 5 ─ popup assets ----------------------------------------------------- */
 {

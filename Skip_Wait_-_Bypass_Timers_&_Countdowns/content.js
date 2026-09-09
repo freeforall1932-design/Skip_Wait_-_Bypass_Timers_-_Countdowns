@@ -7934,7 +7934,7 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
         }, Eb = "This file was deleted or is no longer available.", xb = null, Lb = !1, Cb = () => ({
             name: document.querySelector('form#my_form input[name="filename"]')?.value.trim() ?? "",
             size: document.querySelector('form#my_form input[name="size"]')?.value.trim() ?? ""
-        }), Ib = /^\/([A-Za-z0-9]+)\/.+\.html$/i, Tb = "#free-captcha", $b = '[name="h-captcha-response"], [name="g-recaptcha-response"]', Ab = ['iframe[src*="hcaptcha.com"]', 'iframe[src*="newassets.hcaptcha.com"]'], qb = "skip-wait-freedlink-overlay", _b = "skip-wait-freedlink-boot", Mb = (t, e = "") => e ? {
+        }), Ib = /^\/([A-Za-z0-9]+)\/[^/]+$/i, Tb = "#free-captcha", $b = '[name="h-captcha-response"], [name="g-recaptcha-response"]', Ab = ['iframe[src*="hcaptcha.com"]', 'iframe[src*="newassets.hcaptcha.com"]'], qb = "skip-wait-freedlink-overlay", _b = "skip-wait-freedlink-boot", Mb = (t, e = "") => e ? {
             lead: t || "Unlocking your file.",
             detail: e
         } : {
@@ -11733,6 +11733,273 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
             })
         }(t))
     }
+
+
+    /*
+     * Upstream sync (Skip Wait source v1.4.82, 7602a26): three local-only
+     * flows.  `ot()` is this freeware edition's always-allow hostname gate;
+     * these ports deliberately have no daily limit, key, or account check.
+     */
+    const vexolinkSite = "vexolink";
+    const vexolinkAliasRe = /^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/;
+    const vexolinkOverlayId = "skip-wait-vexolink-overlay";
+    let vexolinkUi = null;
+    let vexolinkPulseTimer = null;
+    let vexolinkPulseDots = 0;
+    let vexolinkBaseStatus = "";
+    let vexolinkCounting = !1;
+    let vexolinkDone = !1;
+
+    function vexolinkAliasFromPath(pathname) {
+        const [segment, ...rest] = pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+        return segment && 0 === rest.length && vexolinkAliasRe.test(segment) ? segment : null;
+    }
+
+    function vexolinkEnsureUi() {
+        return vexolinkUi || (vexolinkUi = $t({
+            id: vexolinkOverlayId,
+            brand: "Skip Wait",
+            note: {
+                lead: "Hang tight — unlocking your link.",
+                detail: "Skip Wait is working. You don’t need to tap anything."
+            },
+            status: "Opening VexoLink",
+            countdownLabel: "Your link opens in"
+        }));
+    }
+
+    function vexolinkStopPulse() {
+        null != vexolinkPulseTimer && (clearInterval(vexolinkPulseTimer), vexolinkPulseTimer = null);
+    }
+
+    function vexolinkPaintProgress(progress) {
+        const ui = vexolinkEnsureUi();
+        vexolinkBaseStatus = progress.status.replace(/\.+$/, "");
+        ui.setNote({
+            lead: progress.lead,
+            detail: progress.detail
+        });
+        if ("number" === typeof progress.waitEndTs && progress.waitEndTs > Date.now()) return vexolinkCounting = !0, vexolinkStopPulse(), ui.setStatus(vexolinkBaseStatus), ui.startCountdown(progress.waitEndTs), ui;
+        vexolinkCounting = !1, ui.hideCountdown(), vexolinkPulseDots = 0, ui.setStatus(`${vexolinkBaseStatus}.`), null == vexolinkPulseTimer && (vexolinkPulseTimer = window.setInterval(() => {
+            vexolinkCounting || !vexolinkUi || (vexolinkPulseDots = (vexolinkPulseDots + 1) % 3, vexolinkUi.setStatus(`${vexolinkBaseStatus}${".".repeat(vexolinkPulseDots + 1)}`));
+        }, 450)), ui;
+    }
+
+    function vexolinkShowError(status) {
+        vexolinkCounting = !0, vexolinkStopPulse();
+        const ui = vexolinkEnsureUi();
+        return ui.hideCountdown(), ui.setNote({
+            lead: "Something went wrong.",
+            detail: "Reload this page and try again."
+        }), ui.setStatus(status), ui;
+    }
+
+    function vexolinkRequestResolve(pageUrl) {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                type: "VEXOLINK_RESOLVE",
+                pageUrl
+            }, response => {
+                chrome.runtime.lastError || !response?.ok || !response.dest ? reject(new Error("resolve")) : resolve(response.dest);
+            });
+        });
+    }
+
+    function vexolinkOpenDestination(url) {
+        return new Promise(resolve => {
+            chrome.runtime.sendMessage({
+                type: "VEXOLINK_OPEN_DEST",
+                url
+            }, ok => {
+                resolve(!chrome.runtime.lastError && !0 === ok);
+            });
+        });
+    }
+
+    function vexolinkBindProgress() {
+        const onProgress = message => {
+            if ("VEXOLINK_PROGRESS" !== message?.type || "string" !== typeof message.lead || "string" !== typeof message.detail || "string" !== typeof message.status) return;
+            vexolinkPaintProgress({
+                lead: message.lead,
+                detail: message.detail,
+                status: message.status,
+                ..."number" === typeof message.waitEndTs ? {
+                    waitEndTs: message.waitEndTs
+                } : {}
+            });
+        };
+        return chrome.runtime.onMessage.addListener(onProgress), () => chrome.runtime.onMessage.removeListener(onProgress);
+    }
+
+    async function vexolinkRun() {
+        if (vexolinkDone) return;
+        vexolinkDone = !0;
+        const unbind = vexolinkBindProgress();
+        try {
+            vexolinkPaintProgress({
+                lead: "Hang tight — unlocking your link.",
+                detail: "Skip Wait is working. You don’t need to tap anything.",
+                status: "Opening VexoLink"
+            });
+            const destination = await vexolinkRequestResolve(location.href);
+            if (!(await vexolinkOpenDestination(destination))) return vexolinkDone = !1, void vexolinkShowError("Couldn’t open the destination. Reload and try again.");
+        } catch {
+            vexolinkDone = !1, vexolinkShowError("Couldn’t finish this short link. Reload and try again.");
+        } finally {
+            unbind();
+        }
+    }
+
+    function initVexolink() {
+        window === window.top && vexolinkAliasFromPath(location.pathname) && ot(vexolinkSite).then(allowed => {
+            allowed && vexolinkRun();
+        });
+    }
+
+    const movies4uSite = "movies4u";
+    const movies4uOverlayId = "skip-wait-movies4u-overlay";
+    let movies4uUi = null;
+    let movies4uPulse = null;
+
+    function movies4uLatestReleasesFromHtml(html, pageHost) {
+        for (const match of html.matchAll(/<a\b[^>]*>/gi)) {
+            const tag = match[0];
+            if (!/\bcta-btn\b/i.test(tag) || !/\bbtn-1\b/i.test(tag)) continue;
+            const href = tag.match(/\bhref\s*=\s*["'](https?:\/\/[^"'>\s]+)["']/i)?.[1]?.trim();
+            if (!href) continue;
+            try {
+                const url = new URL(href);
+                if (url.hostname !== pageHost) return url.href;
+            } catch {}
+        }
+        return null;
+    }
+
+    async function movies4uResolveLatestReleases() {
+        const pageHost = location.hostname;
+        const response = await fetch(`${location.origin}/`, {
+            cache: "no-store",
+            credentials: "same-origin"
+        }).catch(() => null);
+        if (response?.ok) {
+            const destination = movies4uLatestReleasesFromHtml(await response.text(), pageHost);
+            if (destination) return destination;
+        }
+        return movies4uLatestReleasesFromHtml(document.documentElement.innerHTML, pageHost);
+    }
+
+    function movies4uEnsureUi(status) {
+        return movies4uUi ? (movies4uUi.setNote({
+            lead: "Opening Latest Releases",
+            detail: "Skip Wait is reading the landing source."
+        }), movies4uUi.setStatus(status), movies4uUi.setError(null), movies4uUi) : movies4uUi = $t({
+            id: movies4uOverlayId,
+            brand: "Skip Wait",
+            note: {
+                lead: "Opening Latest Releases",
+                detail: "Skip Wait is reading the landing source."
+            },
+            status
+        });
+    }
+
+    async function movies4uRun() {
+        const ui = movies4uEnsureUi("Reading landing source");
+        let dots = 0;
+        const paint = () => ui.setNote({
+            lead: `Opening Latest Releases${".".repeat(dots + 1)}`,
+            detail: "Skip Wait is reading the landing source."
+        });
+        paint(), null == movies4uPulse && (movies4uPulse = window.setInterval(() => {
+            dots = (dots + 1) % 3, paint();
+        }, 450));
+        const destination = await movies4uResolveLatestReleases().catch(() => null);
+        null != movies4uPulse && (clearInterval(movies4uPulse), movies4uPulse = null);
+        destination ? (ui.setNote({
+            lead: "Opening Latest Releases",
+            detail: "Skip Wait is reading the landing source."
+        }), ui.setStatus("Opening Latest Releases"), location.replace(destination)) : (ui.setNote({
+            lead: "Could not open Latest Releases",
+            detail: "Reload and try again."
+        }), ui.setStatus(""), ui.setError("Latest Releases link missing from landing source."));
+    }
+
+    function initMovies4u() {
+        window === window.top && ot(movies4uSite).then(allowed => {
+            allowed && it(() => {
+                movies4uEnsureUi("Reading landing source"), movies4uRun();
+            });
+        });
+    }
+
+    const molynSite = "molyn";
+    const molynOverlayId = "skip-wait-molyn-overlay";
+    const molynPathRe = /^\/(keysystem|finishline|fl|cp\d+)$/;
+    const molynPastebinFallback = "https://pastebin.com/raw/SfhHjBQ1";
+
+    async function molynFetchKey() {
+        const response = await fetch(`${location.origin}/api/keys/fetch-key`, {
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                Accept: "application/json"
+            }
+        });
+        if (!response.ok) return null;
+        const key = (await response.json()).key;
+        return "string" === typeof key && key.trim() ? key.trim() : null;
+    }
+
+    function molynShowKey(ui, key) {
+        ui.setNote({
+            lead: "Your key is ready",
+            detail: "Copy it below and paste into the MOLYN hub."
+        }), ui.setStatus(""), ui.setError(null), ui.turnstileMount.replaceChildren();
+        const code = document.createElement("code");
+        code.textContent = key, code.style.cssText = "display:block;margin-top:4px;padding:14px 16px;border-radius:10px;background:rgba(0,0,0,.35);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;line-height:1.45;color:#e2e8f0;word-break:break-all;user-select:text;-webkit-user-select:text";
+        const button = document.createElement("button");
+        button.type = "button", button.className = yt.action, button.textContent = "Copy key", button.style.border = "0", button.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(key), button.textContent = "Copied!";
+            } catch {
+                button.textContent = "Copy failed";
+            }
+            window.setTimeout(() => {
+                button.textContent = "Copy key";
+            }, 2e3);
+        }, ui.turnstileMount.append(code, button);
+    }
+
+    async function molynRun(ui) {
+        ui.setNote({
+            lead: "Skipping Linkvertise…",
+            detail: "Skip Wait is fetching your MOLYN key."
+        }), ui.setStatus("Fetching key");
+        const key = await molynFetchKey().catch(() => null);
+        key ? molynShowKey(ui, key) : (ui.setNote({
+            lead: "Key unavailable",
+            detail: "Opening the manual Pastebin fallback."
+        }), ui.setStatus("Redirecting…"), location.replace(molynPastebinFallback));
+    }
+
+    function initMolyn() {
+        if (window !== window.top) return;
+        const path = location.pathname.replace(/\/+$/, "") || "/";
+        molynPathRe.test(path) && ot(molynSite).then(allowed => {
+            if (!allowed) return;
+            const ui = $t({
+                id: molynOverlayId,
+                brand: "Skip Wait",
+                note: {
+                    lead: "Skipping Linkvertise…",
+                    detail: "Skip Wait is fetching your MOLYN key."
+                },
+                status: "Fetching key"
+            });
+            molynRun(ui);
+        });
+    }
+
     var vq = [function() {
             ot("storyline-lms").then(t => {
                 t && it(() => {
@@ -14517,6 +14784,12 @@ const human = document.querySelector(".wpsafelink-button, #wpsafelinkhuman, #wps
                     }, !0)
                 })
             })
+        }, function() {
+            initVexolink();
+        }, function() {
+            initMovies4u();
+        }, function() {
+            initMolyn();
         }],
         Sq = "undefined" != typeof chrome && !!chrome.runtime?.id;
     !async function() {

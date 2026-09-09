@@ -2,6 +2,34 @@
 
 All notable changes to the **freeware edition** of Skip Wait.
 
+## [2.4.0] — 2026-09-09
+Upstream flow sync, retained as a free and unlimited freeware release.
+
+### Added
+- **VexoLink** (`vexo-link.com`) — holds the initial redirect, follows the
+  ViewArticleGate referer handoff, resolves the Get Link form, then opens the
+  verified HTTP(S) destination in the originating tab.
+- **Movies4u** (`1movies4u.cc`) — reads the landing page’s external “Latest
+  Releases” handoff and opens it with an in-page progress overlay.
+- **Molyn** (`molyn.top`) — fetches the local key endpoint on supported key
+  paths and displays a copyable key in the overlay, with the upstream manual
+  fallback when the endpoint is unavailable.
+- Targeted smoke coverage for VexoLink’s redirect guard, referer hop and
+  signed form POST, plus page-level coverage for VexoLink, Movies4u and Molyn.
+
+### Fixed
+- **Freedlink** file pages now match any single filename leaf rather than only
+  names ending in `.html`, matching the current upstream route behavior.
+
+### Compatibility / licensing
+- Ported from the developer-maintained active source at commit `7602a26`
+  (version 1.4.82) and re-applied this project’s always-allow freeware gate:
+  no account, license key, daily counter, EAS request or alarm was introduced.
+- Reviewed `murtaza460786/skip-wait-extension` as a comparable project only.
+  Its CC BY-NC-SA 4.0 license is incompatible with this Apache-2.0 project, so
+  no code or host data was copied from it. Its public host map was also a
+  subset of the curated coverage already shipped here.
+
 ## [2.3.0] — 2026-09-07
 Coverage ports, UI-review fixes, and the D3c centralization pass.
 

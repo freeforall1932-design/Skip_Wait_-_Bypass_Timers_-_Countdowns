@@ -9,7 +9,8 @@
  *   3. builds the hosts-based DNR redirect/modify rules,
  *   4. NEVER contacts the old EAS licensing server (eas-x.com),
  *   5. never creates license alarms, never reloads tabs/extensions
- *      — even when fake legacy license data is present in storage.
+ *      — even when fake legacy license data is present in storage,
+ *   6. resolves the synced VexoLink two-hop Get Link flow end-to-end.
  *
  * Usage:
  *   node tools/smoke-background.mjs [path/to/background.js]
@@ -131,6 +132,7 @@ const real = {
     onAlarm: { addListener: (fn) => listeners.alarm.push(fn) },
   },
   tabs: {
+    TAB_ID_NONE: -1,
     query: async () => [],
     update: async () => ({}),
     sendMessage: async (id, msg) => {
@@ -366,6 +368,31 @@ scriptFetch((url, method) => method === "POST" && url === "https://custom-earn.e
 }));
 const customResp = await dispatch({ type: "EARNLINKS_RESOLVE", unlockUrl: "https://custom-earn.example/abcd1234" });
 
+/* Scenario 5: VexoLink — the upstream flow must hold the initial redirect,
+   follow its ViewArticleGate referer hop, and POST the /links/go form. */
+let vexolinkEntryFetches = 0;
+const vexolinkPosts = [];
+scriptFetch(
+  (url, method) => method === "GET" && url === "https://vexo-link.com/Abcd123",
+  () => {
+    vexolinkEntryFetches += 1;
+    return vexolinkEntryFetches === 1
+      ? '<script>ViewArticleGate = {"nextUrls":["https://article.example/read"]};</script>'
+      : GO_FORM();
+  },
+);
+scriptFetch(
+  (url, method) => method === "POST" && url === "https://vexo-link.com/links/go",
+  (url, method, init) => {
+    vexolinkPosts.push({ url, body: String(init.body) });
+    return { status: "success", url: "https://destination.example/vexolink" };
+  },
+);
+const vexolinkResp = await dispatch(
+  { type: "VEXOLINK_RESOLVE", pageUrl: "https://vexo-link.com/Abcd123" },
+  { tab: { id: 64, url: "https://vexo-link.com/Abcd123" } },
+);
+
 /* ------------------------------------------------------------------ *
  *  Assertions                                                         *
  * ------------------------------------------------------------------ */
@@ -427,8 +454,30 @@ check(
   `custom-host override binds a new domain to the engine at runtime (got ${JSON.stringify(customResp)})`,
 );
 
+const vexolinkLocationGuard = rules.find((r) => r.id === 918810);
+check(
+  vexolinkLocationGuard?.action?.responseHeaders?.some(
+    (h) => h.header === "Location" && h.operation === "remove",
+  ) && vexolinkLocationGuard?.condition?.requestDomains?.includes("vexo-link.com"),
+  "VexoLink: main-frame Location redirect guard is installed for its host",
+);
+check(
+  vexolinkResp?.ok === true && vexolinkResp?.dest === "https://destination.example/vexolink",
+  `VexoLink: resolves ViewArticleGate and returns its destination (got ${JSON.stringify(vexolinkResp)})`,
+);
+check(
+  vexolinkEntryFetches === 2 && vexolinkPosts.length === 1 &&
+    vexolinkPosts[0].body.includes("ad_form_data=ad-data-123") &&
+    vexolinkPosts[0].body.includes("_csrfToken=csrf-abc"),
+  "VexoLink: refetches the Get Link shell and POSTs its signed form once",
+);
+check(
+  tabsMessages.some((m) => m.id === 64 && m.msg?.type === "VEXOLINK_PROGRESS"),
+  "VexoLink: resolver reports progress to the initiating tab",
+);
+
 /* ------------------------------------------------------------------ *
- *  Scenario 4: MAIN-world injection plumbing                          *
+ *  Scenario 6: MAIN-world injection plumbing                          *
  * ------------------------------------------------------------------ */
 
 // 4a. SKIP_WAIT_PAGE_CALL injects into the sender tab with the whitelisted name.

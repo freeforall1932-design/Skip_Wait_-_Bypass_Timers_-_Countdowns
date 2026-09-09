@@ -468,3 +468,15 @@ repo is allowed to lag slightly behind.
     will look sparse/empty — that is expected, **not** a CSS bug. Judge it loaded unpacked.
   - Only Poppins 400/600/700/800 are bundled; if future text needs a 500/other weight, add the
     matching woff2 + `@font-face` rather than relying on faux-bold synthesis.
+- **2026-09-09 (9th pass — active-source sync, v2.4.0)** — Synced the
+  developer-maintained active source through `7602a26` / v1.4.82 without
+  importing its paid gate: ported VexoLink (redirect guard, referer hop and
+  Get Link resolver), Movies4u’s Latest Releases handoff, and Molyn’s local
+  key overlay; added their three host rows; and applied the Freedlink route
+  matcher fix for arbitrary filename leaves. Freeware checks remain intact:
+  no EAS / key / daily-counter / alarm path was added. Extended the background
+  smoke harness for VexoLink and the content harness for VexoLink, Movies4u,
+  and Molyn; `node tools/verify-release.mjs` is green. Reviewed the supplied
+  `murtaza460786/skip-wait-extension` repository but did not copy from it:
+  its CC BY-NC-SA 4.0 terms conflict with this project’s Apache-2.0 license,
+  and its public host data is already covered by the curated local map.

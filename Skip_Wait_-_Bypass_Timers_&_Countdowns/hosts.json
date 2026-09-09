@@ -1162,5 +1162,20 @@
     "hosts": [
       "zifury.com"
     ]
+  },
+  "vexolink": {
+    "hosts": [
+      "vexo-link.com"
+    ]
+  },
+  "movies4u": {
+    "hosts": [
+      "1movies4u.cc"
+    ]
+  },
+  "molyn": {
+    "hosts": [
+      "molyn.top"
+    ]
   }
 }

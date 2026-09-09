@@ -9,7 +9,9 @@
  *      and navigates (regression for the shipped Uy engine),
  *   3. the new wpsafelink-button engine extracts a window.open()
  *      destination from #wpsafe-link and navigates after its settle delay,
- *   4. the bitcotasks flow presses Validate once the firewall captcha is
+ *   4. VexoLink sends its resolve/open handshake, Movies4u follows its
+ *      Latest Releases handoff, and Molyn displays a fetched key locally,
+ *   5. the bitcotasks flow presses Validate once the firewall captcha is
  *      verified and asks the background to call page-world continueClicked.
  *
  * Usage:
@@ -177,7 +179,13 @@ const realChrome = {
     id: "smoketestcontentid",
     getURL: (p) => pathToFileURL(path.join(extDir, p)).href,
     getManifest: () => JSON.parse(readFileSync(path.join(extDir, "manifest.json"), "utf8")),
-    onMessage: { addListener: (fn) => listeners.message.push(fn) },
+    onMessage: {
+      addListener: (fn) => listeners.message.push(fn),
+      removeListener: (fn) => {
+        const index = listeners.message.indexOf(fn);
+        if (index >= 0) listeners.message.splice(index, 1);
+      },
+    },
     sendMessage: async (msg) => {
       messages.push(msg);
       return {};
@@ -203,7 +211,7 @@ const fileFetch = async (input) => {
  *  Sandbox factory                                                    *
  * ------------------------------------------------------------------ */
 
-function makeSandbox({ hostname, pathname = "/", search = "", href } = {}) {
+function makeSandbox({ hostname, pathname = "/", search = "", href, onRuntimeMessage } = {}) {
   const doc = makeDocument();
   const navigations = [];
   const loc = {
@@ -264,7 +272,18 @@ function makeSandbox({ hostname, pathname = "/", search = "", href } = {}) {
     TypeError,
     Uint8Array,
     fetch: fileFetch,
-    chrome: realChrome,
+    chrome: {
+      ...realChrome,
+      runtime: {
+        ...realChrome.runtime,
+        sendMessage: (msg, callback) => {
+          messages.push(msg);
+          const response = onRuntimeMessage?.(msg) ?? {};
+          if (typeof callback === "function") queueMicrotask(() => callback(response));
+          return Promise.resolve(response);
+        },
+      },
+    },
     __navigations: navigations,
     __doc: doc,
   };
@@ -320,7 +339,92 @@ async function loadContent(sandbox) {
 }
 
 /* ------------------------------------------------------------------ *
- *  Scenario 2: wp-safelink query engine (?safelink_redirect=JSON)     *
+ *  Scenario 2: VexoLink — content-side resolve/open handshake          *
+ * ------------------------------------------------------------------ */
+
+{
+  messages.length = 0;
+  const sb = makeSandbox({
+    hostname: "vexo-link.com",
+    pathname: "/Abcd123",
+    onRuntimeMessage: (msg) => {
+      if (msg?.type === "VEXOLINK_RESOLVE") return { ok: true, dest: "https://dest.example/vexo-final" };
+      if (msg?.type === "VEXOLINK_OPEN_DEST") return true;
+      return {};
+    },
+  });
+  await loadContent(sb);
+  await tick(500);
+  check(
+    messages.some((m) => m?.type === "VEXOLINK_RESOLVE" && m.pageUrl === "https://vexo-link.com/Abcd123") &&
+      messages.some((m) => m?.type === "VEXOLINK_OPEN_DEST" && m.url === "https://dest.example/vexo-final"),
+    "VexoLink: alias page asks the background to resolve and open the destination",
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Scenario 3: Movies4u — Latest Releases landing handoff             *
+ * ------------------------------------------------------------------ */
+
+{
+  const sb = makeSandbox({ hostname: "1movies4u.cc", pathname: "/" });
+  const defaultFetch = sb.fetch;
+  sb.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.startsWith("file:")) return defaultFetch(input, init);
+    return {
+      ok: true,
+      status: 200,
+      url,
+      text: async () => '<a class="cta-btn btn-1" href="https://latest.example/releases">Latest Releases</a>',
+      json: async () => ({}),
+    };
+  };
+  await loadContent(sb);
+  await tick(500);
+  check(
+    sb.__navigations.includes("https://latest.example/releases"),
+    `Movies4u: reads and opens the external Latest Releases link (nav: ${JSON.stringify(sb.__navigations)})`,
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Scenario 4: Molyn — key endpoint result is shown locally           *
+ * ------------------------------------------------------------------ */
+
+{
+  const sb = makeSandbox({ hostname: "molyn.top", pathname: "/fl" });
+  const defaultFetch = sb.fetch;
+  sb.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.startsWith("file:")) return defaultFetch(input, init);
+    return {
+      ok: url === "https://molyn.top/api/keys/fetch-key",
+      status: 200,
+      url,
+      text: async () => "",
+      json: async () => ({ key: "MOLYN-KEY-123" }),
+    };
+  };
+  const findCode = (el) => {
+    if (!el || el.nodeType !== 1) return null;
+    if (el.tagName === "CODE" && el.textContent === "MOLYN-KEY-123") return el;
+    for (const child of el.children ?? []) {
+      const found = findCode(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  await loadContent(sb);
+  await tick(500);
+  check(
+    !!findCode(sb.__doc.documentElement) && sb.__navigations.length === 0,
+    "Molyn: displays the fetched key in the page instead of navigating away",
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Scenario 5: wp-safelink query engine (?safelink_redirect=JSON)     *
  * ------------------------------------------------------------------ */
 
 {
@@ -496,7 +600,7 @@ async function loadContent(sandbox) {
 
 console.log(
   failures === 0
-    ? "\nsmoke-content: OK — content.js evaluates and the safelink/wpsafelink/bitcotasks flows behave."
+    ? "\nsmoke-content: OK — content.js evaluates and synced page flows behave."
     : `\nsmoke-content: ${failures} FAILURE(S)`,
 );
 process.exit(failures === 0 ? 0 : 1);

@@ -5066,8 +5066,279 @@ chrome.runtime.onMessage.addListener((e, t) => {
     if ("CPMLINK_NET_RESET_CAPTCHA" !== e?.type) return !1;
     const n = t.tab?.id;
     return void 0 === n || Eo(n, t.frameId ?? 0, So), !1
-}), chrome.runtime.onStartup.addListener(() => {
-    i()
-}), chrome.runtime.onInstalled.addListener(() => {
-    i()
-}), i()
+});
+
+/*
+ * Synced from the developer's current Skip Wait source (v1.4.82,
+ * 7602a26).  This freeware port intentionally uses the local always-allow
+ * gate (`ue`/`pe`); it contains no license, account, or usage-counter path.
+ *
+ * VexoLink first returns a Location redirect before the page's Get Link form
+ * is available.  Hold that main-frame redirect long enough for the content
+ * script to resolve the form through the extension service worker.
+ */
+const vexolinkSite = "vexolink";
+const vexolinkLocationRule = 918810;
+const vexolinkRefererRule = 918811;
+const vexolinkAccept = "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8";
+const vexolinkAliasRe = /^(?=.*[A-Za-z])[A-Za-z0-9]{3,}$/;
+
+const vexolinkIsHttpUrl = (href) => /^https?:\/\//i.test(href);
+const vexolinkAliasFromPath = (pathname) => {
+    const [segment, ...rest] = pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+    return segment && rest.length === 0 && vexolinkAliasRe.test(segment) ? segment : null;
+};
+const vexolinkIsAliasUrl = async (href) => {
+    try {
+        const url = new URL(href);
+        return vexolinkIsHttpUrl(url.href) && await c(url.hostname, vexolinkSite) && null !== vexolinkAliasFromPath(url.pathname);
+    } catch {
+        return !1;
+    }
+};
+const vexolinkReadField = (html, name) => {
+    const escaped = name.replace(/[[\]\\]/g, "\\$&");
+    const match = html.match(new RegExp(`name="${escaped}"[^>]*value="([^"]*)"|value="([^"]*)"[^>]*name="${escaped}"`, "i"));
+    const value = match?.[1] ?? match?.[2] ?? null;
+    if (null === value || !/%[0-9A-Fa-f]{2}/.test(value)) return value;
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+};
+const vexolinkHasGoForm = (html) => !!vexolinkReadField(html, "ad_form_data") && !!vexolinkReadField(html, "_csrfToken");
+const vexolinkCounterSeconds = (html) => {
+    const match = html.match(/["']counter_value["']\s*:\s*["']?(\d+)/);
+    const seconds = match ? Number(match[1]) : 0;
+    return Number.isFinite(seconds) && seconds > 0 ? Math.min(seconds, 120) : 0;
+};
+const vexolinkUnlockReferer = (html) => {
+    const match = html.match(/ViewArticleGate\s*=\s*(\{[\s\S]*?\});/);
+    if (!match?.[1]) return null;
+    try {
+        const nextUrls = JSON.parse(match[1]).nextUrls;
+        if (!Array.isArray(nextUrls)) return null;
+        for (const candidate of nextUrls) {
+            if ("string" !== typeof candidate || !vexolinkIsHttpUrl(candidate)) continue;
+            return `${new URL(candidate).origin}/`;
+        }
+    } catch {}
+    return null;
+};
+const vexolinkSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const vexolinkWithReferer = async (url, referer, run) => {
+    await chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [vexolinkRefererRule],
+        addRules: [{
+            id: vexolinkRefererRule,
+            priority: 1,
+            action: {
+                type: "modifyHeaders",
+                requestHeaders: [{
+                    header: "Referer",
+                    operation: "set",
+                    value: referer
+                }]
+            },
+            condition: {
+                urlFilter: `|${url}`,
+                resourceTypes: ["xmlhttprequest"],
+                tabIds: [chrome.tabs.TAB_ID_NONE]
+            }
+        }]
+    });
+    try {
+        return await run();
+    } finally {
+        await chrome.declarativeNetRequest.updateSessionRules({
+            removeRuleIds: [vexolinkRefererRule]
+        }).catch(() => {});
+    }
+};
+const vexolinkFetchHtml = async (url, referer) => {
+    const run = async () => {
+        const response = await fetch(url, {
+            credentials: "include",
+            cache: "no-store",
+            redirect: "follow",
+            headers: {
+                Accept: vexolinkAccept
+            }
+        });
+        if (!response.ok) throw new Error("fetch");
+        return response.text();
+    };
+    return referer ? vexolinkWithReferer(url, referer, run) : run();
+};
+const vexolinkPostGo = async (unlockUrl, html) => {
+    const adFormData = vexolinkReadField(html, "ad_form_data");
+    const csrfToken = vexolinkReadField(html, "_csrfToken");
+    if (!adFormData || !csrfToken) throw new Error("form");
+    const actionRaw = html.match(/id="go-link"[^>]*\baction="([^"]+)"/i)?.[1] ?? html.match(/<form[^>]*\bid="go-link"[^>]*\baction="([^"]+)"/i)?.[1] ?? "/links/go";
+    const action = vexolinkIsHttpUrl(actionRaw) ? actionRaw : new URL(actionRaw, unlockUrl).href;
+    const body = new URLSearchParams({
+        _method: vexolinkReadField(html, "_method") ?? "POST",
+        _csrfToken: csrfToken,
+        ad_form_data: adFormData
+    });
+    const tokenFields = vexolinkReadField(html, "_Token[fields]");
+    const tokenUnlocked = vexolinkReadField(html, "_Token[unlocked]");
+    tokenFields && body.set("_Token[fields]", tokenFields);
+    tokenUnlocked && body.set("_Token[unlocked]", tokenUnlocked);
+    return vexolinkWithReferer(action, unlockUrl, async () => {
+        const response = await fetch(action, {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+                Accept: "application/json, text/javascript, */*; q=0.01",
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-Requested-With": "XMLHttpRequest",
+                Origin: new URL(unlockUrl).origin
+            },
+            body
+        });
+        if (!response.ok) throw new Error("go");
+        const result = JSON.parse(await response.text());
+        const destination = "string" === typeof result.url ? result.url.trim() : "";
+        if (!destination || !vexolinkIsHttpUrl(destination)) throw new Error(result.message || "dest");
+        return destination;
+    });
+};
+const vexolinkResolveDestination = async (pageUrl, progress) => {
+    const alias = vexolinkAliasFromPath(new URL(pageUrl).pathname);
+    if (!alias) throw new Error("alias");
+    const entry = `${new URL(pageUrl).origin}/${encodeURIComponent(alias)}`;
+    progress({
+        lead: "Hang tight — unlocking your link.",
+        detail: "Skip Wait is opening your short link.",
+        status: "Opening VexoLink"
+    });
+    let html = await vexolinkFetchHtml(entry);
+    if (!vexolinkHasGoForm(html)) {
+        progress({
+            lead: "Decoding the unlock path.",
+            detail: "Skip Wait is reading the gate response from your short link.",
+            status: "Decoding gate response"
+        });
+        const referer = vexolinkUnlockReferer(html);
+        if (!referer) throw new Error("referer");
+        progress({
+            lead: "Unlocking Get Link.",
+            detail: "Skip Wait is fetching the Get Link shell on your short link.",
+            status: "Fetching Get Link"
+        });
+        html = await vexolinkFetchHtml(entry, referer);
+    }
+    if (!vexolinkHasGoForm(html)) throw new Error("form");
+    const waitSeconds = vexolinkCounterSeconds(html);
+    if (waitSeconds > 0) {
+        progress({
+            lead: "Your link is almost ready.",
+            detail: "Skip Wait is waiting for the Get Link timer from this page.",
+            status: "Waiting for Get Link",
+            waitEndTs: Date.now() + 1e3 * waitSeconds
+        });
+        await vexolinkSleep(1e3 * waitSeconds);
+    }
+    progress({
+        lead: "Decrypting your destination.",
+        detail: "Skip Wait is posting Get Link to unlock the real URL.",
+        status: "Decrypting destination"
+    });
+    const destination = await vexolinkPostGo(entry, html);
+    progress({
+        lead: "Almost there.",
+        detail: "Opening your destination now.",
+        status: "Opening destination"
+    });
+    return destination;
+};
+const vexolinkArmStopRedirect = async () => {
+    const hosts = await pe(vexolinkSite);
+    await chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [vexolinkLocationRule],
+        addRules: hosts.length ? [{
+            id: vexolinkLocationRule,
+            priority: 2,
+            action: {
+                type: "modifyHeaders",
+                responseHeaders: [{
+                    header: "Location",
+                    operation: "remove"
+                }]
+            },
+            condition: {
+                requestDomains: hosts,
+                resourceTypes: ["main_frame"]
+            }
+        }] : []
+    });
+};
+const vexolinkSendProgress = (tabId, progress) => {
+    null != tabId && chrome.tabs.sendMessage(tabId, {
+        type: "VEXOLINK_PROGRESS",
+        ...progress
+    }).catch(() => {});
+};
+const vexolinkOpenTab = async (tabId, url) => {
+    try {
+        await chrome.tabs.update(tabId, {
+            url
+        });
+        return !0;
+    } catch {
+        return !1;
+    }
+};
+
+vexolinkArmStopRedirect().catch(() => {});
+me(() => {
+    vexolinkArmStopRedirect().catch(() => {});
+});
+chrome.runtime.onMessage.addListener((message, sender, reply) => {
+    const tabId = sender.tab?.id;
+    if ("VEXOLINK_OPEN_DEST" === message.type) {
+        const destination = "string" === typeof message.url ? message.url : "";
+        if (null == tabId || !vexolinkIsHttpUrl(destination)) return reply(!1), !1;
+        return (async () => {
+            try {
+                const hostname = sender.tab?.url ? new URL(sender.tab.url).hostname : "";
+                if (!hostname || !(await ue(hostname, vexolinkSite))) return void reply(!1);
+                reply(await vexolinkOpenTab(tabId, destination));
+            } catch {
+                reply(!1);
+            }
+        })(), !0;
+    }
+    if ("VEXOLINK_RESOLVE" !== message.type) return !1;
+    const pageUrl = "string" === typeof message.pageUrl ? message.pageUrl : "";
+    return (async () => {
+        try {
+            if (!(await vexolinkIsAliasUrl(pageUrl))) return void reply({
+                ok: !1
+            });
+            if (!(await ue(new URL(pageUrl).hostname, vexolinkSite))) return void reply({
+                ok: !1
+            });
+            const destination = await vexolinkResolveDestination(pageUrl, (progress) => vexolinkSendProgress(tabId, progress));
+            reply({
+                ok: !0,
+                dest: destination
+            });
+        } catch {
+            reply({
+                ok: !1
+            });
+        }
+    })(), !0;
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    i();
+});
+chrome.runtime.onInstalled.addListener(() => {
+    i();
+});
+i();
